@@ -1,0 +1,360 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Custom classes for the Professional Polish theme */
+body {
+  background-color: #0F172A;
+  color: #CBD5E1;
+  font-family: "Prompt", "Inter", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Base custom keyframe animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Official Sign-In With Google Button Styling */
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: #1E293B;
+  background-image: none;
+  border: 1px solid #475569;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #F8FAFC;
+  cursor: pointer;
+  font-family: 'Prompt', 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  height: 42px;
+  letter-spacing: 0.15px;
+  outline: none;
+  padding: 0 16px;
+  position: relative;
+  text-align: center;
+  transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: auto;
+  max-width: 400px;
+  min-width: 90px;
+}
+
+.gsi-material-button .gsi-material-button-icon {
+  height: 20px;
+  min-width: 20px;
+  width: 20px;
+}
+
+.gsi-material-button .gsi-material-button-content-wrapper {
+  -webkit-align-items: center;
+  align-items: center;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.gsi-material-button .gsi-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Prompt', 'Inter', sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+  margin-left: 12px;
+  margin-right: 4px;
+}
+
+.gsi-material-button .gsi-material-button-state {
+  -webkit-transition: opacity .2s;
+  transition: opacity .2s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.gsi-material-button:hover {
+  background-color: #334155;
+  border-color: #3b82f6;
+}
+
+.gsi-material-button:active .gsi-material-button-state, 
+.gsi-material-button:focus .gsi-material-button-state {
+  background-color: #475569;
+  opacity: 1;
+}
+
+/* Custom Scrollbar Styles for Panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Comprehensive Light Mode CSS Overrides                                      */
+/* -------------------------------------------------------------------------- */
+
+html.light body {
+  background-color: #F8FAFC;
+  color: #1E293B;
+}
+
+/* Hardcoded Background Overrides */
+html.light .bg-\[\#0F172A\] {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .bg-\[\#1E293B\] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .bg-slate-900 {
+  background-color: #F8FAFC !important;
+}
+
+html.light .bg-slate-950,
+html.light .bg-slate-950\/90,
+html.light .bg-slate-950\/60,
+html.light .bg-slate-950\/40,
+html.light .bg-slate-950\/30,
+html.light .bg-slate-950\/20,
+html.light .bg-slate-950\/10 {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .bg-slate-900\/80,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/50,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/20 {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-850 {
+  background-color: #FFFFFF !important;
+}
+
+html.light .bg-slate-800\/60 {
+  background-color: #E2E8F0 !important;
+}
+
+html.light .bg-slate-700 {
+  background-color: #E2E8F0 !important;
+}
+
+html.light .bg-slate-900\/60 {
+  background-color: #E2E8F0 !important;
+}
+
+/* Neutral/Gray Background overrides for light mode */
+html.light .bg-neutral-900,
+html.light .bg-neutral-900\/40,
+html.light .bg-neutral-950 {
+  background-color: #F1F5F9 !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* Arbitrary and Opacity BG Overrides */
+html.light .bg-\[\#1E293B\]\/40 {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+}
+
+/* Table and interactive hover rows */
+html.light .hover\:bg-slate-800\/50:hover,
+html.light .hover\:bg-slate-800\/40:hover,
+html.light .hover\:bg-slate-800\/20:hover,
+html.light .hover\:bg-slate-800:hover {
+  background-color: #F1F5F9 !important;
+}
+
+html.light .bg-slate-800\/50 {
+  background-color: #F1F5F9 !important;
+}
+
+/* Borders */
+html.light .border-slate-700,
+html.light .border-slate-700\/80,
+html.light .border-slate-700\/60,
+html.light .border-slate-800,
+html.light .border-slate-800\/40,
+html.light .border-slate-850,
+html.light .border-slate-850\/30,
+html.light .border-slate-900,
+html.light .border-neutral-800,
+html.light .border-neutral-900 {
+  border-color: #E2E8F0 !important;
+}
+
+html.light .divide-slate-700 > :not([hidden]) ~ :not([hidden]),
+html.light .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E2E8F0 !important;
+}
+
+/* Primary Text Overrides */
+html.light .text-slate-100,
+html.light .text-white {
+  color: #0F172A !important;
+}
+
+html.light .text-slate-200 {
+  color: #1E293B !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-500 {
+  color: #64748B !important;
+}
+
+/* Neutral Text Overrides */
+html.light .text-neutral-100 {
+  color: #0F172A !important;
+}
+html.light .text-neutral-200 {
+  color: #1E293B !important;
+}
+html.light .text-neutral-300 {
+  color: #334155 !important;
+}
+html.light .text-neutral-400 {
+  color: #475569 !important;
+}
+html.light .text-neutral-500 {
+  color: #64748B !important;
+}
+html.light .text-neutral-600 {
+  color: #8E9BAE !important;
+}
+
+/* Accent texts (increase contrast for light mode) */
+html.light .text-blue-400 {
+  color: #1D4ED8 !important; /* dark blue */
+}
+
+html.light .text-emerald-400 {
+  color: #047857 !important; /* dark green */
+}
+
+html.light .text-rose-400 {
+  color: #B91C1C !important; /* dark red */
+}
+
+html.light .text-amber-400 {
+  color: #B45309 !important; /* dark yellow/amber */
+}
+
+html.light .text-orange-400 {
+  color: #C2410C !important; /* dark orange */
+}
+
+/* Google Sign In Button */
+html.light .gsi-material-button {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #1E293B !important;
+}
+
+html.light .gsi-material-button:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* Input boxes, Selects, Textareas */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Focus and navigation button selections */
+html.light .bg-blue-600\/15 {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+  color: #1D4ED8 !important;
+}
+
+html.light .hover\:text-slate-200:hover,
+html.light .hover\:text-slate-100:hover {
+  color: #0F172A !important;
+}
+
+/* Scrollbar on light mode */
+html.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Maps and charts backgrounds custom tuning */
+html.light .recharts-default-tooltip {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+html.light .recharts-tooltip-label {
+  color: #0F172A !important;
+  font-weight: 600 !important;
+}
+

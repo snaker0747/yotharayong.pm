@@ -1,0 +1,6 @@
+{
+  "name": "Public Lighting Maintenance Dashboard",
+  "description": "แดชบอร์ดสรุปสถานะการซ่อมบำรุงไฟฟ้าสาธารณะ เชื่อมโยงข้อมูลจาก Google Sheets และ Appsheet แบบเรียลไทม์",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
