@@ -69,15 +69,17 @@ export default function App() {
 
   // Sheet connection config
   const [spreadsheetId, setSpreadsheetId] = useState(() => {
-    const saved = localStorage.getItem('pole_spreadsheet_id');
-    if (!saved || saved === '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0') {
+    const saved = localStorage.getItem('pole_spreadsheet_id_v2');
+    if (!saved) {
+      localStorage.setItem('pole_spreadsheet_id_v2', DEFAULT_SPREADSHEET_ID);
       return DEFAULT_SPREADSHEET_ID;
     }
     return saved;
   });
   const [sheetName, setSheetName] = useState(() => {
-    const saved = localStorage.getItem('pole_sheet_name');
-    if (!saved || saved === 'Form Responses 1') {
+    const saved = localStorage.getItem('pole_sheet_name_v2');
+    if (!saved) {
+      localStorage.setItem('pole_sheet_name_v2', DEFAULT_SHEET_NAME);
       return DEFAULT_SHEET_NAME;
     }
     return saved;
@@ -191,8 +193,8 @@ export default function App() {
     setSpreadsheetId(newId);
     setSheetName(newName);
     setAppSheetAppName(newAppName);
-    localStorage.setItem('pole_spreadsheet_id', newId);
-    localStorage.setItem('pole_sheet_name', newName);
+    localStorage.setItem('pole_spreadsheet_id_v2', newId);
+    localStorage.setItem('pole_sheet_name_v2', newName);
     localStorage.setItem('pole_appsheet_name', newAppName);
     setShowSettings(false);
     if (token) {
