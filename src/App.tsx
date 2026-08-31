@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   initAuth, googleSignIn, logout, getAccessToken 
@@ -19,7 +19,8 @@ import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
-  Sun, Moon
+  Sun, Moon, MapPin, BarChart3, ChevronDown, ChevronUp,
+  Clock, Hourglass, AlertTriangle, Layers, X
 } from 'lucide-react';
 
 // Default target spreadsheet ID from user's request
@@ -88,15 +89,39 @@ export default function App() {
     return localStorage.getItem('pole_appsheet_name') || 'ข้อมูลไฟฟ้าแสงสว่าง-724677635';
   });
 
-  // Selected state
+  // Selected state & Popups
   const [selectedRecord, setSelectedRecord] = useState<MaintenanceRecord | null>(null);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
   const [searchFilterTerm, setSearchFilterTerm] = useState<string>('');
+  const [showAnalyticsOverview, setShowAnalyticsOverview] = useState(true);
 
   // Modal open states
   const [showSettings, setShowSettings] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
+
+  // Count mapped coordinates
+  const mappedCount = useMemo(() => {
+    return records.filter(r => r.lat !== null && r.lat !== undefined && !isNaN(Number(r.lat))).length;
+  }, [records]);
+
+  // Status Counts for Quick Status Pills
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: records.length,
+      completed: 0,
+      inProgress: 0,
+      pending: 0,
+      waiting: 0
+    };
+    records.forEach(r => {
+      if (r.status === 'Completed') counts.completed++;
+      else if (r.status === 'In Progress') counts.inProgress++;
+      else if (r.status === 'Waiting for Parts') counts.waiting++;
+      else counts.pending++;
+    });
+    return counts;
+  }, [records]);
 
   // 1. Initialize Auth on mount
   useEffect(() => {
@@ -129,25 +154,17 @@ export default function App() {
       const data = await fetchSheetRecords(targetId, targetSheet, accessToken);
       setRecords(data);
       setLastRefreshed(new Date().toLocaleTimeString('th-TH'));
-      
-      // Auto-select the first record if none is selected
-      if (data.length > 0 && !selectedRecord) {
-        setSelectedRecord(data[0]);
-      }
     } catch (err: any) {
       console.error(err);
       // Fallback to offline mock data on failure
       setRecords(MOCK_RAYONG_RECORDS);
-      if (MOCK_RAYONG_RECORDS.length > 0 && !selectedRecord) {
-        setSelectedRecord(MOCK_RAYONG_RECORDS[0]);
-      }
       setError(
         'กำลังใช้งานโหมดออฟไลน์/ข้อมูลตัวอย่างของระยอง (หากต้องการซิงค์สด กรุณาเปิดแชร์ไฟล์ชีตเป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือตั้งค่าบัญชี Google)'
       );
     } finally {
       setLoadingData(false);
     }
-  }, [selectedRecord]);
+  }, []);
 
   // Load when token, spreadsheetId, or sheetName changes
   useEffect(() => {
@@ -441,11 +458,11 @@ export default function App() {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 mt-4 sm:mt-6 flex-1 w-full">
-        <div className="space-y-4 sm:space-y-6" id="dashboard-active-view">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 mt-4 sm:mt-6 flex-1 w-full pb-10">
+        <div className="space-y-4 sm:space-y-5" id="dashboard-active-view">
             
-            {/* Real-time sync status line */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1E293B] border border-slate-700 rounded-lg px-3.5 sm:px-4 py-2.5 sm:py-3 gap-2 sm:gap-3">
+            {/* Real-time sync status bar & Quick Actions */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1E293B] border border-slate-700 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 gap-2 sm:gap-3 shadow-md">
               <div className="flex items-center gap-2 text-xs sm:text-sm">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -454,7 +471,21 @@ export default function App() {
                 <span className="font-bold text-slate-200 font-sans">เชื่อมโยงข้อมูล (Sync Active)</span>
               </div>
               
-              <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-mono text-slate-400 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-mono text-slate-400 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowAnalyticsOverview(prev => !prev)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-sans border transition-colors cursor-pointer ${
+                    showAnalyticsOverview 
+                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 font-bold' 
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                  }`}
+                >
+                  <BarChart3 size={13} />
+                  <span>{showAnalyticsOverview ? 'ซ่อนสถิติ/กราฟ' : 'ดูสถิติและกราฟ'}</span>
+                  {showAnalyticsOverview ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                </button>
+
                 <label className="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition-colors font-sans">
                   <input
                     type="checkbox"
@@ -462,10 +493,10 @@ export default function App() {
                     onChange={(e) => setAutoRefresh(e.target.checked)}
                     className="accent-blue-500 rounded bg-slate-950 border-slate-800"
                   />
-                  <span>รีเฟรชอัตโนมัติ (60 วิ)</span>
+                  <span>รีเฟรช (60 วิ)</span>
                 </label>
                 {lastRefreshed && (
-                  <span className="font-semibold text-slate-300">ข้อมูลล่าสุด: {lastRefreshed} น.</span>
+                  <span className="font-semibold text-slate-300">ล่าสุด: {lastRefreshed} น.</span>
                 )}
               </div>
             </div>
@@ -486,6 +517,32 @@ export default function App() {
               </div>
             )}
 
+            {/* Optional Collapsible Analytics & Stats Section */}
+            <AnimatePresence>
+              {showAnalyticsOverview && records.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden space-y-4 mb-2"
+                >
+                  <DashboardStats
+                    records={records}
+                    onStatusSelect={setSelectedStatusFilter}
+                    selectedStatus={selectedStatusFilter}
+                  />
+
+                  <AnalyticsCharts 
+                    records={records}
+                    selectedStatus={selectedStatusFilter}
+                    onStatusSelect={setSelectedStatusFilter}
+                    activeFilterQuery={searchFilterTerm}
+                    onFilterQueryChange={setSearchFilterTerm}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Load State Spinner */}
             {loadingData && records.length === 0 ? (
               <div className="py-24 flex flex-col items-center justify-center text-slate-500">
@@ -494,82 +551,86 @@ export default function App() {
               </div>
             ) : (
               <>
-                {/* 1. Metric KPI Cards */}
-                <DashboardStats
-                  records={records}
-                  onStatusSelect={setSelectedStatusFilter}
-                  selectedStatus={selectedStatusFilter}
-                />
+                {/* Primary Data List (Full-width Spacious Table & Grid View directly on open) */}
+                <div className="bg-[#1E293B] border border-slate-700 rounded-xl p-4 sm:p-5 shadow-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+                      <h4 className="text-base sm:text-lg font-bold text-slate-100 font-sans">
+                        รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
+                      </h4>
+                    </div>
 
-                {/* 2. Visual & Analytics Charts (Top Section) */}
-                <div className="mb-6">
-                  <AnalyticsCharts 
+                    {/* Quick Status Filter Badges */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusFilter(null)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                          selectedStatusFilter === null
+                            ? 'bg-blue-600 text-white shadow-sm font-bold'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                        }`}
+                      >
+                        ทั้งหมด ({statusCounts.all})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'Completed' ? null : 'Completed')}
+                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                          selectedStatusFilter === 'Completed'
+                            ? 'bg-emerald-600 text-white shadow-sm font-bold'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        }`}
+                      >
+                        ซ่อมเสร็จ ({statusCounts.completed})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'In Progress' ? null : 'In Progress')}
+                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                          selectedStatusFilter === 'In Progress'
+                            ? 'bg-blue-600 text-white shadow-sm font-bold'
+                            : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        }`}
+                      >
+                        กำลังดำเนินการ ({statusCounts.inProgress})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'Pending' ? null : 'Pending')}
+                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
+                          selectedStatusFilter === 'Pending'
+                            ? 'bg-rose-600 text-white shadow-sm font-bold'
+                            : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                        }`}
+                      >
+                        รอดำเนินการ ({statusCounts.pending})
+                      </button>
+                    </div>
+                  </div>
+
+                  <RecordsList
                     records={records}
-                    selectedStatus={selectedStatusFilter}
-                    onStatusSelect={setSelectedStatusFilter}
-                    activeFilterQuery={searchFilterTerm}
-                    onFilterQueryChange={setSearchFilterTerm}
+                    appName={appSheetAppName}
+                    tableName={sheetName}
+                    onSelectRecord={handleRecordSelect}
+                    selectedRecord={selectedRecord}
+                    selectedStatusFilter={selectedStatusFilter}
+                    onStatusFilterChange={setSelectedStatusFilter}
+                    searchTerm={searchFilterTerm}
+                    onSearchTermChange={setSearchFilterTerm}
+                    onOpenMap={() => {
+                      const mapElem = document.getElementById('map-section');
+                      if (mapElem) {
+                        mapElem.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
                   />
                 </div>
 
-                {/* 3. Data List & Detail Panel (Bottom Section) */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column (2/3 width) - Search & Records list + Map Visualizer */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
-                        <h4 className="text-base font-semibold text-slate-100 font-sans">
-                          รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
-                        </h4>
-                      </div>
-                      <RecordsList
-                        records={records}
-                        onSelectRecord={handleRecordSelect}
-                        selectedRecord={selectedRecord}
-                        selectedStatusFilter={selectedStatusFilter}
-                        onStatusFilterChange={setSelectedStatusFilter}
-                        searchTerm={searchFilterTerm}
-                        onSearchTermChange={setSearchFilterTerm}
-                      />
-                    </div>
-
-                  </div>
-
-                  {/* Right Column (1/3 width) - Deep Info Selected Panel / Instructions */}
-                  <div className="space-y-6">
-                    <AnimatePresence mode="wait">
-                      {selectedRecord ? (
-                        <motion.div
-                          key={selectedRecord.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <RecordDetail
-                            record={selectedRecord}
-                            appName={appSheetAppName}
-                            tableName={sheetName}
-                            onClose={() => setSelectedRecord(null)}
-                          />
-                        </motion.div>
-                      ) : (
-                        <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-6 text-center text-slate-400 min-h-[160px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
-                          <Lightbulb size={24} className="text-blue-500 animate-pulse" />
-                          <div className="space-y-1">
-                            <h5 className="text-xs font-bold text-slate-300">ข้อมูลรายละเอียดรายการซ่อม</h5>
-                            <p className="text-[11px] text-slate-500 max-w-xs">
-                              คลิกเลือกรายการแจ้งซ่อมจากตารางด้านซ้าย เพื่อดูข้อมูลพิกัด อาการชำรุด ลิงก์รูปภาพถ่ายจริง และหมายเหตุโดยละเอียด
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-
-                {/* Map Visualizer (Moved to the very bottom) */}
-                <div className="mt-6">
+                {/* 4. Map Visualizer (Placed directly at the bottom of the page) */}
+                <div className="mt-6 scroll-mt-6" id="map-section">
                   <MapVisualizer
                     records={records}
                     onSelectRecord={handleRecordSelect}
@@ -579,6 +640,18 @@ export default function App() {
                     tableName={sheetName}
                   />
                 </div>
+
+                {/* Modal Popup for Maintenance Record Detail */}
+                <AnimatePresence>
+                  {selectedRecord && (
+                    <RecordDetail
+                      record={selectedRecord}
+                      appName={appSheetAppName}
+                      tableName={sheetName}
+                      onClose={() => setSelectedRecord(null)}
+                    />
+                  )}
+                </AnimatePresence>
               </>
             )}
 

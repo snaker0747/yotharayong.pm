@@ -17,6 +17,7 @@ interface ListProps {
   onStatusFilterChange: (status: string | null) => void;
   searchTerm?: string;
   onSearchTermChange?: (term: string) => void;
+  onOpenMap?: () => void;
 }
 
 export default function RecordsList({ 
@@ -28,12 +29,13 @@ export default function RecordsList({
   selectedStatusFilter,
   onStatusFilterChange,
   searchTerm: externalSearchTerm,
-  onSearchTermChange
+  onSearchTermChange,
+  onOpenMap
 }: ListProps) {
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
   const setSearchTerm = onSearchTermChange || setInternalSearchTerm;
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const [selectedTech, setSelectedTech] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -130,7 +132,20 @@ export default function RecordsList({
           />
         </div>
 
-        <div className="flex items-center gap-2 justify-between sm:justify-end">
+        <div className="flex items-center gap-2 justify-between sm:justify-end flex-wrap sm:flex-nowrap">
+          {/* Map Modal Trigger */}
+          {onOpenMap && (
+            <button
+              onClick={onOpenMap}
+              type="button"
+              className="px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs sm:text-sm rounded-lg border bg-blue-600/15 text-blue-400 hover:bg-blue-600/25 border-blue-500/40 font-semibold flex items-center gap-1.5 transition-all duration-200 cursor-pointer shadow-sm"
+              title="เปิดดูแผนที่พิกัดเสาไฟ (GIS Map)"
+            >
+              <MapPin size={14} className="text-blue-400" />
+              <span>ดูแผนที่พิกัด</span>
+            </button>
+          )}
+
           {/* Advanced Filter Trigger */}
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -151,6 +166,7 @@ export default function RecordsList({
               className={`p-1.5 sm:p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'grid' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
+              title="มุมมองแบบการ์ด (Grid)"
             >
               <Grid size={15} />
             </button>
@@ -159,6 +175,7 @@ export default function RecordsList({
               className={`p-1.5 sm:p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'table' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
+              title="มุมมองแบบตาราง (Table)"
             >
               <ListIcon size={15} />
             </button>
@@ -295,6 +312,13 @@ export default function RecordsList({
                         </span>
                       </div>
                     </div>
+
+                    <div className="pt-2 mt-1 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                      <span className="text-blue-400 group-hover:text-blue-300 font-semibold flex items-center gap-1">
+                        ดูรายละเอียด <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">เปิดป๊อปอัป</span>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -321,7 +345,7 @@ export default function RecordsList({
                     <tr
                       key={record.id}
                       onClick={() => onSelectRecord(record)}
-                      className={`cursor-pointer hover:bg-slate-800/40 transition-colors ${
+                      className={`cursor-pointer hover:bg-slate-800/60 transition-colors group ${
                         isSelected ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-300'
                       }`}
                     >
@@ -332,8 +356,15 @@ export default function RecordsList({
                       <td className="p-3 text-slate-400">{record.technician}</td>
                       <td className="p-3">{getStatusBadge(record.status, record.statusThai)}</td>
                       <td className="p-3 text-right">
-                        <button className="p-1.5 rounded hover:bg-slate-800 text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 text-xs font-mono cursor-pointer">
-                          ดูรายละเอียด <ChevronRight size={13} />
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectRecord(record);
+                          }}
+                          className="px-2.5 py-1 rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer border border-blue-500/20 transition-colors"
+                        >
+                          ดูรายละเอียด <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                       </td>
                     </tr>
