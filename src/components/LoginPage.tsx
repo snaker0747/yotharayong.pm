@@ -89,9 +89,19 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="p-4 rounded-2xl bg-blue-600/10 text-blue-400 mb-4 border border-blue-500/20"
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden flex items-center justify-center bg-white border-2 border-slate-600 shadow-xl mb-6 mx-auto shrink-0"
           >
-            <Lightbulb size={36} className="stroke-[2.5]" />
+            <img 
+              src="/logo.png" 
+              alt="โลโก้เทศบาลนครระยอง" 
+              className="w-full h-full object-contain p-2"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                if (e.currentTarget.parentElement) {
+                  e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
+                }
+              }} 
+            />
           </motion.div>
           <h1 className="text-xl font-bold text-white tracking-tight">
             ระบบจัดการและซ่อมบำรุงไฟฟ้าสาธารณะ
