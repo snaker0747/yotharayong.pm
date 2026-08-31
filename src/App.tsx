@@ -366,7 +366,7 @@ export default function App() {
           {/* Brand/Title */}
           <div className="flex items-center gap-4">
             <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-white border border-slate-600 shadow-md shrink-0">
-              <img src="/logo.png" alt="สำนักช่าง เทศบาลนครระยอง" className="w-full h-full object-cover p-1.5" onError={(e) => {
+              <img src="/logo.png" alt="สำนักช่าง เทศบาลนครระยอง" className="w-full h-full object-contain p-1" onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 if (e.currentTarget.parentElement) e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
               }} />
