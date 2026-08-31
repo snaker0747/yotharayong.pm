@@ -198,13 +198,12 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       tileLayerRef.current.remove();
     }
 
-    // CartoDB Voyager tiles are extremely detailed and crisp.
-    // We use them for both themes, but apply a high-contrast CSS inversion filter in dark mode 
-    // to keep every street, label, and detail perfectly visible and sharp.
-    const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    // Standard OpenStreetMap tiles (free, no API key required)
+    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
-      maxZoom: 19
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(mapRef.current);
 
     // Clean up map on component unmount
