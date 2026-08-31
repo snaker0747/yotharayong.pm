@@ -92,8 +92,8 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
             className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden flex items-center justify-center bg-white border-2 border-slate-600 shadow-xl mb-6 mx-auto shrink-0"
           >
             <img 
-              src="/logo.png" 
-              alt="โลโก้เทศบาลนครระยอง" 
+              src="/login-logo.png" 
+              alt="โลโก้ระบบซ่อมบำรุง" 
               className="w-full h-full object-contain p-2"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
