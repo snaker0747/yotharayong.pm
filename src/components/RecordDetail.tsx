@@ -1,8 +1,9 @@
-import { motion } from 'motion/react';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, MapPin, Calendar, User, CheckCircle2, Clock, 
   Hourglass, AlertTriangle, ExternalLink, Navigation, 
-  Database, Image as ImageIcon, HelpCircle
+  Database, Image as ImageIcon, HelpCircle, Maximize2, ZoomIn
 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 
@@ -14,6 +15,8 @@ interface DetailProps {
 }
 
 export default function RecordDetail({ record, appName = '', tableName = '', onClose }: DetailProps) {
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+
   if (!record) return null;
 
   const getStatusBadgeLarge = (status: string, statusThai: string) => {
@@ -141,27 +144,41 @@ export default function RecordDetail({ record, appName = '', tableName = '', onC
           {/* Left Column: Image (reduced to half size by splitting column) */}
           <div className="space-y-2">
             {previewImage ? (
-              <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-950 group">
+              <div 
+                onClick={() => setIsImageModalOpen(true)}
+                className="relative aspect-video w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-950 group cursor-pointer"
+                title="คลิกเพื่อดูรูปภาพขนาดใหญ่ในป๊อปอัป"
+              >
                 <img
                   src={previewImage}
                   alt={`Pole ${record.poleId} Issue`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-2 right-2 bg-slate-950/90 px-2 py-1 rounded text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
+                <div className="absolute top-2 right-2 bg-slate-950/90 px-2 py-1 rounded text-[10px] font-mono text-slate-400 flex items-center gap-1.5 backdrop-blur-sm">
                   <ImageIcon size={12} />
                   IMAGE ATTACHED
                 </div>
-                <a
-                  href={previewImage}
-                  target="_blank"
-                  referrerPolicy="no-referrer"
-                  rel="noopener noreferrer"
-                  className="absolute bottom-2 right-2 bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-bold"
+
+                {/* Hover overlay with zoom button */}
+                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="bg-blue-600/90 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-bold shadow-lg backdrop-blur-sm transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                    <ZoomIn size={14} />
+                    <span>คลิกเพื่อดูรูปขนาดเต็ม</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsImageModalOpen(true);
+                  }}
+                  className="absolute bottom-2 right-2 bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded flex items-center gap-1.5 text-xs font-bold shadow-md cursor-pointer"
                 >
-                  <ExternalLink size={13} />
+                  <Maximize2 size={13} />
                   ดูรูปขนาดเต็ม
-                </a>
+                </button>
               </div>
             ) : (
               <div className="aspect-video w-full rounded-lg border border-dashed border-slate-700 bg-slate-950/50 flex flex-col items-center justify-center text-center text-slate-400 p-4">
@@ -302,6 +319,89 @@ export default function RecordDetail({ record, appName = '', tableName = '', onC
           </div>
         </div>
       </div>
+
+      {/* In-App Image Lightbox Modal Popup (No new browser tab needed) */}
+      <AnimatePresence>
+        {isImageModalOpen && previewImage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsImageModalOpen(false)}
+              className="absolute inset-0 cursor-pointer"
+            />
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative z-10 max-w-4xl w-full bg-[#1E293B] border border-slate-700 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]"
+            >
+              {/* Modal Top bar */}
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-900/90 border-b border-slate-700">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="p-1 rounded bg-blue-500/15 text-blue-400">
+                    <ImageIcon size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-slate-100 font-mono truncate">
+                      ภาพประกอบรายงาน: เสาไฟ {record.poleId}
+                    </h4>
+                    <p className="text-xs text-slate-400 font-sans truncate">
+                      {record.location || '-'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsImageModalOpen(false)}
+                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                    title="ปิดหน้าต่างรูปภาพ (ESC)"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Image Display */}
+              <div className="flex-1 overflow-auto p-2 sm:p-4 bg-slate-950/90 flex items-center justify-center min-h-[300px] max-h-[70vh]">
+                <img
+                  src={previewImage}
+                  alt={`Pole ${record.poleId}`}
+                  className="max-h-full max-w-full object-contain rounded-lg shadow-xl"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              {/* Modal Footer Info */}
+              <div className="px-4 py-2.5 bg-slate-900/90 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-sans text-slate-400">
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+                    <User size={13} className="text-blue-400" />
+                    ช่าง: {record.technician || '-'}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-slate-300 font-medium">
+                    <Calendar size={13} className="text-emerald-400" />
+                    วันที่: {record.fixedDate || record.timestamp || '-'}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  ปิดหน้าต่าง
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

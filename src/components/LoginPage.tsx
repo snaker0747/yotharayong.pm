@@ -80,16 +80,16 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-[#1E293B] border border-slate-700/80 p-8 rounded-2xl shadow-2xl relative z-10"
+        className="w-full max-w-[460px] bg-[#1E293B] border border-slate-700/80 p-5 sm:p-8 rounded-2xl shadow-2xl relative z-10 mx-auto"
         id="login-card-container"
       >
         {/* Logo and Title */}
-        <div className="flex flex-col items-center text-center mb-8">
+        <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden flex items-center justify-center bg-white border-2 border-slate-600 shadow-xl mb-6 mx-auto shrink-0"
+            className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden flex items-center justify-center bg-white border-2 border-slate-600 shadow-xl mb-3 sm:mb-4 mx-auto shrink-0"
           >
             <img 
               src="/login-logo.png" 
@@ -98,43 +98,43 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 if (e.currentTarget.parentElement) {
-                  e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
+                  e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
                 }
               }} 
             />
           </motion.div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            ระบบจัดการและซ่อมบำรุงไฟฟ้าสาธารณะ
+          <h1 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight font-sans">
+            ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
           </h1>
-          <p className="text-xs font-mono text-slate-400 mt-1 uppercase tracking-wider">
-            Public Lighting Command Center
+          <p className="text-sm sm:text-base font-bold text-slate-300 mt-1 uppercase tracking-wider font-sans">
+            เทศบาลนครระยอง
           </p>
-          <span className="text-[10px] font-mono text-slate-500 bg-slate-900/60 px-2.5 py-0.5 rounded mt-3 border border-slate-800">
+          <span className="text-[11px] sm:text-xs font-mono text-slate-400 bg-slate-900/80 px-3 py-0.5 rounded-md mt-2.5 border border-slate-800 font-semibold">
             Rayong City Works v1.0
           </span>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5" id="login-form">
+        <form onSubmit={handleSubmit} className="space-y-6" id="login-form">
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-lg flex gap-2 items-start"
+              className="p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm rounded-lg flex gap-2.5 items-start font-sans"
             >
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <span>{error}</span>
             </motion.div>
           )}
 
           {/* Username Input */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-300 font-sans block">
+            <label className="text-sm sm:text-base font-semibold text-slate-200 font-sans block">
               ชื่อผู้ใช้งาน (Username)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-slate-400">
-                <User size={16} />
+              <span className="absolute left-3.5 top-3.5 text-slate-400">
+                <User size={20} />
               </span>
               <input
                 type="text"
@@ -142,7 +142,7 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
                 placeholder="ป้อนชื่อผู้ใช้งาน..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-slate-950/60 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-sans"
+                className="w-full bg-slate-950/60 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm sm:text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-sans"
                 id="login-username"
               />
             </div>
@@ -150,12 +150,12 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
 
           {/* Password Input */}
           <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-300 font-sans block">
+            <label className="text-sm sm:text-base font-semibold text-slate-200 font-sans block">
               รหัสผ่าน (Password)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-3 text-slate-400">
-                <Lock size={16} />
+              <span className="absolute left-3.5 top-3.5 text-slate-400">
+                <Lock size={20} />
               </span>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -163,23 +163,23 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
                 placeholder="ป้อนรหัสผ่าน..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-950/60 border border-slate-700 rounded-lg pl-10 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-sans"
+                className="w-full bg-slate-950/60 border border-slate-700 rounded-xl pl-11 pr-11 py-3 text-sm sm:text-base text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors font-sans"
                 id="login-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-200 transition-colors"
+                className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200 transition-colors"
                 id="toggle-password-visibility"
               >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
 
           {/* Remember Me Toggle */}
           <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer group text-xs text-slate-300 hover:text-slate-100 transition-colors">
+            <label className="flex items-center gap-2.5 cursor-pointer group text-sm sm:text-base text-slate-300 hover:text-slate-100 transition-colors">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -187,7 +187,7 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
                 className="accent-blue-500 rounded bg-slate-950 border-slate-700 h-4 w-4"
                 id="login-remember-me"
               />
-              <span className="font-sans">จดจำบัญชีและรหัสผ่าน (Remember Me)</span>
+              <span className="font-sans font-medium">จดจำบัญชีและรหัสผ่าน (Remember Me)</span>
             </label>
           </div>
 
@@ -195,14 +195,14 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/10 disabled:opacity-50"
+            className="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-base sm:text-lg py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 disabled:opacity-50"
             id="login-submit-button"
           >
             {isSubmitting ? (
-              <span className="inline-block border-2 border-white/30 border-t-white rounded-full h-4 w-4 animate-spin" />
+              <span className="inline-block border-2 border-white/30 border-t-white rounded-full h-5 w-5 animate-spin" />
             ) : (
               <>
-                <LogIn size={14} />
+                <LogIn size={18} />
                 <span>เข้าสู่ระบบ</span>
               </>
             )}
@@ -210,8 +210,8 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
         </form>
 
         {/* Demo Credentials Help */}
-        <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 font-sans text-center">
-          <span>กรุณาใช้บัญชีที่ระบบกำหนดในการเข้าใช้งานแดชบอร์ด</span>
+        <div className="mt-8 pt-5 border-t border-slate-800 text-sm text-slate-400 font-sans text-center font-medium">
+          <span>จัดทำโดย ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง</span>
         </div>
       </motion.div>
     </div>

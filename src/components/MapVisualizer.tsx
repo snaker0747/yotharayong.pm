@@ -264,6 +264,23 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
     });
   }, [viewMode, mappedRecords, selectedRecord, onSelectRecord, theme, appName, tableName]);
 
+  // Handle ResizeObserver to invalidate Leaflet map size on screen change / layout change
+  useEffect(() => {
+    if (!mapContainerRef.current || !mapRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    });
+
+    resizeObserver.observe(mapContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [viewMode]);
+
   // Handle flyTo when selectedRecord changes
   useEffect(() => {
     if (
@@ -320,7 +337,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
   const paddedLngSpan = lngMaxPadded - lngMinPadded;
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-[340px] relative shadow-lg" id="map-visualizer-container">
+    <div className="bg-[#1E293B] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-[360px] sm:h-[420px] md:h-[460px] relative shadow-lg" id="map-visualizer-container">
       {/* CSS injection for leaflet custom animations and dark mode tile adjustments */}
       <style>{`
         @keyframes ping-pulse {
@@ -340,33 +357,33 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       `}</style>
 
       {/* Header controls */}
-      <div className="flex justify-between items-center px-4 py-3 bg-slate-900/40 border-b border-slate-700 z-10 select-none">
-        <div className="flex items-center gap-2">
-          <Compass className="text-blue-500 animate-spin-slow" size={16} />
-          <span className="text-base font-semibold text-slate-100 font-sans">
+      <div className="flex justify-between items-center px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/40 border-b border-slate-700 z-10 select-none gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <Compass className="text-blue-500 animate-spin-slow shrink-0" size={16} />
+          <span className="text-xs sm:text-sm md:text-base font-semibold text-slate-100 font-sans truncate">
             พิกัดแผนที่ OpenStreetMap ({mappedRecords.length} จุด)
           </span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0">
           <button
             onClick={() => setViewMode('osm')}
-            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-1 text-[10px] sm:text-xs font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'osm'
                 ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
                 : 'text-slate-500 hover:text-slate-300'
             }`}
           >
-            แผนที่ถนน (OSM)
+            แผนที่ (OSM)
           </button>
           <button
             onClick={() => setViewMode('radar')}
-            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-1 text-[10px] sm:text-xs font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'radar'
                 ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
                 : 'text-slate-500 hover:text-slate-300'
             }`}
           >
-            เรดาร์ (GRID)
+            เรดาร์
           </button>
         </div>
       </div>
@@ -479,7 +496,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className={`absolute bottom-2 right-2 w-[280px] sm:w-[320px] max-w-[95%] backdrop-blur-md rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2 transition-all duration-300 ${
+              className={`absolute bottom-2 left-2 right-2 sm:left-auto sm:right-2 sm:w-[320px] max-w-full backdrop-blur-md rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2 transition-all duration-300 ${
                 theme === 'light'
                   ? 'bg-white/95 border border-slate-200 text-slate-800 shadow-slate-300/40'
                   : 'bg-slate-900/95 border border-slate-700/80 text-slate-100'

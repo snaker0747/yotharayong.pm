@@ -81,7 +81,7 @@ export default function SheetSettings({
   };
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-5 shadow-2xl space-y-4 max-w-md w-full" id="sheet-settings-panel">
+    <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-4 sm:p-5 shadow-2xl space-y-4 max-w-md w-full max-h-[85vh] overflow-y-auto" id="sheet-settings-panel">
       {/* Header */}
       <div className="flex justify-between items-center pb-3 border-b border-slate-700">
         <div className="flex items-center gap-2">

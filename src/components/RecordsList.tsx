@@ -15,6 +15,8 @@ interface ListProps {
   selectedRecord: MaintenanceRecord | null;
   selectedStatusFilter: string | null;
   onStatusFilterChange: (status: string | null) => void;
+  searchTerm?: string;
+  onSearchTermChange?: (term: string) => void;
 }
 
 export default function RecordsList({ 
@@ -24,9 +26,13 @@ export default function RecordsList({
   onSelectRecord, 
   selectedRecord,
   selectedStatusFilter,
-  onStatusFilterChange
+  onStatusFilterChange,
+  searchTerm: externalSearchTerm,
+  onSearchTermChange
 }: ListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [internalSearchTerm, setInternalSearchTerm] = useState('');
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const setSearchTerm = onSearchTermChange || setInternalSearchTerm;
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [selectedTech, setSelectedTech] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -110,9 +116,9 @@ export default function RecordsList({
   };
 
   return (
-    <div className="flex flex-col gap-4" id="records-list-wrapper">
+    <div className="flex flex-col gap-3.5 sm:gap-4" id="records-list-wrapper">
       {/* Controls: Search, Filters Trigger, View Mode Toggle */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-3 text-slate-400" size={18} />
           <input
@@ -124,17 +130,17 @@ export default function RecordsList({
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-between sm:justify-end">
           {/* Advanced Filter Trigger */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`px-4 py-2.5 text-sm rounded-lg border flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+            className={`px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm rounded-lg border flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
               showFilters || selectedTech !== 'all'
                 ? 'bg-blue-600/15 text-blue-400 border-blue-500/40 font-semibold'
                 : 'bg-slate-850 text-slate-300 border-slate-700 hover:text-slate-100 hover:bg-slate-800'
             }`}
           >
-            <SlidersHorizontal size={15} />
+            <SlidersHorizontal size={14} className="sm:w-[15px] sm:h-[15px]" />
             ตัวกรอง {selectedTech !== 'all' && '•'}
           </button>
 
@@ -142,19 +148,19 @@ export default function RecordsList({
           <div className="flex bg-slate-800/60 border border-slate-700 rounded-lg p-0.5">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-all cursor-pointer ${
+              className={`p-1.5 sm:p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'grid' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              <Grid size={16} />
+              <Grid size={15} />
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-md transition-all cursor-pointer ${
+              className={`p-1.5 sm:p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'table' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              <ListIcon size={16} />
+              <ListIcon size={15} />
             </button>
           </div>
         </div>
@@ -169,14 +175,14 @@ export default function RecordsList({
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden bg-slate-900 border border-slate-700/80 rounded-lg"
           >
-            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3.5 sm:p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Technician filter */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-300 font-sans block">ช่างผู้รับผิดชอบ (Technician)</label>
                 <select
                   value={selectedTech}
                   onChange={(e) => setSelectedTech(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-blue-500/30"
+                  className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs sm:text-sm text-slate-300 focus:outline-none focus:border-blue-500/30"
                 >
                   <option value="all">ทั้งหมด (All Technicians)</option>
                   <option value="unassigned">ยังไม่ได้มอบหมาย (Unassigned)</option>
@@ -244,9 +250,17 @@ export default function RecordsList({
                 >
                   <div className="flex justify-between items-start gap-2 mb-2">
                     <div>
-                      <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded mb-1 inline-block">
-                        #{record.id}
-                      </span>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded inline-block">
+                          #{record.id}
+                        </span>
+                        {record.imageUrl && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-400 text-[10px] font-sans border border-blue-500/20" title="มีรูปภาพประกอบ">
+                            <ImageIcon size={11} />
+                            <span>มีรูป</span>
+                          </span>
+                        )}
+                      </div>
                       <h5 className="text-base font-bold text-slate-100 font-mono tracking-wide">
                         เสาไฟ {record.poleId}
                       </h5>
@@ -264,24 +278,24 @@ export default function RecordsList({
                       <span className="truncate">{record.location}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                      <div className="flex items-center gap-1 truncate">
-                        <User size={12} />
-                        <span className="truncate max-w-[80px]">{record.technician}</span>
+                    <div className="flex items-center justify-between text-xs font-mono text-slate-400 gap-2 pt-0.5">
+                      <div className="flex items-center gap-1 min-w-0 truncate">
+                        <User size={12} className="shrink-0 text-slate-500" />
+                        <span className="truncate max-w-[90px]">{record.technician || 'ไม่ระบุ'}</span>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Calendar size={12} />
-                        <span>{record.fixedDate !== '-' ? record.fixedDate : (record.timestamp ? record.timestamp.split(' ')[0] : '-')}</span>
+                      <div 
+                        className="flex items-center gap-1 shrink-0 text-slate-400 text-[11px]" 
+                        title={record.fixedDate !== '-' ? `วันที่ซ่อม: ${record.fixedDate}` : `วันที่แจ้ง: ${record.timestamp}`}
+                      >
+                        <Calendar size={12} className="shrink-0 text-slate-500" />
+                        <span>
+                          {record.fixedDate && record.fixedDate !== '-'
+                            ? record.fixedDate.split(' ')[0]
+                            : (record.timestamp ? record.timestamp.split(' ')[0] : '-')}
+                        </span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Indicator indicator for image */}
-                  {record.imageUrl && (
-                    <div className="absolute bottom-3 right-3 p-1 rounded bg-blue-500/10 text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity">
-                      <ImageIcon size={13} />
-                    </div>
-                  )}
                 </motion.div>
               );
             })}
