@@ -39,9 +39,13 @@ function doPost(e) {
     var data = payload.data || {};
     
     var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(sheetName);
+    // ค้นหาเฉพาะแท็บ "การซ่อมบำรุง" เท่านั้น เพื่อความปลอดภัยสูงสุดต่อแท็บงานอื่นในสเปรดชีต
+    var sheet = ss.getSheetByName(sheetName) || ss.getSheetByName('การซ่อมบำรุง');
     if (!sheet) {
-      sheet = ss.getSheets()[0];
+      return responseJson({ 
+        success: false, 
+        error: 'ระบบความปลอดภัย: ไม่พบแผ่นงานชื่อ "' + sheetName + '" ระบบปฏิเสธการแก้ไขเพื่อไม่ให้กระทบแท็บงานอื่นในสเปรดชีตนี้' 
+      });
     }
     
     var dataRange = sheet.getDataRange();
@@ -439,6 +443,12 @@ export default function SheetSettings({
               <div className="p-5 overflow-y-auto space-y-4">
                 <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs text-slate-300">
                   <h4 className="font-bold text-blue-400 text-xs">ขั้นตอนการติดตั้ง (ทำครั้งเดียว):</h4>
+                  <div className="p-2.5 bg-blue-900/20 border border-blue-500/20 rounded-lg text-[11px] text-blue-200 space-y-1">
+                    <p className="font-semibold text-blue-300">🛡️ ความปลอดภัยต่อระบบงานอื่นใน Sheet นี้:</p>
+                    <p className="text-slate-300">
+                      สคริปต์นี้ถูกล็อกให้ค้นหาและแก้ไขเฉพาะแถวในแท็บ <strong>"การซ่อมบำรุง"</strong> เท่านั้น จะ<strong>ไม่แตะต้อง</strong>แท็บข้อมูลเสาไฟ หรือแท็บระบบงานอื่นในสเปรดชีตนี้ 100%
+                    </p>
+                  </div>
                   <ol className="list-decimal pl-4 space-y-2 leading-relaxed text-slate-300 font-sans text-[11.5px]">
                     <li>
                       เปิดไฟล์ Google Sheet ของท่าน (<a href="https://docs.google.com/spreadsheets/d/1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40" target="_blank" rel="noreferrer" className="text-blue-400 underline inline-flex items-center gap-1">เปิดสเปรดชีตระยอง <ExternalLink size={10} /></a>)
@@ -447,7 +457,7 @@ export default function SheetSettings({
                       ไปที่เมนูด้านบน <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">ส่วนขยาย (Extensions)</span> &gt; <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">Apps Script</span>
                     </li>
                     <li>
-                      ลบโค้ดเดิมทั้งหมดในหน้าต่าง แล้วกดปุ่ม <strong>"คัดลอกโค้ดสคริปต์"</strong> ด้านล่างนี้ไปวางแทนที่ จากนั้นกด <strong>บันทึก (Ctrl+S)</strong>
+                      <strong>หากมีโค้ดเดิมอยู่แล้ว:</strong> กดเครื่องหมาย <span className="font-semibold text-amber-400">+</span> ด้านซ้าย เลือก <em>สคริปต์</em> แล้วตั้งชื่อว่า <code className="text-amber-300">MaintenanceSync</code> (จะได้ไม่ทับโค้ดเดิม) หรือหากเป็นไฟล์ว่าง ให้วางโค้ดด้านล่างนี้แทนที่ แล้วกด <strong>บันทึก (Ctrl+S)</strong>
                     </li>
                     <li>
                       กดปุ่มสีน้ำเงินมุมขวาบน <span className="font-semibold text-white bg-blue-600 px-1.5 py-0.5 rounded">ทำให้ใช้งานได้ (Deploy)</span> &gt; <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">การทำให้ใช้งานได้รายการใหม่ (New deployment)</span>
