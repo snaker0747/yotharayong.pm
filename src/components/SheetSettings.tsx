@@ -171,6 +171,7 @@ export default function SheetSettings({
   const [selectedSheet, setSelectedSheet] = useState(currentSheetName);
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [autoRedirectNotice, setAutoRedirectNotice] = useState<string | null>(null);
 
   // Helper to extract spreadsheet ID from paste URL
   const extractId = (urlOrId: string): string => {
@@ -184,9 +185,31 @@ export default function SheetSettings({
     return trimmed;
   };
 
+  const handleSpreadsheetInputChange = (val: string) => {
+    const trimmed = val.trim();
+    if (trimmed.includes('script.google.com')) {
+      setAppsScriptUrl(trimmed);
+      localStorage.setItem('rayong_apps_script_url', trimmed);
+      setInputValue(currentSpreadsheetId || '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40');
+      setAutoRedirectNotice('ตรวจพบ Apps Script URL! ระบบได้ย้ายไปยังช่อง "Apps Script Web App URL (บันทึกสด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
+      setError(null);
+      return;
+    }
+    setInputValue(val);
+  };
+
   const handleFetchMetadata = async (targetId: string) => {
     if (!targetId) {
       setError('กรุณากรอก Spreadsheet ID หรือ URL');
+      return;
+    }
+
+    if (targetId.includes('script.google.com')) {
+      setAppsScriptUrl(targetId.trim());
+      localStorage.setItem('rayong_apps_script_url', targetId.trim());
+      setInputValue(currentSpreadsheetId || '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40');
+      setAutoRedirectNotice('ตรวจพบ Apps Script URL! ระบบได้ย้ายไปยังช่อง "Apps Script Web App URL (บันทึกสด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
+      setError(null);
       return;
     }
     
@@ -260,7 +283,7 @@ export default function SheetSettings({
                 type="text"
                 placeholder="วางลิ้งค์หรือรหัส Google Sheet ที่นี่..."
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => handleSpreadsheetInputChange(e.target.value)}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500"
               />
               <button
@@ -275,6 +298,12 @@ export default function SheetSettings({
                 )}
               </button>
             </div>
+            {autoRedirectNotice && (
+              <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 flex items-start gap-2 text-emerald-300 text-xs font-sans">
+                <Sparkles size={14} className="shrink-0 mt-0.5 text-emerald-400" />
+                <span>{autoRedirectNotice}</span>
+              </div>
+            )}
             <span className="text-[10.5px] text-slate-500 leading-normal block font-sans">
               ลิงก์ปัจจุบัน: ชีต <code className="text-blue-400 bg-slate-900 px-1 py-0.5 rounded">การซ่อมบำรุง</code> (เทศบาลนครระยอง)
             </span>
