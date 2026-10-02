@@ -564,4 +564,155 @@ export async function syncRecordToGoogleSheet(
   }
 }
 
+// --------------------------------------------------------------------------
+// Community & Soi Options from Google Sheet (gid=89735667)
+// --------------------------------------------------------------------------
+
+export const RAYONG_COMMUNITIES_FALLBACK = [
+  'หนองสนม-ปักป่า',
+  'เนินพระ',
+  'สองพี่น้อง',
+  'แขวงการทาง',
+  'เกาะกลอย',
+  'ก้นปึก-ปากคลอง',
+  'ศูนย์การค้า',
+  'ข้างอำเภอ-ทางไผ่',
+  'สวนวัดโขด',
+  'ทุ่งโตนด',
+  'สนามเป้า',
+  'ปากน้ำ 1',
+  'ปากน้ำ 2',
+  'มุสลิมปากคลอง',
+  'บ้านปากคลอง',
+  'หลังวัดโขด',
+  'บางจาก',
+  'ชายกระป่อม',
+  'วัดป่าประดู่ 1',
+  'วัดป่าประดู่ 2',
+  'ตีนเนิน-เกาะหวาย',
+  'พูนไฉ่',
+  'ริมน้ำ-ท่าเกตุ',
+  'สัมฤทธิ์',
+  'เรือนจำ',
+  'แหลมรุ่งเรือง',
+  'สมุทรเจดีย์',
+  'สมเด็จพระเจ้าตากสินฯ',
+  'สะพานราษฎร์'
+];
+
+export interface CommunitySoiData {
+  communities: string[];
+  sois: string[];
+  communitySoiMap: Record<string, string[]>;
+}
+
+export async function fetchCommunityAndSoiData(
+  spreadsheetId: string = '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40',
+  gid: string = '89735667'
+): Promise<CommunitySoiData> {
+  const cacheKey = `rayong_comm_soi_${spreadsheetId}_${gid}`;
+  
+  // 1. Check local cache
+  let cachedData: CommunitySoiData | null = null;
+  try {
+    const raw = localStorage.getItem(cacheKey);
+    if (raw) {
+      cachedData = JSON.parse(raw);
+    }
+  } catch {}
+
+  const targetId = (spreadsheetId && !spreadsheetId.includes('script.google.com') && !spreadsheetId.startsWith('AKfycb'))
+    ? spreadsheetId
+    : '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40';
+
+  // 2. Fetch fresh CSV from Google Sheets via proxy or direct
+  try {
+    const proxyUrl = `/api/sheets-proxy?spreadsheetId=${targetId}&gid=${gid}&t=${Date.now()}`;
+    let csvText = '';
+    
+    try {
+      const res = await fetch(proxyUrl);
+      if (res.ok) {
+        csvText = await res.text();
+      }
+    } catch {}
+
+    if (!csvText) {
+      const directUrl = `https://docs.google.com/spreadsheets/d/${targetId}/export?format=csv&gid=${gid}&t=${Date.now()}`;
+      const directRes = await fetch(directUrl);
+      if (directRes.ok) {
+        csvText = await directRes.text();
+      }
+    }
+
+    if (csvText) {
+      const rows = parseCSV(csvText);
+      if (rows.length > 1) {
+        const headers = rows[0].map(h => (h || '').trim());
+        let commIdx = headers.findIndex(h => h.includes('ชุมชน') || h.includes('เขต'));
+        let soiIdx = headers.findIndex(h => h.includes('ซอย') || h.includes('ถนน'));
+
+        if (commIdx === -1) commIdx = 3; // Column D default
+        if (soiIdx === -1) soiIdx = 4;  // Column E default
+
+        const commSet = new Set<string>();
+        const soiSet = new Set<string>();
+        const commToSoi: Record<string, Set<string>> = {};
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const comm = (row[commIdx] || '').trim();
+          const soi = (row[soiIdx] || '').trim();
+
+          if (comm) {
+            commSet.add(comm);
+            if (!commToSoi[comm]) {
+              commToSoi[comm] = new Set<string>();
+            }
+            if (soi) {
+              commToSoi[comm].add(soi);
+            }
+          }
+          if (soi) {
+            soiSet.add(soi);
+          }
+        }
+
+        const communities = Array.from(commSet).sort((a, b) => a.localeCompare(b, 'th'));
+        const sois = Array.from(soiSet).sort((a, b) => a.localeCompare(b, 'th'));
+        const communitySoiMap: Record<string, string[]> = {};
+        for (const [k, v] of Object.entries(commToSoi)) {
+          communitySoiMap[k] = Array.from(v).sort((a, b) => a.localeCompare(b, 'th'));
+        }
+
+        const result: CommunitySoiData = {
+          communities: communities.length > 0 ? communities : RAYONG_COMMUNITIES_FALLBACK,
+          sois,
+          communitySoiMap,
+        };
+
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+        } catch {}
+
+        return result;
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to fetch community and soi data from Google Sheets:', err);
+  }
+
+  // 3. Fallback to cache if available, or built-in fallback
+  if (cachedData && cachedData.communities?.length > 0) {
+    return cachedData;
+  }
+
+  return {
+    communities: RAYONG_COMMUNITIES_FALLBACK,
+    sois: [],
+    communitySoiMap: {},
+  };
+}
+
+
 

@@ -1,11 +1,17 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useMemo, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Save, CheckCircle2, Clock, Hourglass, AlertTriangle, 
   MapPin, Calendar, User, Wrench, FileText, Image as ImageIcon, 
   ExternalLink, Navigation, Sparkles, AlertCircle
 } from 'lucide-react';
-import { MaintenanceRecord } from '../sheetsService';
+import { 
+  MaintenanceRecord, 
+  fetchCommunityAndSoiData, 
+  CommunitySoiData, 
+  RAYONG_COMMUNITIES_FALLBACK 
+} from '../sheetsService';
+import SearchableCombobox from './SearchableCombobox';
 
 interface EditRecordModalProps {
   isOpen: boolean;
@@ -26,6 +32,28 @@ export default function EditRecordModal({
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Community and Soi data from Google Sheet gid=89735667
+  const [communityData, setCommunityData] = useState<CommunitySoiData>({
+    communities: RAYONG_COMMUNITIES_FALLBACK,
+    sois: [],
+    communitySoiMap: {},
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchCommunityAndSoiData().then((data) => {
+      if (isMounted) setCommunityData(data);
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  const availableSois = useMemo(() => {
+    if (community && communityData.communitySoiMap[community.trim()]) {
+      return communityData.communitySoiMap[community.trim()];
+    }
+    return communityData.sois;
+  }, [community, communityData]);
 
   // Initialize form when record changes
   useEffect(() => {
@@ -286,23 +314,23 @@ export default function EditRecordModal({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <span className="text-[11px] text-slate-400 font-sans">ชุมชน / เขต</span>
-                  <input
-                    type="text"
+                  <SearchableCombobox
                     value={community}
-                    onChange={(e) => setCommunity(e.target.value)}
-                    placeholder="เช่น บางจาก, เนินพระ, สวนวัดโขด"
-                    className="w-full bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                    onChange={setCommunity}
+                    options={communityData.communities}
+                    placeholder="เช่น หนองสนม-ปักป่า, บางจาก"
+                    emptyText="ไม่พบชื่อชุมชนในชีต (พิมพ์ใช้ชื่อนี้ได้)"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <span className="text-[11px] text-slate-400 font-sans">ซอย / ถนน</span>
-                  <input
-                    type="text"
+                  <SearchableCombobox
                     value={soi}
-                    onChange={(e) => setSoi(e.target.value)}
-                    placeholder="เช่น ถนน อดุลย์ธรรมประภาส"
-                    className="w-full bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-xs font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                    onChange={setSoi}
+                    options={availableSois}
+                    placeholder="เช่น ซอย นครระยอง 1 ซอย 1"
+                    emptyText="ไม่พบชื่อซอยในชีต (พิมพ์ใช้ชื่อนี้ได้)"
                   />
                 </div>
 

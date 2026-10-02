@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Printer, FileText, Plus, Trash2, CheckCircle2, Copy, Check, 
@@ -6,7 +6,13 @@ import {
   Share2, Wrench, Clock, Database, ChevronRight, Sparkles,
   ExternalLink, Navigation, HelpCircle, ArrowRight, ListPlus
 } from 'lucide-react';
-import { MaintenanceRecord } from '../sheetsService';
+import { 
+  MaintenanceRecord, 
+  fetchCommunityAndSoiData, 
+  CommunitySoiData, 
+  RAYONG_COMMUNITIES_FALLBACK 
+} from '../sheetsService';
+import SearchableCombobox from './SearchableCombobox';
 
 export interface WorkOrderItem {
   id: string;
@@ -123,6 +129,39 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
   const [importSelectedIds, setImportSelectedIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'preview'>('create');
+
+  // Community and Soi options from Google Sheet gid=89735667
+  const [communityData, setCommunityData] = useState<CommunitySoiData>({
+    communities: RAYONG_COMMUNITIES_FALLBACK,
+    sois: [],
+    communitySoiMap: {},
+  });
+  const [loadingCommData, setLoadingCommData] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingCommData(true);
+    fetchCommunityAndSoiData()
+      .then((data) => {
+        if (isMounted) {
+          setCommunityData(data);
+          setLoadingCommData(false);
+        }
+      })
+      .catch((err) => {
+        console.warn('Error loading community data:', err);
+        if (isMounted) setLoadingCommData(false);
+      });
+    return () => { isMounted = false; };
+  }, []);
+
+  // Filter sois based on selected community if mapped, otherwise show all sois
+  const availableSois = useMemo(() => {
+    if (community && communityData.communitySoiMap[community.trim()]) {
+      return communityData.communitySoiMap[community.trim()];
+    }
+    return communityData.sois;
+  }, [community, communityData]);
 
   // Handle adding new item to work order list
   const handleAddItem = (e: React.FormEvent) => {
@@ -413,35 +452,33 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
               </div>
             </div>
 
-            {/* 3. Community & Soi */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* 3. Community & Soi (Searchable Combobox from Google Sheet gid=89735667) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  ชุมชน / เขต
-                </label>
-                <input
-                  type="text"
-                  placeholder="เช่น บางจาก, มุสลิมปากคลอง"
+                <SearchableCombobox
+                  label="ชุมชน / เขต"
+                  badge={loadingCommData ? 'กำลังซิงค์ชีต...' : `${communityData.communities.length} ชุมชน`}
                   value={community}
-                  onChange={(e) => setCommunity(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  list="community-list"
+                  onChange={setCommunity}
+                  options={communityData.communities}
+                  placeholder="เช่น หนองสนม-ปักป่า, บางจาก"
+                  emptyText="ไม่พบชื่อชุมชนในชีต (สามารถใช้ชื่อที่พิมพ์นี้ได้)"
                 />
-                <datalist id="community-list">
-                  {COMMON_COMMUNITIES.map(c => <option key={c} value={c} />)}
-                </datalist>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  ซอย / ถนน
-                </label>
-                <input
-                  type="text"
-                  placeholder="เช่น ถนน อดุลย์ธรรมประภาส"
+                <SearchableCombobox
+                  label="ซอย / ถนน"
+                  badge={
+                    community && communityData.communitySoiMap[community.trim()]
+                      ? `${availableSois.length} ซอยในชุมชน`
+                      : `${availableSois.length || communityData.sois.length} ซอย`
+                  }
                   value={soi}
-                  onChange={(e) => setSoi(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  onChange={setSoi}
+                  options={availableSois}
+                  placeholder="เช่น ซอย นครระยอง 1 ซอย 1, ถนน นครระยอง 1"
+                  emptyText="ไม่พบชื่อซอยในชีต (สามารถใช้ชื่อที่พิมพ์นี้ได้)"
                 />
               </div>
             </div>
