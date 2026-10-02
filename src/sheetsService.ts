@@ -507,6 +507,25 @@ export async function syncRecordToGoogleSheet(
   const historyId = (record.raw?.['ID ประวัติ'] || record.raw?.['id ประวัติ'] || record.raw?.['History ID'] || '').trim();
   const rowNumber = Number(record.id) || null;
 
+  const raw = record.raw || {};
+  const data = {
+    'ID ประวัติ': historyId,
+    'ID โคมไฟ': record.poleId && record.poleId !== '-' ? record.poleId : (raw['ID โคมไฟ'] && raw['ID โคมไฟ'] !== '-' ? raw['ID โคมไฟ'] : ''),
+    'ชุมชน/เขต': record.community || raw['ชุมชน/เขต'] || '',
+    'ซอย': record.soi || raw['ซอย'] || '',
+    'ปัญหาที่พบ': record.issue || raw['ปัญหาที่พบ'] || '',
+    'การซ่อมบำรุงแก้ไข': record.repairAction || raw['การซ่อมบำรุงแก้ไข'] || '',
+    'รายละเอียดการแก้ไขเพิ่มเติม': raw['รายละเอียดการแก้ไขเพิ่มเติม'] || record.remarks || '',
+    'วันที่ซ่อมบำรุงแก้ไข': record.fixedDate || raw['วันที่ซ่อมบำรุงแก้ไข'] || '',
+    'สถานะ': record.statusThai || record.status || raw['สถานะ'] || 'รอดำเนินการ',
+    'รูปภาพการซ่อมบำรุง': record.imageUrl || raw['รูปภาพการซ่อมบำรุง'] || '',
+    'รูปภาพการซ่อมบำรุง_2': raw['รูปภาพการซ่อมบำรุง_2'] || '',
+    'รูปภาพการซ่อมบำรุง_3': raw['รูปภาพการซ่อมบำรุง_3'] || '',
+    'พิกัดซ่อมบำรุง': (record.lat && record.lng ? `${record.lat}, ${record.lng}` : '') || raw['พิกัดซ่อมบำรุง'] || '',
+    'ชื่อผู้ปฏิบัติงาน': record.technician || raw['ชื่อผู้ปฏิบัติงาน'] || '',
+    'หมายเหตุ': record.remarks || raw['หมายเหตุ'] || '',
+  };
+
   const payload = {
     appsScriptUrl: url,
     action,
@@ -514,21 +533,7 @@ export async function syncRecordToGoogleSheet(
     rowNumber: action === 'insert' ? null : rowNumber,
     historyId,
     sheetName,
-    data: {
-      'ID ประวัติ': historyId,
-      'ID โคมไฟ': record.poleId && record.poleId !== '-' ? record.poleId : '',
-      'ชุมชน/เขต': record.community || '',
-      'ซอย': record.soi || '',
-      'ปัญหาที่พบ': record.issue || '',
-      'การซ่อมบำรุงแก้ไข': record.repairAction || '',
-      'รายละเอียดการแก้ไขเพิ่มเติม': record.remarks || '',
-      'วันที่ซ่อมบำรุงแก้ไข': record.fixedDate || '',
-      'สถานะ': record.statusThai || record.status || 'รอดำเนินการ',
-      'รูปภาพการซ่อมบำรุง': record.imageUrl || '',
-      'พิกัดซ่อมบำรุง': record.lat && record.lng ? `${record.lat}, ${record.lng}` : '',
-      'ชื่อผู้ปฏิบัติงาน': record.technician || '',
-      'หมายเหตุ': record.remarks || '',
-    }
+    data,
   };
 
   try {
