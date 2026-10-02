@@ -97,7 +97,7 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
               className="w-full h-full object-contain drop-shadow-md"
             />
           </motion.div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-white leading-snug">
             ระบบงานซ่อมบำรุง
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1 uppercase tracking-wider">

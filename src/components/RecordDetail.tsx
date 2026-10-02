@@ -178,8 +178,8 @@ export default function RecordDetail({ record, appName = '', tableName = '', onC
               <div className="flex items-center justify-end mb-1">
                 {getStatusBadgeLarge(record.status, record.statusThai)}
               </div>
-              <h3 className="text-base font-bold text-slate-100 font-mono">
-                เสาไฟฟ้าหมายเลข: <span className="text-blue-400">{record.poleId}</span>
+              <h3 className="text-base font-bold text-slate-100 font-sans">
+                เสาไฟฟ้าหมายเลข: <span className="text-blue-400 font-mono font-bold">{record.poleId}</span>
               </h3>
             </div>
 

@@ -256,8 +256,8 @@ export default function RecordsList({
                       <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded mb-1 inline-block">
                         #{record.id}
                       </span>
-                      <h5 className="text-base font-bold text-slate-100 font-mono tracking-wide">
-                        เสาไฟ {record.poleId}
+                      <h5 className="text-base font-bold text-slate-100 font-sans">
+                        เสาไฟ <span className="font-mono text-blue-400">{record.poleId}</span>
                       </h5>
                     </div>
                     {getStatusBadge(record.status, record.statusThai)}
@@ -273,12 +273,12 @@ export default function RecordsList({
                       <span className="truncate">{record.location}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-mono text-slate-400">
+                    <div className="flex items-center justify-between text-xs font-sans text-slate-400">
                       <div className="flex items-center gap-1 truncate">
                         <User size={12} />
                         <span className="truncate max-w-[80px]">{record.technician}</span>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1 shrink-0 font-mono text-[11px]">
                         <Calendar size={12} />
                         <span>{record.fixedDate !== '-' ? record.fixedDate : (record.timestamp ? record.timestamp.split(' ')[0] : '-')}</span>
                       </div>
@@ -298,15 +298,15 @@ export default function RecordsList({
         ) : (
           <div className="overflow-x-auto bg-[#1E293B]/40 border border-slate-700 rounded-lg" id="records-table-view">
             <table className="w-full text-left text-sm font-sans">
-              <thead className="bg-slate-900/80 text-slate-400 uppercase font-mono border-b border-slate-700 text-xs tracking-wider">
+              <thead className="bg-slate-900/80 text-slate-300 font-sans border-b border-slate-700 text-xs">
                 <tr>
-                  <th className="p-3">ลำดับ (No.)</th>
-                  <th className="p-3">รหัสเสาไฟ (Pole ID)</th>
-                  <th className="p-3">อาการเสีย (Issue)</th>
-                  <th className="p-3">สถานที่ (Location)</th>
-                  <th className="p-3">ผู้รับผิดชอบ (Technician)</th>
-                  <th className="p-3">สถานะ (Status)</th>
-                  <th className="p-3 text-right">ดำเนินการ (Action)</th>
+                  <th className="p-3 font-semibold">ลำดับ</th>
+                  <th className="p-3 font-semibold">รหัสเสาไฟ</th>
+                  <th className="p-3 font-semibold">อาการเสีย</th>
+                  <th className="p-3 font-semibold">สถานที่</th>
+                  <th className="p-3 font-semibold">ผู้รับผิดชอบ</th>
+                  <th className="p-3 font-semibold">สถานะ</th>
+                  <th className="p-3 font-semibold text-right">ดำเนินการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700/50">
@@ -320,14 +320,14 @@ export default function RecordsList({
                         isSelected ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-300'
                       }`}
                     >
-                      <td className="p-3 font-mono text-slate-500">#{record.id}</td>
+                      <td className="p-3 font-mono text-slate-500 text-xs">#{record.id}</td>
                       <td className="p-3 font-mono font-bold text-slate-200">{record.poleId}</td>
-                      <td className="p-3 max-w-[180px] truncate">{record.issue}</td>
-                      <td className="p-3 max-w-[180px] truncate text-slate-400">{record.location}</td>
-                      <td className="p-3 text-slate-400">{record.technician}</td>
+                      <td className="p-3 max-w-[180px] truncate leading-normal">{record.issue}</td>
+                      <td className="p-3 max-w-[180px] truncate text-slate-400 leading-normal">{record.location}</td>
+                      <td className="p-3 text-slate-300 leading-normal">{record.technician}</td>
                       <td className="p-3">{getStatusBadge(record.status, record.statusThai)}</td>
                       <td className="p-3 text-right">
-                        <button className="p-1.5 rounded hover:bg-slate-800 text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 text-xs font-mono cursor-pointer">
+                        <button className="p-1.5 rounded hover:bg-slate-800 text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 text-xs font-sans font-medium cursor-pointer">
                           ดูรายละเอียด <ChevronRight size={13} />
                         </button>
                       </td>

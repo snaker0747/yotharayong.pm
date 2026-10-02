@@ -484,7 +484,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
               }`}
             >
               <MapPin size={11} className="text-blue-500 animate-bounce shrink-0" />
-              <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">เสา {selectedRecord.poleId}</span>
+              <span className="font-sans text-blue-600 dark:text-blue-400 font-bold">เสา <span className="font-mono">{selectedRecord.poleId}</span></span>
               <span className="text-[9px] opacity-60">| คลิกเพื่อพับเปิด</span>
               <ChevronUp size={11} className="text-slate-400 shrink-0 ml-0.5" />
             </motion.button>

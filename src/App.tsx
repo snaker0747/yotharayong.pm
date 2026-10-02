@@ -226,7 +226,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col items-center justify-center font-sans">
         <Loader2 className="text-blue-500 animate-spin" size={32} />
-        <span className="text-xs text-slate-500 mt-2.5 font-mono">กำลังตรวจสอบความถูกต้องบัญชี...</span>
+        <span className="text-xs text-slate-400 mt-2.5 font-sans">กำลังตรวจสอบความถูกต้องบัญชี...</span>
       </div>
     );
   }
@@ -365,7 +365,7 @@ export default function App() {
               }} />
             </span>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-sans leading-snug">
                 ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
               </h1>
               <p className="text-sm sm:text-base font-semibold font-sans text-slate-400 mt-0.5">
@@ -444,7 +444,7 @@ export default function App() {
                 <span className="font-bold text-slate-200 font-sans">เชื่อมโยงข้อมูล (Sync Active)</span>
               </div>
               
-              <div className="flex items-center gap-4 text-xs font-mono text-slate-400 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="flex items-center gap-4 text-xs font-sans text-slate-400 w-full sm:w-auto justify-between sm:justify-end">
                 <label className="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition-colors font-sans">
                   <input
                     type="checkbox"
@@ -480,7 +480,7 @@ export default function App() {
             {loadingData && records.length === 0 ? (
               <div className="py-24 flex flex-col items-center justify-center text-slate-500">
                 <Loader2 className="animate-spin text-blue-500 mb-2" size={24} />
-                <span className="text-xs font-mono">กำลังจัดลำดับและวิเคราะห์จุดพิกัดเสาไฟ...</span>
+                <span className="text-xs font-sans">กำลังจัดลำดับและวิเคราะห์จุดพิกัดเสาไฟ...</span>
               </div>
             ) : (
               <>
