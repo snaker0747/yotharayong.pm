@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   initAuth, googleSignIn, logout, getAccessToken 
@@ -19,8 +19,7 @@ import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
-  Sun, Moon, MapPin, BarChart3, ChevronDown, ChevronUp,
-  Clock, Hourglass, AlertTriangle, Layers, X
+  Sun, Moon
 } from 'lucide-react';
 
 // Default target spreadsheet ID from user's request
@@ -70,17 +69,15 @@ export default function App() {
 
   // Sheet connection config
   const [spreadsheetId, setSpreadsheetId] = useState(() => {
-    const saved = localStorage.getItem('pole_spreadsheet_id_v2');
-    if (!saved) {
-      localStorage.setItem('pole_spreadsheet_id_v2', DEFAULT_SPREADSHEET_ID);
+    const saved = localStorage.getItem('pole_spreadsheet_id');
+    if (!saved || saved === '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0') {
       return DEFAULT_SPREADSHEET_ID;
     }
     return saved;
   });
   const [sheetName, setSheetName] = useState(() => {
-    const saved = localStorage.getItem('pole_sheet_name_v2');
-    if (!saved) {
-      localStorage.setItem('pole_sheet_name_v2', DEFAULT_SHEET_NAME);
+    const saved = localStorage.getItem('pole_sheet_name');
+    if (!saved || saved === 'Form Responses 1') {
       return DEFAULT_SHEET_NAME;
     }
     return saved;
@@ -89,39 +86,14 @@ export default function App() {
     return localStorage.getItem('pole_appsheet_name') || 'ข้อมูลไฟฟ้าแสงสว่าง-724677635';
   });
 
-  // Selected state & Popups
+  // Selected state
   const [selectedRecord, setSelectedRecord] = useState<MaintenanceRecord | null>(null);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
-  const [searchFilterTerm, setSearchFilterTerm] = useState<string>('');
-  const [showAnalyticsOverview, setShowAnalyticsOverview] = useState(true);
 
   // Modal open states
   const [showSettings, setShowSettings] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
-
-  // Count mapped coordinates
-  const mappedCount = useMemo(() => {
-    return records.filter(r => r.lat !== null && r.lat !== undefined && !isNaN(Number(r.lat))).length;
-  }, [records]);
-
-  // Status Counts for Quick Status Pills
-  const statusCounts = useMemo(() => {
-    const counts = {
-      all: records.length,
-      completed: 0,
-      inProgress: 0,
-      pending: 0,
-      waiting: 0
-    };
-    records.forEach(r => {
-      if (r.status === 'Completed') counts.completed++;
-      else if (r.status === 'In Progress') counts.inProgress++;
-      else if (r.status === 'Waiting for Parts') counts.waiting++;
-      else counts.pending++;
-    });
-    return counts;
-  }, [records]);
 
   // 1. Initialize Auth on mount
   useEffect(() => {
@@ -154,17 +126,25 @@ export default function App() {
       const data = await fetchSheetRecords(targetId, targetSheet, accessToken);
       setRecords(data);
       setLastRefreshed(new Date().toLocaleTimeString('th-TH'));
+      
+      // Auto-select the first record if none is selected
+      if (data.length > 0 && !selectedRecord) {
+        setSelectedRecord(data[0]);
+      }
     } catch (err: any) {
       console.error(err);
       // Fallback to offline mock data on failure
       setRecords(MOCK_RAYONG_RECORDS);
+      if (MOCK_RAYONG_RECORDS.length > 0 && !selectedRecord) {
+        setSelectedRecord(MOCK_RAYONG_RECORDS[0]);
+      }
       setError(
         'กำลังใช้งานโหมดออฟไลน์/ข้อมูลตัวอย่างของระยอง (หากต้องการซิงค์สด กรุณาเปิดแชร์ไฟล์ชีตเป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือตั้งค่าบัญชี Google)'
       );
     } finally {
       setLoadingData(false);
     }
-  }, []);
+  }, [selectedRecord]);
 
   // Load when token, spreadsheetId, or sheetName changes
   useEffect(() => {
@@ -211,8 +191,8 @@ export default function App() {
     setSpreadsheetId(newId);
     setSheetName(newName);
     setAppSheetAppName(newAppName);
-    localStorage.setItem('pole_spreadsheet_id_v2', newId);
-    localStorage.setItem('pole_sheet_name_v2', newName);
+    localStorage.setItem('pole_spreadsheet_id', newId);
+    localStorage.setItem('pole_sheet_name', newName);
     localStorage.setItem('pole_appsheet_name', newAppName);
     setShowSettings(false);
     if (token) {
@@ -380,74 +360,72 @@ export default function App() {
 
       {/* Primary Top Bar Navigation */}
       <header className="border-b border-slate-700 bg-[#1E293B] sticky top-0 backdrop-blur-md z-40">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
           {/* Brand/Title */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            <span className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full overflow-hidden flex items-center justify-center bg-white border border-slate-600 shadow-md shrink-0">
-              <img src="/logo.png" alt="สำนักช่าง เทศบาลนครระยอง" className="w-full h-full object-contain p-1" onError={(e) => {
+          <div className="flex items-center gap-4">
+            <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-white border border-slate-600 shadow-md shrink-0">
+              <img src="/logo.png" alt="สำนักช่าง เทศบาลนครระยอง" className="w-full h-full object-cover p-1.5" onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 if (e.currentTarget.parentElement) e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
               }} />
             </span>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight text-white font-sans leading-tight truncate sm:whitespace-normal">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans leading-tight">
                 ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
               </h1>
-              <p className="text-xs sm:text-sm md:text-base font-semibold font-sans text-slate-400 mt-0.5 truncate sm:whitespace-normal">
+              <p className="text-sm sm:text-base font-semibold font-sans text-slate-400 mt-0.5">
                 ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง
               </p>
             </div>
           </div>
 
           {/* Nav Links / Actions */}
-          <div className="flex items-center gap-2 sm:gap-3 justify-between md:justify-end border-t md:border-t-0 pt-2 md:pt-0 border-slate-700/60">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Theme Toggle Button */}
-              <button
-                onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
-                className="p-2 sm:p-2.5 rounded-lg border border-slate-700 bg-slate-800 text-amber-400 hover:text-amber-300 hover:border-amber-500/50 transition-colors cursor-pointer"
-                title={theme === 'light' ? 'เปลี่ยนเป็นโหมดมืด (Dark Mode)' : 'เปลี่ยนเป็นโหมดสว่าง (Light Mode)'}
-                id="header-theme-toggle"
-              >
-                {theme === 'light' ? <Moon size={17} className="text-indigo-400" /> : <Sun size={17} className="text-amber-400" />}
-              </button>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-amber-400 hover:text-amber-300 hover:border-amber-500/50 transition-colors cursor-pointer"
+              title={theme === 'light' ? 'เปลี่ยนเป็นโหมดมืด (Dark Mode)' : 'เปลี่ยนเป็นโหมดสว่าง (Light Mode)'}
+              id="header-theme-toggle"
+            >
+              {theme === 'light' ? <Moon size={18} className="text-indigo-400" /> : <Sun size={18} className="text-amber-400" />}
+            </button>
 
-              {/* Config & Auto refresh tools */}
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 sm:p-2.5 rounded-lg border border-slate-700 bg-slate-800 text-blue-400 hover:text-blue-300 hover:border-blue-500/50 transition-colors cursor-pointer"
-                title="ตั้งค่าชีต"
-              >
-                <Settings size={17} />
-              </button>
-              
-              <button
-                onClick={() => loadData(token, spreadsheetId, sheetName)}
-                disabled={loadingData}
-                className="p-2 sm:p-2.5 rounded-lg border border-slate-700 bg-slate-800 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/50 transition-colors disabled:opacity-50 cursor-pointer"
-                title="รีเฟรชข้อมูล"
-              >
-                <RefreshCw size={17} className={loadingData ? 'animate-spin' : ''} />
-              </button>
-            </div>
+            {/* Config & Auto refresh tools */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-blue-400 hover:text-blue-300 hover:border-blue-500/50 transition-colors cursor-pointer"
+              title="ตั้งค่าชีต"
+            >
+              <Settings size={18} />
+            </button>
+            
+            <button
+              onClick={() => loadData(token, spreadsheetId, sheetName)}
+              disabled={loadingData}
+              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/50 transition-colors disabled:opacity-50 cursor-pointer"
+              title="รีเฟรชข้อมูล"
+            >
+              <RefreshCw size={18} className={loadingData ? 'animate-spin' : ''} />
+            </button>
 
             {/* Profile Detail */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
+            <div className="flex items-center gap-2.5 pl-2.5 border-l border-slate-700">
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
                   alt={user.displayName || 'Profile'}
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-slate-700"
+                  className="w-9 h-9 rounded-full border border-slate-700"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-300 font-bold uppercase border border-slate-600">
+                <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-300 font-bold uppercase border border-slate-600">
                   {user.displayName?.charAt(0) || 'U'}
                 </div>
               )}
               <button
                 onClick={handleLogout}
-                className="p-1.5 text-rose-500 hover:text-rose-400 transition-colors cursor-pointer"
+                className="p-1.5 text-rose-500 hover:text-rose-400 transition-colors cursor-pointer ml-1"
                 title="ออกจากระบบ"
               >
                 <LogOut size={18} />
@@ -458,12 +436,12 @@ export default function App() {
       </header>
 
       {/* Main Content Body */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 mt-4 sm:mt-6 flex-1 w-full pb-10">
-        <div className="space-y-4 sm:space-y-5" id="dashboard-active-view">
+      <main className="max-w-7xl mx-auto px-4 mt-6 flex-1 w-full">
+        <div className="space-y-6" id="dashboard-active-view">
             
-            {/* Real-time sync status bar & Quick Actions */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1E293B] border border-slate-700 rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 gap-2 sm:gap-3 shadow-md">
-              <div className="flex items-center gap-2 text-xs sm:text-sm">
+            {/* Real-time sync status line */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 gap-3">
+              <div className="flex items-center gap-2 text-sm">
                 <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -471,21 +449,7 @@ export default function App() {
                 <span className="font-bold text-slate-200 font-sans">เชื่อมโยงข้อมูล (Sync Active)</span>
               </div>
               
-              <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-mono text-slate-400 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setShowAnalyticsOverview(prev => !prev)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-sans border transition-colors cursor-pointer ${
-                    showAnalyticsOverview 
-                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 font-bold' 
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-                  }`}
-                >
-                  <BarChart3 size={13} />
-                  <span>{showAnalyticsOverview ? 'ซ่อนสถิติ/กราฟ' : 'ดูสถิติและกราฟ'}</span>
-                  {showAnalyticsOverview ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
-
+              <div className="flex items-center gap-4 text-xs font-mono text-slate-400 w-full sm:w-auto justify-between sm:justify-end">
                 <label className="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition-colors font-sans">
                   <input
                     type="checkbox"
@@ -493,10 +457,10 @@ export default function App() {
                     onChange={(e) => setAutoRefresh(e.target.checked)}
                     className="accent-blue-500 rounded bg-slate-950 border-slate-800"
                   />
-                  <span>รีเฟรช (60 วิ)</span>
+                  <span>รีเฟรชอัตโนมัติ (60 วิ)</span>
                 </label>
                 {lastRefreshed && (
-                  <span className="font-semibold text-slate-300">ล่าสุด: {lastRefreshed} น.</span>
+                  <span className="font-semibold text-slate-300">ข้อมูลล่าสุด: {lastRefreshed} น.</span>
                 )}
               </div>
             </div>
@@ -517,32 +481,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Optional Collapsible Analytics & Stats Section */}
-            <AnimatePresence>
-              {showAnalyticsOverview && records.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden space-y-4 mb-2"
-                >
-                  <DashboardStats
-                    records={records}
-                    onStatusSelect={setSelectedStatusFilter}
-                    selectedStatus={selectedStatusFilter}
-                  />
-
-                  <AnalyticsCharts 
-                    records={records}
-                    selectedStatus={selectedStatusFilter}
-                    onStatusSelect={setSelectedStatusFilter}
-                    activeFilterQuery={searchFilterTerm}
-                    onFilterQueryChange={setSearchFilterTerm}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Load State Spinner */}
             {loadingData && records.length === 0 ? (
               <div className="py-24 flex flex-col items-center justify-center text-slate-500">
@@ -551,86 +489,74 @@ export default function App() {
               </div>
             ) : (
               <>
-                {/* Primary Data List (Full-width Spacious Table & Grid View directly on open) */}
-                <div className="bg-[#1E293B] border border-slate-700 rounded-xl p-4 sm:p-5 shadow-lg">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-700/80 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
-                      <h4 className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                        รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
-                      </h4>
-                    </div>
+                {/* 1. Metric KPI Cards */}
+                <DashboardStats
+                  records={records}
+                  onStatusSelect={setSelectedStatusFilter}
+                  selectedStatus={selectedStatusFilter}
+                />
 
-                    {/* Quick Status Filter Badges */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStatusFilter(null)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
-                          selectedStatusFilter === null
-                            ? 'bg-blue-600 text-white shadow-sm font-bold'
-                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
-                        }`}
-                      >
-                        ทั้งหมด ({statusCounts.all})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'Completed' ? null : 'Completed')}
-                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
-                          selectedStatusFilter === 'Completed'
-                            ? 'bg-emerald-600 text-white shadow-sm font-bold'
-                            : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                        }`}
-                      >
-                        ซ่อมเสร็จ ({statusCounts.completed})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'In Progress' ? null : 'In Progress')}
-                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
-                          selectedStatusFilter === 'In Progress'
-                            ? 'bg-blue-600 text-white shadow-sm font-bold'
-                            : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        }`}
-                      >
-                        กำลังดำเนินการ ({statusCounts.inProgress})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedStatusFilter(selectedStatusFilter === 'Pending' ? null : 'Pending')}
-                        className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium transition-all cursor-pointer ${
-                          selectedStatusFilter === 'Pending'
-                            ? 'bg-rose-600 text-white shadow-sm font-bold'
-                            : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        }`}
-                      >
-                        รอดำเนินการ ({statusCounts.pending})
-                      </button>
-                    </div>
-                  </div>
-
-                  <RecordsList
-                    records={records}
-                    appName={appSheetAppName}
-                    tableName={sheetName}
-                    onSelectRecord={handleRecordSelect}
-                    selectedRecord={selectedRecord}
-                    selectedStatusFilter={selectedStatusFilter}
-                    onStatusFilterChange={setSelectedStatusFilter}
-                    searchTerm={searchFilterTerm}
-                    onSearchTermChange={setSearchFilterTerm}
-                    onOpenMap={() => {
-                      const mapElem = document.getElementById('map-section');
-                      if (mapElem) {
-                        mapElem.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                  />
+                {/* 2. Visual & Analytics Charts (Top Section) */}
+                <div className="mb-6">
+                  <AnalyticsCharts records={records} />
                 </div>
 
-                {/* 4. Map Visualizer (Placed directly at the bottom of the page) */}
-                <div className="mt-6 scroll-mt-6" id="map-section">
+                {/* 3. Data List & Detail Panel (Bottom Section) */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column (2/3 width) - Search & Records list + Map Visualizer */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
+                        <h4 className="text-base font-semibold text-slate-100 font-sans">
+                          รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
+                        </h4>
+                      </div>
+                      <RecordsList
+                        records={records}
+                        onSelectRecord={handleRecordSelect}
+                        selectedRecord={selectedRecord}
+                        selectedStatusFilter={selectedStatusFilter}
+                        onStatusFilterChange={setSelectedStatusFilter}
+                      />
+                    </div>
+
+                  </div>
+
+                  {/* Right Column (1/3 width) - Deep Info Selected Panel / Instructions */}
+                  <div className="space-y-6">
+                    <AnimatePresence mode="wait">
+                      {selectedRecord ? (
+                        <motion.div
+                          key={selectedRecord.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <RecordDetail
+                            record={selectedRecord}
+                            appName={appSheetAppName}
+                            tableName={sheetName}
+                            onClose={() => setSelectedRecord(null)}
+                          />
+                        </motion.div>
+                      ) : (
+                        <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-6 text-center text-slate-400 min-h-[160px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
+                          <Lightbulb size={24} className="text-blue-500 animate-pulse" />
+                          <div className="space-y-1">
+                            <h5 className="text-xs font-bold text-slate-300">ข้อมูลรายละเอียดรายการซ่อม</h5>
+                            <p className="text-[11px] text-slate-500 max-w-xs">
+                              คลิกเลือกรายการแจ้งซ่อมจากตารางด้านซ้าย เพื่อดูข้อมูลพิกัด อาการชำรุด ลิงก์รูปภาพถ่ายจริง และหมายเหตุโดยละเอียด
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                {/* Map Visualizer (Moved to the very bottom) */}
+                <div className="mt-6">
                   <MapVisualizer
                     records={records}
                     onSelectRecord={handleRecordSelect}
@@ -640,18 +566,6 @@ export default function App() {
                     tableName={sheetName}
                   />
                 </div>
-
-                {/* Modal Popup for Maintenance Record Detail */}
-                <AnimatePresence>
-                  {selectedRecord && (
-                    <RecordDetail
-                      record={selectedRecord}
-                      appName={appSheetAppName}
-                      tableName={sheetName}
-                      onClose={() => setSelectedRecord(null)}
-                    />
-                  )}
-                </AnimatePresence>
               </>
             )}
 

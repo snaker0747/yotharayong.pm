@@ -69,7 +69,7 @@ export default function DashboardStats({ records, onStatusSelect, selectedStatus
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3.5 md:gap-4 mb-4 sm:mb-6 bg-slate-900/40 p-2.5 sm:p-4 border border-slate-700/60 rounded-xl" id="stats-dashboard-grid">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 bg-slate-900/40 p-4 border border-slate-700/60 rounded-xl" id="stats-dashboard-grid">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         const isActive = selectedStatus === card.id;
@@ -82,8 +82,8 @@ export default function DashboardStats({ records, onStatusSelect, selectedStatus
             transition={{ duration: 0.3, delay: idx * 0.05 }}
             onClick={() => onStatusSelect(card.id)}
             id={`stat-card-${card.id || 'all'}`}
-            className={`flex flex-col justify-between p-3 sm:p-4 rounded-lg border text-left transition-all duration-300 relative overflow-hidden group cursor-pointer ${card.borderColor} ${
-              card.id === null ? 'col-span-2 sm:col-span-1' : 'col-span-1'
+            className={`flex flex-col justify-between p-4 rounded-lg border text-left transition-all duration-300 relative overflow-hidden group cursor-pointer ${card.borderColor} ${
+              card.id === null ? 'col-span-2 md:col-span-1' : 'col-span-1'
             } ${
               isActive ? card.activeColor : card.color
             }`}
@@ -91,22 +91,22 @@ export default function DashboardStats({ records, onStatusSelect, selectedStatus
             {/* Ambient Background Glow on Hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             
-            <div className="flex justify-between items-start mb-1.5 sm:mb-2 gap-1">
-              <div className="min-w-0 flex-1">
-                <h3 className="text-xs sm:text-sm md:text-base font-bold font-sans text-neutral-200 leading-tight truncate">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="text-base font-bold font-sans text-neutral-200 leading-tight">
                   {card.title}
                 </h3>
-                <p className="text-[9px] sm:text-[10px] md:text-xs font-semibold font-mono text-neutral-400 tracking-wider uppercase mt-0.5 sm:mt-1 truncate">
+                <p className="text-xs font-semibold font-mono text-neutral-400 tracking-wider uppercase mt-1">
                   {card.subTitle}
                 </p>
               </div>
-              <div className="p-1.5 sm:p-2 rounded bg-slate-900/60 group-hover:scale-110 transition-transform duration-300 shrink-0">
-                <Icon size={16} className="sm:w-[18px] sm:h-[18px] stroke-[2.2]" />
+              <div className="p-2 rounded bg-slate-900/60 group-hover:scale-110 transition-transform duration-300">
+                <Icon size={18} className="stroke-[2.2]" />
               </div>
             </div>
             
-            <div className="mt-2 sm:mt-4 flex items-baseline justify-between">
-              <span className="text-2xl sm:text-3xl md:text-4xl font-mono font-extrabold tracking-tight">
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-4xl font-mono font-extrabold tracking-tight">
                 {card.count}
               </span>
             </div>

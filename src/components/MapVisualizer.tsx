@@ -12,88 +12,55 @@ interface MapProps {
   theme: 'light' | 'dark';
   appName?: string;
   tableName?: string;
-  onClose?: () => void;
 }
 
 // Custom Marker creator using Leaflet divIcon to bypass default image path issues 
-// and style the markers dynamically using prominent, high-contrast pins matching state colors
+// and style the markers dynamically using standard css matching our state colors!
 const createCustomMarker = (status: string, isSelected: boolean) => {
-  let color = '#ef4444'; // Pending: vibrant red-500
-  let ringColor = 'rgba(239, 68, 68, 0.45)';
-  if (status === 'Completed') {
-    color = '#10b981'; // Completed: vibrant emerald-500
-    ringColor = 'rgba(16, 185, 129, 0.45)';
-  } else if (status === 'In Progress') {
-    color = '#2563eb'; // In Progress: vibrant blue-600
-    ringColor = 'rgba(37, 99, 235, 0.45)';
-  } else if (status === 'Waiting for Parts') {
-    color = '#f59e0b'; // Waiting for parts: vibrant amber-500
-    ringColor = 'rgba(245, 158, 11, 0.45)';
-  }
+  let color = '#f43f5e'; // Pending: rose-500
+  if (status === 'Completed') color = '#10b981'; // Completed: emerald-500
+  else if (status === 'In Progress') color = '#3b82f6'; // In Progress: blue-500
+  else if (status === 'Waiting for Parts') color = '#f97316'; // Waiting for parts: orange-500
 
-  const width = isSelected ? 34 : 26;
-  const height = isSelected ? 42 : 32;
+  const size = isSelected ? 34 : 24;
+  const dotSize = isSelected ? 16 : 10;
 
   const html = `
-    <div style="
-      position: relative; 
-      width: ${width}px; 
-      height: ${height}px; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
-      cursor: pointer;
-    ">
+    <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
       ${isSelected ? `
         <div style="
           position: absolute;
-          bottom: -4px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 28px;
-          height: 28px;
+          width: 100%;
+          height: 100%;
           border-radius: 50%;
-          background-color: ${ringColor};
-          animation: ping-pulse 1.5s infinite ease-in-out;
-          z-index: 0;
-          pointer-events: none;
+          background-color: ${color};
+          opacity: 0.4;
+          animation: ping-pulse 1.6s infinite ease-in-out;
         "></div>
       ` : ''}
-      <svg 
-        width="${width}" 
-        height="${height}" 
-        viewBox="0 0 28 34" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg" 
-        style="position: relative; z-index: 1; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);"
-      >
-        <!-- Outer Pin Teardrop with crisp white border -->
-        <path 
-          d="M14 1C6.82 1 1 6.82 1 14C1 22.8 14 33 14 33C14 33 27 22.8 27 14C27 6.82 21.18 1 14 1Z" 
-          fill="${color}" 
-          stroke="#FFFFFF" 
-          stroke-width="2.6" 
-          stroke-linejoin="round"
-        />
-        <!-- Inner White Core for high contrast -->
-        <circle cx="14" cy="13.5" r="5.8" fill="#FFFFFF" />
-        <!-- Center Status Dot -->
-        <circle cx="14" cy="13.5" r="3.2" fill="${color}" />
-      </svg>
+      <div style="
+        position: relative;
+        width: ${dotSize}px;
+        height: ${dotSize}px;
+        border-radius: 50%;
+        background-color: ${color};
+        border: 2.5px solid #ffffff;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      "></div>
     </div>
   `;
 
   return L.divIcon({
     html,
     className: 'custom-leaflet-marker-wrapper',
-    iconSize: [width, height],
-    iconAnchor: [width / 2, height],
-    popupAnchor: [0, -height - 2]
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    popupAnchor: [0, -size / 2]
   });
 };
 
-export default function MapVisualizer({ records, onSelectRecord, selectedRecord, theme, appName = '', tableName = '', onClose }: MapProps) {
+export default function MapVisualizer({ records, onSelectRecord, selectedRecord, theme, appName = '', tableName = '' }: MapProps) {
   const [viewMode, setViewMode] = useState<'osm' | 'radar'>('osm');
   const [isPopupMinimized, setIsPopupMinimized] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -101,33 +68,12 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
-  // Close on Escape key press
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && onClose) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
   // Reset popup minimized status when a record is selected
   useEffect(() => {
     if (selectedRecord) {
       setIsPopupMinimized(false);
     }
   }, [selectedRecord]);
-
-  // Invalidate map size to prevent grey tiles when modal opens
-  useEffect(() => {
-    if (mapRef.current) {
-      const timer = setTimeout(() => {
-        mapRef.current?.invalidateSize();
-      }, 150);
-      return () => clearTimeout(timer);
-    }
-  }, [viewMode]);
 
   // Look up Soi / alley name from raw sheet values
   const getSoiValue = (record: MaintenanceRecord) => {
@@ -211,12 +157,12 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       case 'Completed':
         return '#10b981'; // emerald-500
       case 'In Progress':
-        return '#2563eb'; // vibrant blue-600
+        return '#3b82f6'; // blue-500
       case 'Waiting for Parts':
-        return '#f59e0b'; // amber-500
+        return '#f97316'; // orange-500
       case 'Pending':
       default:
-        return '#ef4444'; // red-500
+        return '#f43f5e'; // rose-500
     }
   };
 
@@ -252,12 +198,13 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       tileLayerRef.current.remove();
     }
 
-    // Standard OpenStreetMap tiles (free, no API key required)
-    const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    // CartoDB Voyager tiles are extremely detailed and crisp.
+    // We use them for both themes, but apply a high-contrast CSS inversion filter in dark mode 
+    // to keep every street, label, and detail perfectly visible and sharp.
+    const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
-      maxZoom: 19,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      maxZoom: 19
     }).addTo(mapRef.current);
 
     // Clean up map on component unmount
@@ -302,7 +249,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
 
       // Bind informative popup
       marker.bindPopup(`
-        <div style="font-family: 'Prompt', sans-serif; font-size: 11px; line-height: 1.4; color: ${theme === 'light' ? '#0f172a' : '#f1f5f9'}; padding: 2px; width: 170px;">
+        <div style="font-family: 'FC Vision Superfamily', 'FC Vision', 'Prompt', sans-serif; font-size: 11px; line-height: 1.4; color: ${theme === 'light' ? '#0f172a' : '#f1f5f9'}; padding: 2px; width: 170px;">
           <strong style="color: #3b82f6; font-size: 12px; font-family: monospace; display: block; border-bottom: 1px solid #475569; padding-bottom: 3px; margin-bottom: 5px;">📍 ${record.poleId}</strong>
           <div style="margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>ตำแหน่ง:</strong> ${record.location || 'ไม่ระบุ'}</div>
           <div style="margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>อาการ:</strong> ${record.issue || 'ไม่ระบุ'}</div>
@@ -317,23 +264,6 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       markersLayerRef.current?.addLayer(marker);
     });
   }, [viewMode, mappedRecords, selectedRecord, onSelectRecord, theme, appName, tableName]);
-
-  // Handle ResizeObserver to invalidate Leaflet map size on screen change / layout change
-  useEffect(() => {
-    if (!mapContainerRef.current || !mapRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    });
-
-    resizeObserver.observe(mapContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [viewMode]);
 
   // Handle flyTo when selectedRecord changes
   useEffect(() => {
@@ -391,19 +321,12 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
   const paddedLngSpan = lngMaxPadded - lngMinPadded;
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700 rounded-xl overflow-hidden flex flex-col h-[440px] sm:h-[480px] md:h-[520px] relative shadow-lg" id="map-visualizer-container">
+    <div className="bg-[#1E293B] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-[340px] relative shadow-lg" id="map-visualizer-container">
       {/* CSS injection for leaflet custom animations and dark mode tile adjustments */}
       <style>{`
         @keyframes ping-pulse {
           0% { transform: scale(0.6); opacity: 1; }
-          100% { transform: scale(1.8); opacity: 0; }
-        }
-        .custom-leaflet-marker-wrapper {
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .custom-leaflet-marker-wrapper:hover {
-          transform: translateY(-4px) scale(1.18);
-          z-index: 1000 !important;
+          100% { transform: scale(1.6); opacity: 0; }
         }
         .custom-map-popup .leaflet-popup-content-wrapper {
           background-color: ${theme === 'light' ? '#ffffff' : '#0f172a'} !important;
@@ -418,45 +341,34 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       `}</style>
 
       {/* Header controls */}
-      <div className="flex justify-between items-center px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900/90 border-b border-slate-700 z-10 select-none gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-          <Compass className="text-blue-500 animate-spin-slow shrink-0" size={16} />
-          <span className="text-xs sm:text-sm md:text-base font-semibold text-slate-100 font-sans truncate">
+      <div className="flex justify-between items-center px-4 py-3 bg-slate-900/40 border-b border-slate-700 z-10 select-none">
+        <div className="flex items-center gap-2">
+          <Compass className="text-blue-500 animate-spin-slow" size={16} />
+          <span className="text-base font-semibold text-slate-100 font-sans">
             พิกัดแผนที่ OpenStreetMap ({mappedRecords.length} จุด)
           </span>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex gap-1">
           <button
             onClick={() => setViewMode('osm')}
-            className={`px-2.5 py-1 text-[10px] sm:text-xs font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'osm'
                 ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
-            แผนที่ (OSM)
+            แผนที่ถนน (OSM)
           </button>
           <button
             onClick={() => setViewMode('radar')}
-            className={`px-2.5 py-1 text-[10px] sm:text-xs font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'radar'
                 ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
-            เรดาร์
+            เรดาร์ (GRID)
           </button>
-
-          {onClose && (
-            <button
-              onClick={onClose}
-              type="button"
-              className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0 ml-1"
-              title="ปิดแผนที่ (ESC)"
-            >
-              <X size={16} />
-            </button>
-          )}
         </div>
       </div>
 
@@ -568,7 +480,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 20, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className={`absolute bottom-2 left-2 right-2 sm:left-auto sm:right-2 sm:w-[320px] max-w-full backdrop-blur-md rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2 transition-all duration-300 ${
+              className={`absolute bottom-2 right-2 w-[280px] sm:w-[320px] max-w-[95%] backdrop-blur-md rounded-xl p-3 z-30 shadow-2xl flex flex-col gap-2 transition-all duration-300 ${
                 theme === 'light'
                   ? 'bg-white/95 border border-slate-200 text-slate-800 shadow-slate-300/40'
                   : 'bg-slate-900/95 border border-slate-700/80 text-slate-100'
@@ -677,29 +589,21 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
                 </div>
               </div>
 
-              {/* Navigation and Detail Action Footer */}
-              <div className={`flex items-center gap-1.5 mt-0.5 border-t pt-1.5 ${theme === 'light' ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                {selectedRecord.lat && (
+              {/* Navigation Action Footer */}
+              {selectedRecord.lat && (
+                <div className={`flex justify-end mt-0.5 border-t pt-1.5 ${theme === 'light' ? 'border-slate-100' : 'border-slate-800/60'}`}>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${selectedRecord.lat},${selectedRecord.lng}`}
                     target="_blank"
                     referrerPolicy="no-referrer"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center gap-1 px-2 py-1 rounded bg-blue-600 text-white font-bold text-[9px] hover:bg-blue-500 transition-colors cursor-pointer shadow-sm justify-center"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded bg-blue-600 text-white font-bold text-[9px] hover:bg-blue-500 transition-colors cursor-pointer shadow-sm w-full justify-center"
                   >
                     <ExternalLink size={9} />
-                    เปิดแผนที่นำทาง
+                    เปิดแผนที่นำทาง (Google Maps)
                   </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => onSelectRecord(selectedRecord)}
-                  className="flex-1 flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 font-bold text-[9px] border border-blue-500/30 transition-colors cursor-pointer shadow-sm justify-center"
-                >
-                  <Eye size={9} />
-                  ดูรายละเอียดเต็ม
-                </button>
-              </div>
+                </div>
+              )}
             </motion.div>
           )
         )}

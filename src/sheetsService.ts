@@ -184,16 +184,16 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
 
       switch (key) {
         case 'timestamp':
-          timestamp = value;
+          if (value && (!timestamp || timestamp.length < value.length)) timestamp = value;
           break;
         case 'poleId':
-          poleId = value;
+          if (value && !poleId) poleId = value;
           break;
         case 'issue':
-          issue = value;
+          if (value && !issue) issue = value;
           break;
         case 'location':
-          location = value;
+          if (value && !location) location = value;
           break;
         case 'lat':
           if (value) {
@@ -208,29 +208,31 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
           }
           break;
         case 'coordinates':
-          const coords = parseCoordinates(value);
-          if (coords.lat !== null && coords.lng !== null) {
-            lat = coords.lat;
-            lng = coords.lng;
+          if (value) {
+            const coords = parseCoordinates(value);
+            if (coords.lat !== null && coords.lng !== null) {
+              lat = coords.lat;
+              lng = coords.lng;
+            }
           }
           break;
         case 'status':
-          statusVal = value;
+          if (value && !statusVal) statusVal = value;
           break;
         case 'technician':
-          technician = value;
+          if (value && !technician) technician = value;
           break;
         case 'fixedDate':
-          fixedDate = value;
+          if (value && !fixedDate) fixedDate = value;
           break;
         case 'imageUrl':
-          imageUrl = value;
+          if (value && !imageUrl) imageUrl = value;
           break;
         case 'remarks':
-          remarks = value;
+          if (value && (!remarks || remarks === '-')) remarks = value;
           break;
         case 'repairAction':
-          repairAction = value;
+          if (value && (!repairAction || repairAction.length < value.length)) repairAction = value;
           break;
       }
     });
@@ -280,67 +282,23 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
   return records.reverse();
 }
 
-function fetchGoogleSheetJSONP(spreadsheetId: string, sheetName: string): Promise<string[][]> {
-  return new Promise((resolve, reject) => {
-    const callbackName = `gvizCallback_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-    const script = document.createElement('script');
-    
-    // Fallback: If sheet name is exactly our default, we use GID 1789715931 since it might be required
-    const gidParam = sheetName === 'การซ่อมบำรุง' ? 'gid=1789715931' : `sheet=${encodeURIComponent(sheetName)}`;
-    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=responseHandler:${callbackName}&${gidParam}`;
-    
-    // Timeout in case the request never finishes
-    const timeoutId = setTimeout(() => {
-      cleanup();
-      reject(new Error('การดึงข้อมูลใช้เวลานานเกินไป โปรดตรวจสอบอินเทอร์เน็ตหรือ Spreadsheet ID'));
-    }, 15000);
-
-    const cleanup = () => {
-      clearTimeout(timeoutId);
-      delete (window as any)[callbackName];
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-
-    (window as any)[callbackName] = (data: any) => {
-      cleanup();
-      try {
-        if (!data || !data.table || !data.table.cols) {
-          throw new Error('รูปแบบข้อมูล JSON จาก Google Sheets ไม่ถูกต้อง');
-        }
-        const headers = data.table.cols.map((c: any) => c ? String(c.label || '') : '');
-        const rows = data.table.rows.map((r: any) => {
-          return r.c.map((cell: any) => {
-            if (!cell) return '';
-            return cell.f !== undefined && cell.f !== null ? String(cell.f) : (cell.v !== undefined && cell.v !== null ? String(cell.v) : '');
-          });
-        });
-        
-        resolve([headers, ...rows]);
-      } catch (err) {
-        reject(err);
-      }
-    };
-
-    script.onerror = () => {
-      cleanup();
-      reject(new Error('ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบว่าชีตตั้งค่าแชร์เป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" (Anyone with the link can view) แล้วหรือไม่'));
-    };
-
-    script.src = url;
-    document.head.appendChild(script);
-  });
-}
-
 export async function fetchSpreadsheetMetadata(spreadsheetId: string, accessToken: string | null): Promise<SheetMetadata> {
   if (!accessToken || accessToken === 'mock-rayong-token-888') {
-    // Return mock metadata immediately, we'll fetch data via JSONP directly.
-    return {
-      id: spreadsheetId,
-      title: 'ฐานข้อมูลเสาไฟฟ้าอัจฉริยะ (Public Link)',
-      sheetNames: ['การซ่อมบำรุง', 'Form Responses 1', 'Sheet1', 'ชีต1', 'Data'],
-    };
+    try {
+      const proxyUrl = `/api/sheets-proxy?spreadsheetId=${spreadsheetId}&t=${Date.now()}`;
+      const response = await fetch(proxyUrl);
+      if (response.ok) {
+        return {
+          id: spreadsheetId,
+          title: 'ฐานข้อมูลเสาไฟฟ้าอัจฉริยะ (Public Link)',
+          sheetNames: ['การซ่อมบำรุง', 'Form Responses 1', 'Sheet1', 'ชีต1', 'Data'],
+        };
+      } else {
+        throw new Error(`Spreadsheet is private or invalid ID: ${response.status}`);
+      }
+    } catch (e: any) {
+      throw new Error(`ไม่สามารถเชื่อมต่อชีตได้: โปรดตรวจสอบว่าได้ตั้งค่าชีตเป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" (Anyone with the link can view) หรือเช็ค Spreadsheet ID อีกครั้ง (${e.message})`);
+    }
   }
 
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`;
@@ -351,12 +309,20 @@ export async function fetchSpreadsheetMetadata(spreadsheetId: string, accessToke
   });
 
   if (!response.ok) {
-    // If token fails, fallback to basic metadata assuming it's public
-    return {
-      id: spreadsheetId,
-      title: 'ฐานข้อมูลเสาไฟฟ้าอัจฉริยะ (Public Link)',
-      sheetNames: ['การซ่อมบำรุง', 'Form Responses 1', 'Sheet1', 'ชีต1', 'Data'],
-    };
+    try {
+      const publicUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&t=${Date.now()}`;
+      const publicResponse = await fetch(publicUrl);
+      if (publicResponse.ok) {
+        return {
+          id: spreadsheetId,
+          title: 'ฐานข้อมูลเสาไฟฟ้าอัจฉริยะ (Public Link)',
+          sheetNames: ['การซ่อมบำรุง', 'Form Responses 1', 'Sheet1', 'ชีต1', 'Data'],
+        };
+      }
+    } catch (e) {}
+
+    const errText = await response.text();
+    throw new Error(`Failed to fetch spreadsheet metadata: ${response.status} ${errText}`);
   }
 
   const data = await response.json();
@@ -373,16 +339,21 @@ export async function fetchSheetRecords(
   sheetName: string,
   accessToken: string | null
 ): Promise<MaintenanceRecord[]> {
-  // Try fetching public sheet via JSONP first if token is empty or mock
+  // Try fetching public CSV first if token is empty or mock
   if (!accessToken || accessToken === 'mock-rayong-token-888') {
     try {
-      const rows = await fetchGoogleSheetJSONP(spreadsheetId, sheetName);
-      if (rows.length > 0) {
-        return parseRowsToRecords(rows);
+      const gidParam = sheetName === 'การซ่อมบำรุง' ? 'gid=1789715931' : `sheet=${encodeURIComponent(sheetName)}`;
+      const proxyUrl = `/api/sheets-proxy?spreadsheetId=${spreadsheetId}&${gidParam}&t=${Date.now()}`;
+      const response = await fetch(proxyUrl);
+      if (response.ok) {
+        const text = await response.text();
+        const rows = parseCSV(text);
+        if (rows.length > 0) {
+          return parseRowsToRecords(rows);
+        }
       }
-    } catch (publicErr: any) {
-      console.warn('Failed to fetch public sheet JSONP, fallback to mock:', publicErr);
-      throw new Error(`ไม่สามารถโหลดข้อมูลจากชีตได้ โปรดตั้งค่าเป็น สาธารณะ (Public) - ${publicErr.message}`);
+    } catch (publicErr) {
+      console.warn('Failed to fetch public sheet CSV, fallback to token or mock:', publicErr);
     }
   }
 
@@ -400,19 +371,27 @@ export async function fetchSheetRecords(
       const rows: string[][] = data.values || [];
       return parseRowsToRecords(rows);
     } else {
-      // Backup fallback to public JSONP
+      // Backup fallback to public CSV
       try {
-        const rows = await fetchGoogleSheetJSONP(spreadsheetId, sheetName);
-        if (rows.length > 0) {
-          return parseRowsToRecords(rows);
+        const gidParam = sheetName === 'การซ่อมบำรุง' ? 'gid=1789715931' : `sheet=${encodeURIComponent(sheetName)}`;
+        const proxyUrl = `/api/sheets-proxy?spreadsheetId=${spreadsheetId}&${gidParam}&t=${Date.now()}`;
+        const publicResponse = await fetch(proxyUrl);
+        if (publicResponse.ok) {
+          const text = await publicResponse.text();
+          const rows = parseCSV(text);
+          if (rows.length > 0) {
+            return parseRowsToRecords(rows);
+          }
         }
-      } catch (publicErr) {
-        console.warn('Fallback JSONP also failed');
+      } catch (backupErr) {
+        console.error('Backup public fetch failed:', backupErr);
       }
+      
       const errText = await response.text();
-      throw new Error(`Failed to fetch records: ${response.status} ${errText}`);
+      throw new Error(`Failed to fetch sheet records: ${response.status} ${errText}`);
     }
   }
 
-  return [];
+  // If both failed and we don't have token, throw a descriptive error
+  throw new Error('ไม่สามารถเข้าถึงข้อมูลสเปรดชีตได้ กรุณาแชร์สเปรดชีตเป็นแบบ "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือเชื่อมต่อผ่านบัญชี Google ของคุณ');
 }
