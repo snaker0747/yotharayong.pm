@@ -338,14 +338,15 @@ export default function RecordsList({
                       onClick={() => {
                         onSelectRecord(record);
                       }}
-                      className={`cursor-pointer hover:bg-slate-800/40 transition-colors ${
+                      title="คลิกเพื่อดูรายละเอียดรายงานการซ่อมบำรุง"
+                      className={`cursor-pointer hover:bg-slate-800/60 transition-colors ${
                         isSelected ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-300'
                       }`}
                     >
                       <td className="p-3 font-mono text-slate-500 text-xs">#{record.id}</td>
-                      <td className="p-3 font-mono font-bold text-slate-200">{record.poleId}</td>
-                      <td className="p-3 max-w-[180px] truncate leading-normal">{record.issue}</td>
-                      <td className="p-3 max-w-[180px] truncate text-slate-400 leading-normal">{record.location}</td>
+                      <td className="p-3 font-mono font-bold text-slate-100">{record.poleId}</td>
+                      <td className="p-3 max-w-[320px] truncate leading-normal" title={record.issue}>{record.issue}</td>
+                      <td className="p-3 max-w-[280px] truncate text-slate-400 leading-normal" title={record.location}>{record.location}</td>
                       <td className="p-3 text-slate-300 leading-normal">{record.technician}</td>
                       <td className="p-3">{getStatusBadge(record.status, record.statusThai)}</td>
                       <td className="p-3 text-right">

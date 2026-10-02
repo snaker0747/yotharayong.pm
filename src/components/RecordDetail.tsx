@@ -104,7 +104,7 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
   const locationDisplay = [communityVal, soiVal].filter(v => v && v !== '-').join(' - ') || record.location || 'ไม่ระบุสถานที่';
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl overflow-hidden flex flex-col shadow-2xl relative" id="record-detail-panel">
+    <div className="bg-[#1E293B] flex flex-col h-full max-h-[92vh] overflow-hidden" id="record-detail-panel">
       {/* Top Banner with Actions */}
       <div className="flex justify-between items-center px-4 sm:px-5 py-3.5 bg-slate-900/80 border-b border-slate-700/80 gap-2 flex-wrap">
         <div className="flex items-center gap-2.5">

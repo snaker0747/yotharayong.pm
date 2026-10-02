@@ -757,7 +757,7 @@ export default function App() {
               )}
 
               {activeSection === 'records' && (
-                /* PAGE 2: รายการแจ้งซ่อม (รายการรับเรื่องแจ้งซ่อมทั้งหมด + รายละเอียดรายงานการซ่อมบำรุง) */
+                /* PAGE 2: รายการแจ้งซ่อม (รายการรับเรื่องแจ้งซ่อมทั้งหมด - เต็มพื้นที่หน้าเว็บเพื่อประหยัดเนื้อที่) */
                 <motion.div
                   key="view-records"
                   initial={{ opacity: 0, y: 10 }}
@@ -767,74 +767,43 @@ export default function App() {
                   className="space-y-6"
                   id="section-records"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    {/* Left Column (7/12 width) - Search & Records list */}
-                    <div className="lg:col-span-7 space-y-6">
-                      <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
-                        <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
-                          <div className="flex items-center gap-2">
-                            <ClipboardList size={18} className="text-emerald-400" />
-                            <h4 className="text-base font-bold text-slate-100 font-sans">
-                              รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
-                            </h4>
-                          </div>
-                          {selectedStatusFilter && (
-                            <button
-                              onClick={() => setSelectedStatusFilter(null)}
-                              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium underline cursor-pointer"
-                            >
-                              แสดงทั้งหมด (ล้างตัวกรอง: {selectedStatusFilter})
-                            </button>
-                          )}
+                  <div className="w-full bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4 border-b border-slate-700/80 pb-3.5 flex-wrap gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                          <ClipboardList size={20} />
                         </div>
-                        <RecordsList
-                          records={records}
-                          onSelectRecord={handleRecordSelect}
-                          onEditRecord={handleOpenEdit}
-                          selectedRecord={selectedRecord}
-                          selectedStatusFilter={selectedStatusFilter}
-                          onStatusFilterChange={setSelectedStatusFilter}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Right Column (5/12 width) - Detail Preview (Sticky on tablet/desktop) */}
-                    <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
-                      <AnimatePresence mode="wait">
-                        {selectedRecord ? (
-                          <motion.div
-                            key={selectedRecord.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <RecordDetail
-                              record={selectedRecord}
-                              appName={appSheetAppName}
-                              tableName={sheetName}
-                              onEdit={handleOpenEdit}
-                              onDelete={handleDeleteRecord}
-                              onClose={() => setSelectedRecord(null)}
-                            />
-                          </motion.div>
-                        ) : (
-                          <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 sm:p-8 text-center text-slate-400 min-h-[260px] flex flex-col items-center justify-center gap-3.5 font-sans shadow-sm">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                              <Lightbulb size={24} className="text-amber-400" />
-                            </div>
-                            <div className="space-y-1.5">
-                              <h5 className="text-sm sm:text-base font-bold text-slate-200">
-                                รายละเอียดรายงานการซ่อมบำรุง
-                              </h5>
-                              <p className="text-xs text-slate-400 max-w-xs leading-relaxed mx-auto">
-                                คลิกเลือกรายการแจ้งซ่อมจากตารางเพื่อดูรายละเอียดภาพถ่าย พิกัด GPS อาการเสีย หรือกดปุ่ม "แก้ไข" เพื่อเปิดหน้าต่างแก้ไขข้อมูล
-                              </p>
-                            </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-base font-bold text-slate-100 font-sans">
+                              รายการรับเรื่องแจ้งซ่อมทั้งหมด
+                            </h4>
+                            <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-semibold">
+                              ทั้งหมด {records.length} งาน
+                            </span>
                           </div>
-                        )}
-                      </AnimatePresence>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            คลิกที่แถวรายการเพื่อเปิดดูรายละเอียดรายงานการซ่อมบำรุง และกดแก้ไขข้อมูล
+                          </p>
+                        </div>
+                      </div>
+                      {selectedStatusFilter && (
+                        <button
+                          onClick={() => setSelectedStatusFilter(null)}
+                          className="text-xs text-emerald-400 hover:text-emerald-300 font-medium underline cursor-pointer"
+                        >
+                          แสดงทั้งหมด (ล้างตัวกรอง: {selectedStatusFilter})
+                        </button>
+                      )}
                     </div>
+                    <RecordsList
+                      records={records}
+                      onSelectRecord={handleRecordSelect}
+                      onEditRecord={handleOpenEdit}
+                      selectedRecord={selectedRecord}
+                      selectedStatusFilter={selectedStatusFilter}
+                      onStatusFilterChange={setSelectedStatusFilter}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -867,6 +836,41 @@ export default function App() {
           ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง © 2569 | เชื่อมโยงข้อมูลผ่าน Google Sheets & Google Apps Script
         </footer>
       </div>
+
+      {/* Detail Record Popup Modal (คลิกในรายการ แล้วขึ้น popup รายละเอียดรายงานการซ่อมบำรุง เพื่อประหยัดเนื้อที่เว็บ) */}
+      <AnimatePresence>
+        {activeSection === 'records' && selectedRecord && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedRecord(null)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+
+            {/* Modal Dialog Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-2xl bg-[#1E293B] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-10 my-auto max-h-[92vh] flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <RecordDetail
+                record={selectedRecord}
+                appName={appSheetAppName}
+                tableName={sheetName}
+                onEdit={handleOpenEdit}
+                onDelete={handleDeleteRecord}
+                onClose={() => setSelectedRecord(null)}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Record Popup Modal */}
       <EditRecordModal
