@@ -568,6 +568,56 @@ export async function syncRecordToGoogleSheet(
   }
 }
 
+/**
+ * ลบรายการงานซ่อมบำรุงออกจาก Google Sheets ตาม ID ประวัติ
+ */
+export async function deleteRecordFromGoogleSheet(
+  historyId: string,
+  sheetName: string = 'การซ่อมบำรุง',
+  appsScriptUrl?: string,
+  rowNumber?: number | null
+): Promise<{ success: boolean; message?: string }> {
+  const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
+
+  const payload = {
+    appsScriptUrl: url,
+    action: 'delete',
+    historyId: historyId.trim(),
+    rowId: historyId.trim(),
+    rowNumber: rowNumber || null,
+    sheetName,
+  };
+
+  try {
+    const res = await fetch('/api/update-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return { success: true, message: data.result?.message || 'ลบข้อมูลออกจาก Google Sheet เรียบร้อยแล้ว' };
+      }
+    }
+  } catch (err: any) {
+    console.warn('Vercel proxy failed, trying direct fetch:', err);
+  }
+
+  // Fallback direct
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    return { success: true, message: 'ส่งคำสั่งลบข้อมูลไปยัง Google Sheet เรียบร้อยแล้ว' };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+}
+
 // --------------------------------------------------------------------------
 // Community & Soi Options from Google Sheet (gid=89735667)
 // --------------------------------------------------------------------------

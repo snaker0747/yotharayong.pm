@@ -71,6 +71,36 @@ function doPost(e) {
     
     var targetRow = -1;
     
+    // 0. ถ้าคำสั่งเป็น 'delete' ให้ค้นหาตาม "ID ประวัติ" แล้วลบแถวนั้นออกจากชีท
+    if (action === 'delete') {
+      var rowToDelete = -1;
+      if (historyIdColIdx !== -1 && historyId) {
+        for (var r = 1; r < values.length; r++) {
+          if (values[r][historyIdColIdx].toString().trim() === historyId) {
+            rowToDelete = r + 1;
+            break;
+          }
+        }
+      }
+      if (rowToDelete === -1 && rowNumber && rowNumber >= 2 && rowNumber <= values.length) {
+        rowToDelete = rowNumber;
+      }
+      
+      if (rowToDelete !== -1) {
+        sheet.deleteRow(rowToDelete);
+        return responseJson({
+          success: true,
+          message: 'ลบแถวที่ ' + rowToDelete + ' (ID: ' + historyId + ') ออกจาก Google Sheet สำเร็จแล้ว',
+          deletedRow: rowToDelete
+        });
+      } else {
+        return responseJson({
+          success: false,
+          error: 'ไม่พบรายการที่ต้องการลบใน Google Sheet (ID: ' + historyId + ')'
+        });
+      }
+    }
+
     // 1. ถ้าคำสั่งเป็น 'insert' หรือ 'append' ให้เพิ่มแถวใหม่ต่อท้ายเสมอ (ห้ามทับแถวเดิมเด็ดขาด)
     if (action === 'insert' || action === 'append') {
       targetRow = values.length + 1;

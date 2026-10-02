@@ -4,7 +4,7 @@ import {
   initAuth, googleSignIn, logout, getAccessToken 
 } from './auth';
 import { 
-  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
+  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, deleteRecordFromGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
 import MapVisualizer from './components/MapVisualizer';
@@ -278,6 +278,13 @@ export default function App() {
     // 3. Sync to Google Sheets
     const result = await syncRecordToGoogleSheet(updatedRecord, sheetName, undefined, action);
     return result;
+  };
+
+  const handleDeleteRecord = async (historyId: string) => {
+    // 1. Optimistic update local state immediately
+    setRecords(prev => prev.filter(r => (r.raw?.['ID ประวัติ'] || r.id) !== historyId));
+    // 2. Sync deletion to Google Sheet
+    return await deleteRecordFromGoogleSheet(historyId, sheetName);
   };
 
   if (!isCustomLoggedIn) {
@@ -806,6 +813,7 @@ export default function App() {
                     records={records}
                     theme={theme}
                     onSyncNewRecord={handleSaveRecord}
+                    onDeleteRecord={handleDeleteRecord}
                   />
                 </motion.div>
               )}

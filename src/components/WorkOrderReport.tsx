@@ -40,6 +40,7 @@ export interface WorkOrderItem {
 interface WorkOrderReportProps {
   records: MaintenanceRecord[];
   onSyncNewRecord?: (record: MaintenanceRecord, action?: 'insert' | 'update') => Promise<{ success: boolean; message?: string }>;
+  onDeleteRecord?: (historyId: string) => Promise<{ success: boolean; message?: string }>;
   theme: 'light' | 'dark';
 }
 
@@ -80,7 +81,7 @@ const STATUS_OPTIONS = [
   { val: 'เสร็จสิ้น', label: 'เสร็จสิ้น', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
 ];
 
-export default function WorkOrderReport({ records, onSyncNewRecord, theme }: WorkOrderReportProps) {
+export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteRecord, theme }: WorkOrderReportProps) {
   // Saved work orders in current draft batch
   const [workOrders, setWorkOrders] = useState<WorkOrderItem[]>(() => {
     try {
@@ -365,9 +366,28 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
     setEditingItem(null);
   };
 
-  // Remove item
-  const handleRemoveItem = (id: string) => {
+  // Remove item and sync deletion to Google Sheet
+  const handleRemoveItem = async (id: string) => {
+    const itemToRemove = workOrders.find(item => item.id === id);
+    if (!itemToRemove) return;
+
+    const label = itemToRemove.poleId || itemToRemove.issue || 'รายการนี้';
+    if (!confirm(`ยืนยันลบรายการ "${label}" ออกจากระบบและ Google Sheet หรือไม่?`)) {
+      return;
+    }
+
+    // 1. ลบออกจากตารางในเว็บทันที
     setWorkOrders(prev => prev.filter(item => item.id !== id));
+
+    // 2. ซิงค์ลบแถวใน Google Sheet
+    const targetHistoryId = itemToRemove.historyId || itemToRemove.id;
+    if (onDeleteRecord && targetHistoryId) {
+      try {
+        await onDeleteRecord(targetHistoryId);
+      } catch (err) {
+        console.warn('Failed to delete from Google Sheet:', err);
+      }
+    }
   };
 
   // Clear all
