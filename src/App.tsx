@@ -259,7 +259,7 @@ export default function App() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveRecord = async (updatedRecord: MaintenanceRecord) => {
+  const handleSaveRecord = async (updatedRecord: MaintenanceRecord, action: 'insert' | 'update' = 'insert') => {
     // 1. Optimistic update local state immediately (update if exists, append if new)
     setRecords(prev => {
       const exists = prev.some(r => r.id === updatedRecord.id);
@@ -276,7 +276,7 @@ export default function App() {
     saveRecordOverride(updatedRecord);
 
     // 3. Sync to Google Sheets
-    const result = await syncRecordToGoogleSheet(updatedRecord, sheetName);
+    const result = await syncRecordToGoogleSheet(updatedRecord, sheetName, undefined, action);
     return result;
   };
 

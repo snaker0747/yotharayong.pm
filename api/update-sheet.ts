@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgyxiX20-OzdCThoDgFNnRfqO5LYAPp5GLyup0_WflWBF2GdX4N0ZQhKWW9mKFjz1Ggg/exec';
-    const { appsScriptUrl, rowId, rowNumber, historyId, sheetName, data } = req.body;
+    const { appsScriptUrl, action, rowId, rowNumber, historyId, sheetName, data } = req.body;
     const targetUrl = appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
 
     // Forward to Google Apps Script Web App
@@ -38,8 +38,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        action: action || 'insert',
         rowId: historyId || rowId,
-        rowNumber,
+        rowNumber: action === 'insert' ? null : rowNumber,
         historyId,
         sheetName: sheetName || 'การซ่อมบำรุง',
         data,

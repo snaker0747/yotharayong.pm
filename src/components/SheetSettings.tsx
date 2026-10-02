@@ -17,8 +17,8 @@ interface SettingsProps {
 
 export const APPS_SCRIPT_TEMPLATE = `/**
  * =========================================================================
- * Google Apps Script: ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ เทศบาลนครระยอง
- * สำหรับรับข้อมูลแก้ไขจากหน้าเว็บแดชบอร์ดและบันทึกอัปเดตลง Google Sheets โดยตรง
+ * Google Apps Script: ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ เทศบาลนครระยอง (V2)
+ * สำหรับรับข้อมูลบันทึกงานใหม่ (Insert) และอัปเดตงานเดิม (Update) ลง Google Sheets
  * =========================================================================
  */
 
@@ -33,6 +33,7 @@ function doPost(e) {
     }
     
     var payload = JSON.parse(rawData);
+    var action = (payload.action || 'auto').toString().toLowerCase(); // 'insert' | 'append' | 'update' | 'auto'
     var sheetName = payload.sheetName || 'การซ่อมบำรุง';
     var historyId = (payload.historyId || payload.rowId || '').toString().trim();
     var rowNumber = parseInt(payload.rowNumber, 10);
@@ -44,7 +45,7 @@ function doPost(e) {
     if (!sheet) {
       return responseJson({ 
         success: false, 
-        error: 'ระบบความปลอดภัย: ไม่พบแผ่นงานชื่อ "' + sheetName + '" ระบบปฏิเสธการแก้ไขเพื่อไม่ให้กระทบแท็บงานอื่นในสเปรดชีตนี้' 
+        error: 'ระบบความปลอดภัย: ไม่พบแผ่นงานชื่อ "' + sheetName + '"' 
       });
     }
     
@@ -70,44 +71,36 @@ function doPost(e) {
     
     var targetRow = -1;
     
-    // 1. ค้นหาแถวตาม ID ประวัติ
-    if (historyIdColIdx !== -1 && historyId) {
-      for (var r = 1; r < values.length; r++) {
-        if (values[r][historyIdColIdx].toString().trim() === historyId) {
-          targetRow = r + 1;
-          break;
-        }
-      }
-    }
-    
-    // 2. ตรวจสอบจาก rowNumber ถ้ายังไม่พบ
-    if (targetRow === -1 && rowNumber && rowNumber >= 2 && rowNumber <= values.length) {
-      var rowVals = values[rowNumber - 1];
-      if (poleColIdx !== -1 && data['ID โคมไฟ']) {
-        if (rowVals[poleColIdx].toString().trim() === data['ID โคมไฟ'].toString().trim()) {
-          targetRow = rowNumber;
-        }
-      } else {
-        targetRow = rowNumber;
-      }
-    }
-    
-    // 3. ค้นหาจาก ID โคมไฟ รายการล่าสุด
-    if (targetRow === -1 && poleColIdx !== -1 && data['ID โคมไฟ']) {
-      for (var r = values.length - 1; r >= 1; r--) {
-        if (values[r][poleColIdx].toString().trim() === data['ID โคมไฟ'].toString().trim()) {
-          targetRow = r + 1;
-          break;
-        }
-      }
-    }
-    
-    // ถ้ายังไม่พบแถวเดิม ให้เพิ่มแถวใหม่
-    if (targetRow === -1) {
+    // 1. ถ้าคำสั่งเป็น 'insert' หรือ 'append' ให้เพิ่มแถวใหม่ต่อท้ายเสมอ (ห้ามทับแถวเดิมเด็ดขาด)
+    if (action === 'insert' || action === 'append') {
       targetRow = values.length + 1;
       sheet.insertRowAfter(values.length);
       if (historyIdColIdx !== -1 && historyId) {
         sheet.getRange(targetRow, historyIdColIdx + 1).setValue(historyId);
+      }
+    } else {
+      // 2. ถ้าเป็น 'update' หรือ 'auto': ค้นหาแถวที่จะอัปเดตตาม "ID ประวัติ" เท่านั้น
+      if (historyIdColIdx !== -1 && historyId) {
+        for (var r = 1; r < values.length; r++) {
+          if (values[r][historyIdColIdx].toString().trim() === historyId) {
+            targetRow = r + 1;
+            break;
+          }
+        }
+      }
+      
+      // 3. ถ้าไม่พบจาก ID ประวัติ และมีการระบุ rowNumber ที่ถูกต้อง
+      if (targetRow === -1 && rowNumber && rowNumber >= 2 && rowNumber <= values.length) {
+        targetRow = rowNumber;
+      }
+      
+      // 4. ถ้ายังไม่พบแถวเดิม ให้เพิ่มแถวใหม่ต่อท้ายเสมอ (Append)
+      if (targetRow === -1) {
+        targetRow = values.length + 1;
+        sheet.insertRowAfter(values.length);
+        if (historyIdColIdx !== -1 && historyId) {
+          sheet.getRange(targetRow, historyIdColIdx + 1).setValue(historyId);
+        }
       }
     }
     
@@ -123,8 +116,9 @@ function doPost(e) {
     
     return responseJson({
       success: true,
-      message: 'บันทึกข้อมูลลง Google Sheet แถวที่ ' + targetRow + ' สำเร็จแล้ว',
+      message: 'บันทึกข้อมูลลง Google Sheet แถวที่ ' + targetRow + ' (' + (action === 'insert' ? 'เพิ่มแถวใหม่' : 'อัปเดตข้อมูล') + ') สำเร็จแล้ว',
       row: targetRow,
+      action: action,
       updatedColumns: updatedColumns
     });
     

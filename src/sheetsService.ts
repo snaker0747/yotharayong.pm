@@ -499,7 +499,8 @@ export const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfyc
 export async function syncRecordToGoogleSheet(
   record: MaintenanceRecord,
   sheetName: string = 'การซ่อมบำรุง',
-  appsScriptUrl?: string
+  appsScriptUrl?: string,
+  action: 'insert' | 'update' | 'auto' = 'insert'
 ): Promise<{ success: boolean; message?: string }> {
   const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
 
@@ -508,23 +509,25 @@ export async function syncRecordToGoogleSheet(
 
   const payload = {
     appsScriptUrl: url,
+    action,
     rowId: historyId || record.id,
-    rowNumber,
+    rowNumber: action === 'insert' ? null : rowNumber,
     historyId,
     sheetName,
     data: {
-      'ID โคมไฟ': record.poleId,
-      'ปัญหาที่พบ': record.issue,
+      'ID ประวัติ': historyId,
+      'ID โคมไฟ': record.poleId && record.poleId !== '-' ? record.poleId : '',
       'ชุมชน/เขต': record.community || '',
       'ซอย': record.soi || '',
-      'สถานะ': record.statusThai,
-      'ชื่อผู้ปฏิบัติงาน': record.technician,
-      'วันที่ซ่อมบำรุงแก้ไข': record.fixedDate,
+      'ปัญหาที่พบ': record.issue || '',
       'การซ่อมบำรุงแก้ไข': record.repairAction || '',
       'รายละเอียดการแก้ไขเพิ่มเติม': record.remarks || '',
-      'หมายเหตุ': record.remarks || '',
-      'พิกัดซ่อมบำรุง': record.lat && record.lng ? `${record.lat}, ${record.lng}` : '',
+      'วันที่ซ่อมบำรุงแก้ไข': record.fixedDate || '',
+      'สถานะ': record.statusThai || record.status || 'รอดำเนินการ',
       'รูปภาพการซ่อมบำรุง': record.imageUrl || '',
+      'พิกัดซ่อมบำรุง': record.lat && record.lng ? `${record.lat}, ${record.lng}` : '',
+      'ชื่อผู้ปฏิบัติงาน': record.technician || '',
+      'หมายเหตุ': record.remarks || '',
     }
   };
 
@@ -551,8 +554,9 @@ export async function syncRecordToGoogleSheet(
       mode: 'no-cors',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
+        action,
         rowId: historyId || record.id,
-        rowNumber,
+        rowNumber: action === 'insert' ? null : rowNumber,
         historyId,
         sheetName,
         data: payload.data,

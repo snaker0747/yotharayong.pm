@@ -39,7 +39,7 @@ export interface WorkOrderItem {
 
 interface WorkOrderReportProps {
   records: MaintenanceRecord[];
-  onSyncNewRecord?: (record: MaintenanceRecord) => Promise<{ success: boolean; message?: string }>;
+  onSyncNewRecord?: (record: MaintenanceRecord, action?: 'insert' | 'update') => Promise<{ success: boolean; message?: string }>;
   theme: 'light' | 'dark';
 }
 
@@ -241,13 +241,14 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
       }
     }
 
+    const generatedHistoryId = Math.random().toString(36).substring(2, 10);
     const newItem: WorkOrderItem = {
       id: `WO-${Date.now()}`,
-      historyId: Math.random().toString(36).substring(2, 10),
-      poleId: poleId.trim() || '-',
+      historyId: generatedHistoryId,
+      poleId: poleId.trim(),
       community: community.trim(),
       soi: soi.trim(),
-      issue: issue.trim() || '-',
+      issue: issue.trim() || 'รอซ่อมบำรุง',
       repairAction: repairAction.trim(),
       repairDetail: repairDetail.trim(),
       fixedDate: fixedDate || new Date().toISOString().split('T')[0],
@@ -262,7 +263,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
 
     setWorkOrders(prev => [newItem, ...prev]);
 
-    // Optional sync to Google Sheet
+    // Optional sync to Google Sheet (Action: insert -> always append new row)
     if (syncToSheet && onSyncNewRecord) {
       setIsSubmitting(true);
       try {
@@ -284,7 +285,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
           community: newItem.community,
           soi: newItem.soi,
           raw: {
-            'ID ประวัติ': newItem.historyId || newItem.id,
+            'ID ประวัติ': newItem.historyId,
             'ID โคมไฟ': newItem.poleId,
             'ชุมชน/เขต': newItem.community,
             'ซอย': newItem.soi,
@@ -299,7 +300,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             'หมายเหตุ': newItem.remarks || '',
           }
         };
-        await onSyncNewRecord(sheetRec);
+        await onSyncNewRecord(sheetRec, 'insert');
       } catch (err) {
         console.warn('Sync to Google Sheet failed:', err);
       } finally {
@@ -317,7 +318,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
     setGpsStr('');
   };
 
-  // Handle saving an edited item from modal
+  // Handle saving an edited item from modal (Action: update -> update existing row)
   const handleSaveEditedItem = async () => {
     if (!editingItem) return;
 
@@ -358,7 +359,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
           'หมายเหตุ': editingItem.remarks || '',
         }
       };
-      await onSyncNewRecord(sheetRec);
+      await onSyncNewRecord(sheetRec, 'update');
     }
 
     setEditingItem(null);
@@ -975,7 +976,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
                       <div className="min-w-0 space-y-1 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono font-bold text-sm text-white">
-                            {item.poleId}
+                            {item.poleId || 'ไม่ระบุรหัส'}
                           </span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${statusColor}`}>
                             {item.status}
