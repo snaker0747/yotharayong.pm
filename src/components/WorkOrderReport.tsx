@@ -600,9 +600,185 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     });
   };
 
-  // Trigger browser print
+  // Trigger browser print using an isolated iframe to guarantee 100% reliable rendering in A4 Landscape without dark backgrounds or blank pages
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById('printable-work-order');
+    if (!printContent) {
+      window.print();
+      return;
+    }
+
+    try {
+      const oldFrame = document.getElementById('rayong_print_frame');
+      if (oldFrame) oldFrame.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'rayong_print_frame';
+      iframe.name = 'rayong_print_frame';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '-9999px';
+      iframe.style.left = '-9999px';
+      iframe.style.width = '1200px';
+      iframe.style.height = '900px';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
+
+      const frameDoc = iframe.contentWindow?.document;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      const contentHtml = printContent.innerHTML;
+
+      frameDoc.open();
+      frameDoc.write(`
+        <!DOCTYPE html>
+        <html lang="th">
+        <head>
+          <meta charset="utf-8" />
+          <title>ใบสั่งงานซ่อมบำรุงไฟฟ้าสาธารณะ - ${reportNumber}</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 6mm 8mm;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background-color: #ffffff !important;
+              color: #0f172a !important;
+              font-family: 'Noto Sans Thai', 'Sukhumvit Set', sans-serif;
+              font-size: 11px;
+              line-height: 1.35;
+            }
+            .font-mono {
+              font-family: 'JetBrains Mono', monospace !important;
+            }
+            .font-sans {
+              font-family: 'Noto Sans Thai', 'Sukhumvit Set', sans-serif !important;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              page-break-inside: auto;
+            }
+            tr {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            thead {
+              display: table-header-group;
+            }
+            th, td {
+              border: 1px solid #64748b;
+              padding: 5px 7px;
+              vertical-align: middle;
+            }
+            th {
+              background-color: #f1f5f9 !important;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: bold; }
+            .font-extrabold { font-weight: 800; }
+            .font-semibold { font-weight: 600; }
+            .font-medium { font-weight: 500; }
+            .italic { font-style: italic; }
+            .flex { display: flex; }
+            .items-center { align-items: center; }
+            .items-baseline { align-items: baseline; }
+            .justify-between { justify-content: space-between; }
+            .justify-end { justify-content: flex-end; }
+            .flex-wrap { flex-wrap: wrap; }
+            .gap-2 { gap: 8px; }
+            .gap-3 { gap: 12px; }
+            .gap-4 { gap: 16px; }
+            .border-b-2 { border-bottom: 2px solid #0f172a; }
+            .border-b { border-bottom: 1px solid #cbd5e1; }
+            .pb-2\\.5 { padding-bottom: 10px; }
+            .mb-3 { margin-bottom: 12px; }
+            .mt-3 { margin-top: 12px; }
+            .mt-0\\.5 { margin-top: 2px; }
+            .pt-2 { padding-top: 8px; }
+            .border-t { border-top: 1px solid #cbd5e1; }
+            .text-xs { font-size: 12px; }
+            .text-sm { font-size: 14px; }
+            .text-base { font-size: 16px; }
+            .text-\\[10px\\] { font-size: 10px; }
+            .text-\\[11px\\] { font-size: 11px; }
+            .text-\\[9px\\] { font-size: 9px; }
+            .text-\\[9\\.5px\\] { font-size: 9.5px; }
+            .text-slate-950 { color: #020617; }
+            .text-slate-900 { color: #0f172a; }
+            .text-slate-800 { color: #1e293b; }
+            .text-slate-700 { color: #334155; }
+            .text-slate-600 { color: #475569; }
+            .text-slate-500 { color: #64748b; }
+            .text-slate-400 { color: #94a3b8; }
+            .bg-slate-100 { background-color: #f1f5f9 !important; }
+            .bg-slate-50\\/40 { background-color: #f8fafc !important; }
+            .border-dashed { border-style: dashed; }
+            .border-slate-400\\/80 { border-color: rgba(148, 163, 184, 0.8); }
+            .border-slate-300 { border-color: #cbd5e1; }
+            .border-slate-400 { border-color: #94a3b8; }
+            .h-6 { height: 24px; }
+            .w-10 { width: 40px; }
+            .w-11 { width: 44px; }
+            .h-11 { height: 44px; }
+            .w-24 { width: 90px; }
+            .w-28 { width: 110px; }
+            .w-44 { width: 170px; }
+            .whitespace-nowrap { white-space: nowrap; }
+            .rounded { border-radius: 4px; }
+            .px-1\\.5 { padding-left: 6px; padding-right: 6px; }
+            .py-0\\.5 { padding-top: 2px; padding-bottom: 2px; }
+            .px-2 { padding-left: 8px; padding-right: 8px; }
+            .py-1\\.5 { padding-top: 6px; padding-bottom: 6px; }
+            .px-2\\.5 { padding-left: 10px; padding-right: 10px; }
+            .px-3 { padding-left: 12px; padding-right: 12px; }
+            .border { border: 1px solid #cbd5e1; }
+            .border-r { border-right: 1px solid #cbd5e1; }
+            .leading-tight { line-height: 1.25; }
+            .text-emerald-700 { color: #047857; }
+            .bg-emerald-50 { background-color: #ecfdf5 !important; }
+            .border-emerald-300 { border-color: #6ee7b7; }
+            .text-rose-700 { color: #be123c; }
+            .bg-rose-50 { background-color: #fff1f2 !important; }
+            .border-rose-300 { border-color: #fda4af; }
+            img { max-height: 44px; object-fit: contain; }
+          </style>
+        </head>
+        <body>
+          ${contentHtml}
+        </body>
+        </html>
+      `);
+      frameDoc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 5000);
+      }, 350);
+    } catch (err) {
+      console.warn('Print iframe error, fallback to window.print():', err);
+      window.print();
+    }
   };
 
   return (
