@@ -58,7 +58,7 @@ export default function DashboardStats({ records, onStatusSelect, selectedStatus
     },
     {
       id: 'Completed',
-      title: 'ซ่อมเสร็จสิ้น',
+      title: 'เสร็จสิ้น',
       subTitle: 'Completed',
       count: completed,
       color: 'border-slate-700 text-emerald-400 bg-[#1E293B] hover:bg-slate-800',

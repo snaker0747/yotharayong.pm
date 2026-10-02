@@ -18,7 +18,7 @@ export default function AnalyticsCharts({ records }: ChartsProps) {
   const statusThaiNames: Record<string, string> = {
     'Pending': 'รอดำเนินการ',
     'In Progress': 'กำลังดำเนินการ',
-    'Completed': 'ซ่อมเสร็จสิ้น',
+    'Completed': 'เสร็จสิ้น',
     'Waiting for Parts': 'รออะไหล่/วัสดุ'
   };
 

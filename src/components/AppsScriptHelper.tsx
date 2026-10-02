@@ -194,7 +194,7 @@ function getMaintenanceData() {
           <p class="text-2xl font-bold text-blue-500 font-mono mt-1">\${inProgress}</p>
         </div>
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl text-left">
-          <p class="text-xs text-slate-500 uppercase">ซ่อมเสร็จสิ้น</p>
+          <p class="text-xs text-slate-500 uppercase">เสร็จสิ้น</p>
           <p class="text-2xl font-bold text-emerald-500 font-mono mt-1">\${completed}</p>
         </div>
       \`;

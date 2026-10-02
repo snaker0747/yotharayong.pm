@@ -264,6 +264,11 @@ export default function App() {
 
   const handleRecordSelect = (record: MaintenanceRecord) => {
     setSelectedRecord(record);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        document.getElementById('record-detail-panel')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   const handleOpenEdit = (record: MaintenanceRecord) => {
@@ -762,9 +767,9 @@ export default function App() {
                   className="space-y-6"
                   id="section-records"
                 >
-                  <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     {/* Left Column (7/12 width) - Search & Records list */}
-                    <div className="xl:col-span-7 space-y-6">
+                    <div className="lg:col-span-7 space-y-6">
                       <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
                           <div className="flex items-center gap-2">
@@ -793,8 +798,8 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Right Column (5/12 width) - Detail Preview */}
-                    <div className="xl:col-span-5 space-y-6">
+                    {/* Right Column (5/12 width) - Detail Preview (Sticky on tablet/desktop) */}
+                    <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-20">
                       <AnimatePresence mode="wait">
                         {selectedRecord ? (
                           <motion.div
@@ -814,12 +819,16 @@ export default function App() {
                             />
                           </motion.div>
                         ) : (
-                          <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 text-center text-slate-400 min-h-[220px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
-                            <Lightbulb size={28} className="text-amber-400 animate-pulse" />
-                            <div className="space-y-1">
-                              <h5 className="text-sm font-bold text-slate-200">รายละเอียดรายงานการซ่อมบำรุง</h5>
-                              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                                คลิกเลือกรายการจากตารางทางซ้ายเพื่อดูรายละเอียดภาพถ่าย พิกัด และอาการ หรือกดปุ่ม "แก้ไขข้อมูล" เพื่ออัปเดตลง Google Sheet ทันที
+                          <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 sm:p-8 text-center text-slate-400 min-h-[260px] flex flex-col items-center justify-center gap-3.5 font-sans shadow-sm">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                              <Lightbulb size={24} className="text-amber-400" />
+                            </div>
+                            <div className="space-y-1.5">
+                              <h5 className="text-sm sm:text-base font-bold text-slate-200">
+                                รายละเอียดรายงานการซ่อมบำรุง
+                              </h5>
+                              <p className="text-xs text-slate-400 max-w-xs leading-relaxed mx-auto">
+                                คลิกเลือกรายการแจ้งซ่อมจากตารางเพื่อดูรายละเอียดภาพถ่าย พิกัด GPS อาการเสีย หรือกดปุ่ม "แก้ไข" เพื่อเปิดหน้าต่างแก้ไขข้อมูล
                               </p>
                             </div>
                           </div>

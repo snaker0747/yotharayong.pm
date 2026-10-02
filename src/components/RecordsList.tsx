@@ -93,7 +93,7 @@ export default function RecordsList({
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-sans font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <CheckCircle2 size={12} />
-            {statusThai || 'ซ่อมเสร็จสิ้น'}
+            {statusThai === 'ซ่อมเสร็จสิ้น' ? 'เสร็จสิ้น' : (statusThai || 'เสร็จสิ้น')}
           </span>
         );
       case 'In Progress':
@@ -215,7 +215,7 @@ export default function RecordsList({
                     ทั้งหมด
                   </button>
                   {['Pending', 'In Progress', 'Waiting for Parts', 'Completed'].map((st) => {
-                    const label = st === 'Pending' ? 'รอซ่อม' : st === 'In Progress' ? 'กำลังซ่อม' : st === 'Waiting for Parts' ? 'รออะไหล่' : 'ซ่อมเสร็จ';
+                    const label = st === 'Pending' ? 'รอซ่อม' : st === 'In Progress' ? 'กำลังซ่อม' : st === 'Waiting for Parts' ? 'รออะไหล่' : 'เสร็จสิ้น';
                     return (
                       <button
                         key={st}

@@ -87,7 +87,7 @@ function mapStatus(statusVal: string): { eng: string; thai: string } {
   }
   
   if (val.includes('เสร็จ') || val.includes('สำเร็จ') || val.includes('เรียบร้อย') || val.includes('complete') || val.includes('done') || val.includes('success')) {
-    return { eng: 'Completed', thai: 'ซ่อมเสร็จสิ้น' };
+    return { eng: 'Completed', thai: 'เสร็จสิ้น' };
   }
   if (val.includes('กำลัง') || val.includes('ดำเนิน') || val.includes('ซ่อมอยู่') || val.includes('progress') || val.includes('active')) {
     return { eng: 'In Progress', thai: 'กำลังดำเนินการ' };

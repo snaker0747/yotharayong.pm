@@ -58,8 +58,13 @@ export default function EditRecordModal({
   // Initialize form when record changes
   useEffect(() => {
     if (record) {
+      let initialStatusThai = record.statusThai || '';
+      if (initialStatusThai === 'ซ่อมเสร็จสิ้น' || record.status === 'Completed') {
+        initialStatusThai = 'เสร็จสิ้น';
+      }
       setFormData({
         ...record,
+        statusThai: initialStatusThai,
       });
 
       // Extract community and soi from record or raw
@@ -157,7 +162,7 @@ export default function EditRecordModal({
   };
 
   const statusOptions = [
-    { eng: 'Completed', thai: 'ซ่อมเสร็จสิ้น', icon: CheckCircle2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
+    { eng: 'Completed', thai: 'เสร็จสิ้น', icon: CheckCircle2, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' },
     { eng: 'In Progress', thai: 'กำลังดำเนินการ', icon: Hourglass, color: 'text-blue-400 bg-blue-500/10 border-blue-500/30' },
     { eng: 'Waiting for Parts', thai: 'รออะไหล่/วัสดุ', icon: AlertTriangle, color: 'text-orange-400 bg-orange-500/10 border-orange-500/30' },
     { eng: 'Pending', thai: 'รอดำเนินการ', icon: Clock, color: 'text-rose-400 bg-rose-500/10 border-rose-500/30' }
@@ -222,7 +227,9 @@ export default function EditRecordModal({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {statusOptions.map((opt) => {
                   const Icon = opt.icon;
-                  const isSelected = (formData.status === opt.eng) || (formData.statusThai === opt.thai);
+                  const isSelected = (formData.status === opt.eng) || 
+                    (opt.eng === 'Completed' && (formData.statusThai === 'เสร็จสิ้น' || formData.statusThai === 'ซ่อมเสร็จสิ้น' || formData.status === 'Completed')) ||
+                    (formData.statusThai === opt.thai);
                   return (
                     <button
                       key={opt.eng}
