@@ -27,7 +27,16 @@ export default function RecordsList({
   onStatusFilterChange
 }: ListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
+    const saved = localStorage.getItem('rayong_records_view_mode');
+    return (saved as 'grid' | 'table') || 'table';
+  });
+
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('rayong_records_view_mode', mode);
+  };
+
   const [selectedTech, setSelectedTech] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -141,7 +150,7 @@ export default function RecordsList({
           {/* View Mode Toggle */}
           <div className="flex bg-slate-800/60 border border-slate-700 rounded-lg p-0.5">
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => handleViewModeChange('grid')}
               className={`p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'grid' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
@@ -149,7 +158,7 @@ export default function RecordsList({
               <Grid size={16} />
             </button>
             <button
-              onClick={() => setViewMode('table')}
+              onClick={() => handleViewModeChange('table')}
               className={`p-2 rounded-md transition-all cursor-pointer ${
                 viewMode === 'table' ? 'bg-slate-700 text-blue-400' : 'text-slate-500 hover:text-slate-300'
               }`}
