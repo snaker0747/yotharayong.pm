@@ -101,40 +101,43 @@ function doPost(e) {
       }
     }
 
-    // 1. ถ้าคำสั่งเป็น 'insert' หรือ 'append' ให้เพิ่มแถวใหม่ต่อท้ายเสมอ (ห้ามทับแถวเดิมเด็ดขาด)
-    if (action === 'insert' || action === 'append') {
-      targetRow = values.length + 1;
-      sheet.insertRowAfter(values.length);
-      if (historyIdColIdx !== -1 && historyId) {
-        sheet.getRange(targetRow, historyIdColIdx + 1).setValue(historyId);
-      }
-    } else {
-      // 2. ถ้าเป็น 'update' หรือ 'auto': ค้นหาแถวที่จะอัปเดตตาม "ID ประวัติ" เท่านั้น
-      if (historyIdColIdx !== -1 && historyId) {
-        for (var r = 1; r < values.length; r++) {
-          if (values[r][historyIdColIdx].toString().trim() === historyId) {
-            targetRow = r + 1;
-            break;
-          }
-        }
-      }
-      
-      // 3. ถ้าไม่พบจาก ID ประวัติ และมีการระบุ rowNumber ที่ถูกต้อง
-      if (targetRow === -1 && rowNumber && rowNumber >= 2 && rowNumber <= values.length) {
-        targetRow = rowNumber;
-      }
-      
-      // 4. ถ้ายังไม่พบแถวเดิม ให้เพิ่มแถวใหม่ต่อท้ายเสมอ (Append)
-      if (targetRow === -1) {
-        targetRow = values.length + 1;
-        sheet.insertRowAfter(values.length);
-        if (historyIdColIdx !== -1 && historyId) {
-          sheet.getRange(targetRow, historyIdColIdx + 1).setValue(historyId);
+    // 1. ตรวจสอบว่า "ID ประวัติ" มีอยู่ในชีทอยู่แล้วหรือไม่
+    if (historyIdColIdx !== -1 && historyId) {
+      for (var r = 1; r < values.length; r++) {
+        if (values[r][historyIdColIdx].toString().trim() === historyId) {
+          targetRow = r + 1; // พบแถวเดิมของรายการนี้แล้ว!
+          break;
         }
       }
     }
+
+    // 2. ถ้าพบแถวเดิม (ID ประวัติ ตรงกัน) -> ให้อัปเดตข้อมูลในช่องคอลัมน์ของแถวเดิมทันที ห้ามสร้างแถวใหม่เด็ดขาด
+    if (targetRow !== -1) {
+      var updatedCols = [];
+      for (var c = 0; c < headers.length; c++) {
+        var colName = headers[c].toString().trim();
+        if (data.hasOwnProperty(colName) && data[colName] !== undefined) {
+          sheet.getRange(targetRow, c + 1).setValue(data[colName]);
+          updatedCols.push(colName);
+        }
+      }
+      return responseJson({
+        success: true,
+        message: 'อัปเดตข้อมูลในแถวเดิมที่ ' + targetRow + ' (ID: ' + historyId + ') สำเร็จแล้ว',
+        row: targetRow,
+        action: 'update',
+        updatedColumns: updatedCols
+      });
+    }
+
+    // 3. ถ้าไม่พบ ID ประวัติในชีท -> ถือว่าเป็นรายการใหม่ ให้เพิ่มแถวใหม่ต่อท้าย (Append)
+    targetRow = values.length + 1;
+    sheet.insertRowAfter(values.length);
+    if (historyIdColIdx !== -1 && historyId) {
+      sheet.getRange(targetRow, historyIdColIdx + 1).setValue(historyId);
+    }
     
-    // อัปเดตข้อมูลทุกคอลัมน์ที่ตรงกับ Header
+    // บันทึกข้อมูลคอลัมน์ของแถวใหม่
     var updatedColumns = [];
     for (var c = 0; c < headers.length; c++) {
       var headerName = headers[c].toString().trim();
