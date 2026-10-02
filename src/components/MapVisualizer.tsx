@@ -61,7 +61,7 @@ const createCustomMarker = (status: string, isSelected: boolean) => {
 };
 
 export default function MapVisualizer({ records, onSelectRecord, selectedRecord, theme, appName = '', tableName = '' }: MapProps) {
-  const [viewMode, setViewMode] = useState<'osm' | 'radar'>('osm');
+  const [viewMode, setViewMode] = useState<'osm' | 'satellite' | 'radar'>('osm');
   const [isPopupMinimized, setIsPopupMinimized] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -168,7 +168,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
 
   // Setup Leaflet Map Instance
   useEffect(() => {
-    if (viewMode !== 'osm' || !mapContainerRef.current) {
+    if (viewMode === 'radar' || !mapContainerRef.current) {
       // Clean up map instance if switching view modes
       if (mapRef.current) {
         mapRef.current.remove();
@@ -186,25 +186,30 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
         attributionControl: false
       }).setView([Number(defaultCenter.lat) || 12.6815, Number(defaultCenter.lng) || 101.2813], 13);
 
-      // Add customized Zoom Control to bottom-left (looks cleaner and avoids overlap with bottom-right popup)
+      // Add customized Zoom Control to bottom-left
       L.control.zoom({ position: 'bottomleft' }).addTo(mapRef.current);
 
       // Create Layer Group for markers
       markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
     }
 
-    // Update Tile style based on light/dark theme
+    // Update Tile style based on viewMode
     if (tileLayerRef.current) {
       tileLayerRef.current.remove();
     }
 
-    // CartoDB Voyager tiles are extremely detailed and crisp.
-    // We use them for both themes, but apply a high-contrast CSS inversion filter in dark mode 
-    // to keep every street, label, and detail perfectly visible and sharp.
-    const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    // Use official OpenStreetMap tiles for street map, and ESRI World Imagery for satellite
+    // Both are completely free and do NOT require any API keys (no watermark!)
+    let tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let maxZoom = 19;
+
+    if (viewMode === 'satellite') {
+      tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      maxZoom = 19;
+    }
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
-      maxZoom: 19
+      maxZoom
     }).addTo(mapRef.current);
 
     // Clean up map on component unmount
@@ -220,7 +225,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
 
   // Update Map Markers on records change
   useEffect(() => {
-    if (viewMode !== 'osm' || !mapRef.current || !markersLayerRef.current) return;
+    if (viewMode === 'radar' || !mapRef.current || !markersLayerRef.current) return;
 
     // Clear existing markers
     markersLayerRef.current.clearLayers();
@@ -268,7 +273,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
   // Handle flyTo when selectedRecord changes
   useEffect(() => {
     if (
-      viewMode !== 'osm' || 
+      viewMode === 'radar' || 
       !mapRef.current || 
       !selectedRecord || 
       selectedRecord.lat === null || 
@@ -345,26 +350,36 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
         <div className="flex items-center gap-2">
           <Compass className="text-blue-500 animate-spin-slow" size={16} />
           <span className="text-base font-semibold text-slate-100 font-sans">
-            พิกัดแผนที่ OpenStreetMap ({mappedRecords.length} จุด)
+            พิกัดแผนที่ GIS ({mappedRecords.length} จุด)
           </span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <button
             onClick={() => setViewMode('osm')}
-            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'osm'
-                ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             แผนที่ถนน (OSM)
           </button>
           <button
+            onClick={() => setViewMode('satellite')}
+            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
+              viewMode === 'satellite'
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            ภาพดาวเทียม
+          </button>
+          <button
             onClick={() => setViewMode('radar')}
-            className={`px-2 py-0.5 text-[9px] font-sans rounded-md transition-all cursor-pointer ${
+            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
               viewMode === 'radar'
-                ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 font-bold'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
+                : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             เรดาร์ (GRID)
@@ -372,7 +387,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
         </div>
       </div>
 
-      {viewMode === 'osm' ? (
+      {viewMode !== 'radar' ? (
         <div className="flex-1 w-full h-full relative bg-slate-950 min-h-[220px] z-0" ref={mapContainerRef} id="osm-map" />
       ) : (
         <div className="relative flex-1 bg-slate-950/80 flex items-center justify-center overflow-hidden p-4 min-h-[220px]">
