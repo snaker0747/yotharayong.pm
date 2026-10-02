@@ -460,3 +460,56 @@ html.light .recharts-tooltip-label {
   font-weight: 600 !important;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Official A4 Print Styles for Field Work Orders                              */
+/* -------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+
+  /* Hide all non-printable application elements */
+  aside,
+  header,
+  footer,
+  .no-print,
+  #authorized-app-layout > aside,
+  #authorized-app-layout > div > header,
+  #authorized-app-layout > div > div.md\:hidden,
+  #authorized-app-layout > div > footer {
+    display: none !important;
+  }
+
+  #authorized-app-layout {
+    display: block !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .printable-area {
+    display: block !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}
+

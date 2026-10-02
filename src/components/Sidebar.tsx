@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  LayoutDashboard, ClipboardList, 
+  LayoutDashboard, ClipboardList, Printer,
   Settings, RefreshCw, Sun, Moon, LogOut, X, 
   CheckCircle2, Clock, Hourglass, Shield, ExternalLink,
   PanelLeftClose
@@ -61,6 +61,14 @@ export default function Sidebar({
       icon: ClipboardList,
       badge: pendingRecords > 0 ? `${pendingRecords} รอซ่อม` : null,
       badgeColor: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
+    },
+    {
+      id: 'reports',
+      label: 'รายงาน',
+      sublabel: 'ใบสั่งงาน & พิมพ์ส่งช่าง',
+      icon: Printer,
+      badge: 'ใบงาน A4',
+      badgeColor: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
     },
   ];
 

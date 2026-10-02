@@ -16,13 +16,14 @@ import SheetSettings from './components/SheetSettings';
 import AppsScriptHelper from './components/AppsScriptHelper';
 import Sidebar from './components/Sidebar';
 import LoginPage from './components/LoginPage';
+import WorkOrderReport from './components/WorkOrderReport';
 import { User } from 'firebase/auth';
 import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
   Sun, Moon, Menu, ClipboardList, PanelLeftClose, PanelLeftOpen,
-  LayoutDashboard
+  LayoutDashboard, Printer
 } from 'lucide-react';
 
 // Default target spreadsheet ID from user's request
@@ -259,8 +260,15 @@ export default function App() {
   };
 
   const handleSaveRecord = async (updatedRecord: MaintenanceRecord) => {
-    // 1. Optimistic update local state immediately
-    setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
+    // 1. Optimistic update local state immediately (update if exists, append if new)
+    setRecords(prev => {
+      const exists = prev.some(r => r.id === updatedRecord.id);
+      if (exists) {
+        return prev.map(r => r.id === updatedRecord.id ? updatedRecord : r);
+      } else {
+        return [updatedRecord, ...prev];
+      }
+    });
     setSelectedRecord(updatedRecord);
     setEditingRecord(updatedRecord);
     
@@ -528,6 +536,17 @@ export default function App() {
                   </span>
                 )}
               </button>
+              <button
+                onClick={() => handleNavigate('reports')}
+                className={`px-3.5 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeSection === 'reports'
+                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                <Printer size={14} />
+                <span>รายงาน & ใบสั่งงาน</span>
+              </button>
             </div>
 
             {/* Right: Actions, Sync Status & Quick Controls */}
@@ -590,30 +609,41 @@ export default function App() {
         <div className="md:hidden border-b border-slate-700/80 bg-[#1E293B] px-4 py-2 flex items-center gap-2">
           <button
             onClick={() => handleNavigate('dashboard')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               activeSection === 'dashboard'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-400 bg-slate-800/60 hover:text-slate-200'
             }`}
           >
-            <LayoutDashboard size={14} />
-            <span>ภาพรวม & แผนที่</span>
+            <LayoutDashboard size={13} />
+            <span>ภาพรวม</span>
           </button>
           <button
             onClick={() => handleNavigate('records')}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               activeSection === 'records'
                 ? 'bg-emerald-600 text-white shadow-sm'
                 : 'text-slate-400 bg-slate-800/60 hover:text-slate-200'
             }`}
           >
-            <ClipboardList size={14} />
-            <span>รายการแจ้งซ่อม</span>
+            <ClipboardList size={13} />
+            <span>แจ้งซ่อม</span>
             {pendingCount > 0 && (
               <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 font-bold">
                 {pendingCount}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => handleNavigate('reports')}
+            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              activeSection === 'reports'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-400 bg-slate-800/60 hover:text-slate-200'
+            }`}
+          >
+            <Printer size={13} />
+            <span>รายงาน</span>
           </button>
         </div>
 
@@ -643,7 +673,7 @@ export default function App() {
             </div>
           ) : (
             <AnimatePresence mode="wait">
-              {activeSection === 'dashboard' ? (
+              {activeSection === 'dashboard' && (
                 /* PAGE 1: ภาพรวมระบบ (KPI Cards + กราฟสถิติ + แผนที่ GIS) */
                 <motion.div
                   key="view-dashboard"
@@ -681,7 +711,9 @@ export default function App() {
                     />
                   </div>
                 </motion.div>
-              ) : (
+              )}
+
+              {activeSection === 'records' && (
                 /* PAGE 2: รายการแจ้งซ่อม (รายการรับเรื่องแจ้งซ่อมทั้งหมด + รายละเอียดรายงานการซ่อมบำรุง) */
                 <motion.div
                   key="view-records"
@@ -756,6 +788,25 @@ export default function App() {
                       </AnimatePresence>
                     </div>
                   </div>
+                </motion.div>
+              )}
+
+              {activeSection === 'reports' && (
+                /* PAGE 3: รายงาน (ใบสั่งงาน & บันทึกการปฏิบัติงาน พิมพ์ A4 & ส่งไลน์) */
+                <motion.div
+                  key="view-reports"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-6"
+                  id="section-reports"
+                >
+                  <WorkOrderReport
+                    records={records}
+                    theme={theme}
+                    onSyncNewRecord={handleSaveRecord}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
