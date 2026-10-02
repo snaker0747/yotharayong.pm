@@ -467,18 +467,14 @@ export async function fetchSheetRecords(
   throw new Error('ไม่สามารถเข้าถึงข้อมูลสเปรดชีตได้ กรุณาแชร์สเปรดชีตเป็นแบบ "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือเชื่อมต่อผ่านบัญชี Google ของคุณ');
 }
 
+export const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgyxiX20-OzdCThoDgFNnRfqO5LYAPp5GLyup0_WflWBF2GdX4N0ZQhKWW9mKFjz1Ggg/exec';
+
 export async function syncRecordToGoogleSheet(
   record: MaintenanceRecord,
   sheetName: string = 'การซ่อมบำรุง',
   appsScriptUrl?: string
 ): Promise<{ success: boolean; message?: string }> {
-  const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || '';
-  if (!url) {
-    return { 
-      success: false, 
-      message: 'บันทึกในระบบเรียบร้อย (หากต้องการซิงค์เข้า Google Sheet อัตโนมัติ กรุณาระบุ Apps Script Web App URL ในเมนูตั้งค่า)' 
-    };
-  }
+  const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
 
   const historyId = (record.raw?.['ID ประวัติ'] || record.raw?.['id ประวัติ'] || record.raw?.['History ID'] || '').trim();
   const rowNumber = Number(record.id) || null;

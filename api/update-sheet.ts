@@ -15,14 +15,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgyxiX20-OzdCThoDgFNnRfqO5LYAPp5GLyup0_WflWBF2GdX4N0ZQhKWW9mKFjz1Ggg/exec';
     const { appsScriptUrl, rowId, rowNumber, historyId, sheetName, data } = req.body;
-
-    if (!appsScriptUrl) {
-      return res.status(400).json({ error: 'Missing appsScriptUrl' });
-    }
+    const targetUrl = appsScriptUrl || DEFAULT_APPS_SCRIPT_URL;
 
     // Forward to Google Apps Script Web App
-    const response = await fetch(appsScriptUrl, {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -4,7 +4,7 @@ import {
   initAuth, googleSignIn, logout, getAccessToken 
 } from './auth';
 import { 
-  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet 
+  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
 import MapVisualizer from './components/MapVisualizer';
@@ -46,6 +46,14 @@ export default function App() {
     }
     localStorage.setItem('rayong_app_theme', theme);
   }, [theme]);
+
+  // Pre-configure the default Rayong Apps Script Web App URL
+  useEffect(() => {
+    const current = localStorage.getItem('rayong_apps_script_url');
+    if (!current || !current.includes('script.google.com')) {
+      localStorage.setItem('rayong_apps_script_url', DEFAULT_APPS_SCRIPT_URL);
+    }
+  }, []);
   const [user, setUser] = useState<User | null>(() => {
     const isLogged = localStorage.getItem('rayong_custom_logged_in') === 'true' || 
                      sessionStorage.getItem('rayong_custom_logged_in') === 'true';

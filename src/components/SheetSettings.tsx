@@ -152,6 +152,8 @@ function responseJson(data) {
 }
 `;
 
+export const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgyxiX20-OzdCThoDgFNnRfqO5LYAPp5GLyup0_WflWBF2GdX4N0ZQhKWW9mKFjz1Ggg/exec';
+
 export default function SheetSettings({ 
   accessToken, 
   currentSpreadsheetId, 
@@ -163,7 +165,7 @@ export default function SheetSettings({
   const [inputValue, setInputValue] = useState(currentSpreadsheetId);
   const [appName, setAppName] = useState(currentAppName);
   const [appsScriptUrl, setAppsScriptUrl] = useState(() => {
-    return localStorage.getItem('rayong_apps_script_url') || '';
+    return localStorage.getItem('rayong_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
