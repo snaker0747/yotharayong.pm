@@ -127,10 +127,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
   // Handle adding new item to work order list
   const handleAddItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!poleId.trim() && !issue.trim() && !location.trim()) {
-      alert('กรุณากรอกรหัสเสาไฟ, อาการชำรุด หรือสถานที่อย่างน้อย 1 รายการ');
-      return;
-    }
 
     let lat: number | null = null;
     let lng: number | null = null;
@@ -144,8 +140,8 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
 
     const newItem: WorkOrderItem = {
       id: `WO-${Date.now()}`,
-      poleId: poleId.trim() || 'ไม่ระบุรหัสเสา',
-      issue: issue.trim() || 'ตรวจสอบระบบไฟฟ้า',
+      poleId: poleId.trim() || '-',
+      issue: issue.trim() || '-',
       community: community.trim(),
       soi: soi.trim(),
       location: location.trim(),
@@ -349,7 +345,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             <div className="flex items-center gap-2">
               <Plus size={18} className="text-emerald-400" />
               <h3 className="text-base font-bold text-slate-100">
-                กรอกข้อมูลเพิ่มเข้ารายการแจ้งซ่อม
+                กรอกข้อมูลเพิ่มเข้ารายการซ่อมบำรุง
               </h3>
             </div>
             <span className="text-[11px] text-slate-400 font-mono">
@@ -362,7 +358,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-                  รหัสโคมไฟ / เสาไฟ <span className="text-rose-400">*</span>
+                  รหัสโคมไฟ / เสาไฟ
                 </label>
                 <input
                   type="text"
@@ -392,7 +388,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             {/* 2. Issue / Problem */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
-                <span>ปัญหา / อาการชำรุดที่พบ <span className="text-rose-400">*</span></span>
+                <span>ปัญหา / อาการชำรุดที่พบ</span>
                 <span className="text-[10px] text-slate-400">เลือกจากตัวเลือกลัด หรือพิมพ์เอง</span>
               </label>
               <input
@@ -532,7 +528,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
               className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
             >
               <Plus size={16} />
-              <span>เพิ่มเข้ารายการแจ้งซ่อมส่งช่าง</span>
+              <span>เพิ่มเข้ารายการซ่อมบำรุง</span>
             </button>
           </form>
         </div>
@@ -543,7 +539,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             <div className="flex items-center gap-2">
               <FileText size={18} className="text-blue-400" />
               <h3 className="text-base font-bold text-slate-100">
-                ริส รายการแจ้งซ่อมที่เตรียมส่งช่าง ({workOrders.length} งาน)
+                รายการซ่อมบำรุง ({workOrders.length} งาน)
               </h3>
             </div>
             <div className="flex items-center gap-2">
