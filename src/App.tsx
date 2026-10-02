@@ -7,8 +7,6 @@ import {
   fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
-import MapVisualizer from './components/MapVisualizer';
-import AnalyticsCharts from './components/AnalyticsCharts';
 import RecordsList from './components/RecordsList';
 import RecordDetail from './components/RecordDetail';
 import EditRecordModal from './components/EditRecordModal';
@@ -590,12 +588,7 @@ export default function App() {
                 />
               </section>
 
-              {/* Section 2: Analytics & Trends */}
-              <section id="section-analytics" className="scroll-mt-20">
-                <AnalyticsCharts records={records} />
-              </section>
-
-              {/* Section 3: Records Table & Detail */}
+              {/* Section 2: Records Table & Detail */}
               <section id="section-records" className="scroll-mt-20">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left Column (2/3 width) - Search & Records list */}
@@ -661,18 +654,6 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                 </div>
-              </section>
-
-              {/* Section 4: GIS Map Visualizer */}
-              <section id="section-map" className="scroll-mt-20">
-                <MapVisualizer
-                  records={records}
-                  onSelectRecord={handleRecordSelect}
-                  selectedRecord={selectedRecord}
-                  theme={theme}
-                  appName={appSheetAppName}
-                  tableName={sheetName}
-                />
               </section>
             </>
           )}
