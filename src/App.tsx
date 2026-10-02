@@ -447,9 +447,15 @@ export default function App() {
   }
 
   // Summary counts for navigation badges
-  const pendingCount = records.filter(r => r.status === 'รอซ่อม' || !r.status).length;
-  const inProgressCount = records.filter(r => r.status === 'กำลังซ่อม').length;
-  const completedCount = records.filter(r => r.status === 'ซ่อมแล้วเสร็จ').length;
+  const pendingCount = records.filter(r => 
+    r.status === 'Pending' || r.statusThai === 'รอดำเนินการ' || r.status === 'รอซ่อม' || r.status === 'รอดำเนินการ' || !r.status
+  ).length;
+  const inProgressCount = records.filter(r => 
+    r.status === 'In Progress' || r.statusThai === 'กำลังดำเนินการ' || r.status === 'กำลังซ่อม' || r.status === 'กำลังดำเนินการ'
+  ).length;
+  const completedCount = records.filter(r => 
+    r.status === 'Completed' || r.statusThai === 'เสร็จสิ้น' || r.statusThai === 'ซ่อมเสร็จสิ้น' || r.status === 'เสร็จสิ้น' || r.status === 'ซ่อมแล้วเสร็จ'
+  ).length;
 
   // --- MAIN AUTHORIZED DASHBOARD ---
   return (

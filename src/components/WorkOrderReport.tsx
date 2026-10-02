@@ -81,34 +81,48 @@ const STATUS_OPTIONS = [
   { val: 'เสร็จสิ้น', label: 'เสร็จสิ้น', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
 ];
 
+// Helper to check if a record is pending repair
+const isPendingRecord = (r: MaintenanceRecord) => 
+  r.status === 'Pending' || 
+  r.statusThai === 'รอดำเนินการ' || 
+  r.status === 'รอดำเนินการ' || 
+  r.status === 'รอซ่อม' || 
+  !r.status;
+
 export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteRecord, theme }: WorkOrderReportProps) {
-  // Saved work orders in current draft batch
+  // Saved work orders in current draft batch (synchronized with database)
   const [workOrders, setWorkOrders] = useState<WorkOrderItem[]>(() => {
     try {
       const saved = localStorage.getItem('rayong_work_orders_draft');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
-    // Default initial mock items from pending records if empty
-    const pendingOnes = records.filter(r => r.status === 'รอซ่อม' || !r.status).slice(0, 3);
-    if (pendingOnes.length > 0) {
-      return pendingOnes.map((p, idx) => ({
-        id: `WO-${Date.now()}-${idx}`,
-        poleId: p.poleId || `POLE-${idx + 1}`,
-        issue: p.issue || 'หลอดไฟดับ',
-        community: p.community || 'บางจาก',
-        soi: p.soi || 'ถนน อดุลย์ธรรมประภาส',
-        location: p.location || '',
-        lat: p.lat,
-        lng: p.lng,
-        technician: p.technician || 'ช่างหมู',
-        status: 'รอดำเนินการ',
-        remarks: p.remarks || '',
-        orderDate: new Date().toISOString().split('T')[0],
-        fixedDate: new Date().toISOString().split('T')[0],
+    // Initial from records if available
+    if (records && records.length > 0) {
+      return records.map((r, idx) => ({
+        id: `WO-${(r.raw?.['ID ประวัติ'] || r.id || idx).trim()}`,
+        historyId: (r.raw?.['ID ประวัติ'] || r.raw?.['id ประวัติ'] || r.id || '').trim(),
+        poleId: r.poleId || 'ไม่ระบุรหัส',
+        issue: r.issue || r.raw?.['ปัญหาที่พบ'] || 'รอซ่อมบำรุง',
+        community: r.community || r.raw?.['ชุมชน/เขต'] || '',
+        soi: r.soi || r.raw?.['ซอย'] || '',
+        location: r.location || `${r.community || ''} ${r.soi || ''}`.trim() || 'ไม่ระบุสถานที่',
+        lat: r.lat,
+        lng: r.lng,
+        technician: r.technician || r.raw?.['ชื่อผู้ปฏิบัติงาน'] || 'ทีมบำรุงรักษา',
+        status: r.statusThai || r.status || 'รอดำเนินการ',
+        repairAction: r.repairAction || r.raw?.['การซ่อมบำรุงแก้ไข'] || '',
+        repairDetail: r.repairDetail || r.raw?.['รายละเอียดการแก้ไขเพิ่มเติม'] || '',
+        imageUrl: r.imageUrl || r.raw?.['รูปภาพการซ่อมบำรุง'] || '',
+        remarks: (r.remarks && r.remarks !== '-') ? r.remarks : (r.raw?.['หมายเหตุ'] || ''),
+        orderDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
+        fixedDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
         isFromExisting: true,
-      }));
+      })).reverse();
     }
     return [];
   });
@@ -219,8 +233,45 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
         return w;
       });
 
-      if (remaining.length !== prev.length || hasChanges) {
-        return updated;
+      // 3. เพิ่มรายการใหม่จากฐานข้อมูลเข้ามาอัตโนมัติ (Multi-device Cloud Sync):
+      // เพื่อให้เปิดดูในมือถือ แท็บเล็ต หรือคอมพิวเตอร์เครื่องอื่น ข้อมูลซิงค์ตรงกันเสมอและไม่หาย
+      const existingHistoryIds = new Set(updated.map(w => (w.historyId || '').trim()).filter(Boolean));
+      const existingPoleIds = new Set(updated.map(w => (w.poleId || '').trim()).filter(p => p && p !== 'ไม่ระบุรหัส' && p !== '-'));
+
+      const newFromRecords: WorkOrderItem[] = [];
+      records.forEach((r, idx) => {
+        const hId = (r.raw?.['ID ประวัติ'] || r.raw?.['id ประวัติ'] || r.id || '').trim();
+        const pId = (r.poleId || '').trim();
+        const alreadyExists = (hId && existingHistoryIds.has(hId)) || 
+                              (pId && pId !== '-' && pId !== 'ไม่ระบุรหัส' && existingPoleIds.has(pId));
+
+        if (!alreadyExists) {
+          hasChanges = true;
+          newFromRecords.push({
+            id: `WO-${hId || Date.now()}-${idx}`,
+            historyId: hId,
+            poleId: r.poleId || 'ไม่ระบุรหัส',
+            issue: r.issue || r.raw?.['ปัญหาที่พบ'] || 'รอซ่อมบำรุง',
+            community: r.community || r.raw?.['ชุมชน/เขต'] || '',
+            soi: r.soi || r.raw?.['ซอย'] || '',
+            location: r.location || `${r.community || ''} ${r.soi || ''}`.trim() || 'ไม่ระบุสถานที่',
+            lat: r.lat,
+            lng: r.lng,
+            technician: r.technician || r.raw?.['ชื่อผู้ปฏิบัติงาน'] || 'ทีมบำรุงรักษา',
+            status: r.statusThai || r.status || 'รอดำเนินการ',
+            repairAction: r.repairAction || r.raw?.['การซ่อมบำรุงแก้ไข'] || '',
+            repairDetail: r.repairDetail || r.raw?.['รายละเอียดการแก้ไขเพิ่มเติม'] || '',
+            imageUrl: r.imageUrl || r.raw?.['รูปภาพการซ่อมบำรุง'] || '',
+            remarks: (r.remarks && r.remarks !== '-') ? r.remarks : (r.raw?.['หมายเหตุ'] || ''),
+            orderDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
+            fixedDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
+            isFromExisting: true,
+          });
+        }
+      });
+
+      if (remaining.length !== prev.length || hasChanges || newFromRecords.length > 0) {
+        return [...newFromRecords.reverse(), ...updated];
       }
       return prev;
     });
@@ -507,34 +558,43 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
 
   // Import pending records from sheet
   const handleImportPending = () => {
-    const pendingRecords = records.filter(r => r.status === 'รอซ่อม' || r.status === 'รอดำเนินการ' || !r.status);
+    const pendingRecords = records.filter(isPendingRecord);
     const toAdd: WorkOrderItem[] = [];
 
     pendingRecords.forEach((r, idx) => {
-      if (!workOrders.some(w => w.poleId === r.poleId)) {
+      const hId = (r.raw?.['ID ประวัติ'] || r.id || '').trim();
+      const pId = (r.poleId || '').trim();
+      const alreadyInList = workOrders.some(w => 
+        (hId && w.historyId === hId) || 
+        (pId && pId !== '-' && pId !== 'ไม่ระบุรหัส' && w.poleId === pId)
+      );
+
+      if (!alreadyInList) {
         toAdd.push({
-          id: `WO-${Date.now()}-${idx}`,
-          historyId: (r.raw?.['ID ประวัติ'] || r.id).trim(),
+          id: `WO-${hId || Date.now()}-${idx}`,
+          historyId: hId,
           poleId: r.poleId || `POLE-${idx + 1}`,
-          issue: r.issue || 'รอซ่อมบำรุง',
-          community: r.community || '',
-          soi: r.soi || '',
-          location: r.location || '',
+          issue: r.issue || r.raw?.['ปัญหาที่พบ'] || 'รอซ่อมบำรุง',
+          community: r.community || r.raw?.['ชุมชน/เขต'] || '',
+          soi: r.soi || r.raw?.['ซอย'] || '',
+          location: r.location || `${r.community || ''} ${r.soi || ''}`.trim() || 'ไม่ระบุสถานที่',
           lat: r.lat,
           lng: r.lng,
-          technician: r.technician || 'ทีมบำรุงรักษา',
-          status: 'รอดำเนินการ',
-          repairAction: r.repairAction || '',
-          remarks: r.remarks || 'ดึงจากฐานข้อมูลระบบ',
-          orderDate: new Date().toISOString().split('T')[0],
-          fixedDate: new Date().toISOString().split('T')[0],
+          technician: r.technician || r.raw?.['ชื่อผู้ปฏิบัติงาน'] || 'ทีมบำรุงรักษา',
+          status: r.statusThai || r.status || 'รอดำเนินการ',
+          repairAction: r.repairAction || r.raw?.['การซ่อมบำรุงแก้ไข'] || '',
+          repairDetail: r.repairDetail || r.raw?.['รายละเอียดการแก้ไขเพิ่มเติม'] || '',
+          imageUrl: r.imageUrl || r.raw?.['รูปภาพการซ่อมบำรุง'] || '',
+          remarks: (r.remarks && r.remarks !== '-') ? r.remarks : (r.raw?.['หมายเหตุ'] || 'ดึงจากฐานข้อมูลระบบ'),
+          orderDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
+          fixedDate: (r.fixedDate && r.fixedDate !== '-') ? r.fixedDate : (r.raw?.['วันที่ซ่อมบำรุงแก้ไข'] || new Date().toISOString().split('T')[0]),
           isFromExisting: true,
         });
       }
     });
 
     if (toAdd.length === 0) {
-      alert('รายการแจ้งซ่อมที่รอดำเนินการถูกเพิ่มไว้ในชุดงานครบแล้ว');
+      alert('รายการแจ้งซ่อมที่รอดำเนินการถูกเชื่อมโยงไว้ในรายการครบแล้ว');
       return;
     }
 
@@ -836,7 +896,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <ListPlus size={15} className="text-amber-400" />
-            <span>ดึงงานรอซ่อม ({records.filter(r => r.status === 'รอซ่อม' || r.status === 'รอดำเนินการ' || !r.status).length})</span>
+            <span>ดึงงานรอซ่อม ({records.filter(isPendingRecord).length})</span>
           </button>
 
           {/* Copy LINE Summary Button */}
@@ -1045,11 +1105,11 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[680px] overflow-y-auto pr-1">
             {filteredWorkOrders.map((item, index) => {
               const statusColor = 
-                item.status === 'เสร็จสิ้น' 
+                (item.status === 'เสร็จสิ้น' || item.status === 'ซ่อมเสร็จสิ้น' || item.status === 'Completed')
                   ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
-                  : item.status === 'กำลังดำเนินการ' 
+                  : (item.status === 'กำลังดำเนินการ' || item.status === 'กำลังซ่อม' || item.status === 'In Progress')
                   ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' 
-                  : item.status === 'รออะไหล่/วัสดุ'
+                  : (item.status === 'รออะไหล่/วัสดุ' || item.status === 'Waiting for Parts')
                   ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                   : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
 
