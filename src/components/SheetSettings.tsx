@@ -117,7 +117,27 @@ function doPost(e) {
       for (var c = 0; c < headers.length; c++) {
         var colName = headers[c].toString().trim();
         if (data.hasOwnProperty(colName) && data[colName] !== undefined) {
-          sheet.getRange(targetRow, c + 1).setValue(data[colName]);
+          var val = data[colName];
+          // หากเป็นรูปภาพ base64 ให้บันทึกลงโฟลเดอร์ การซ่อมบำรุง_Images เพื่อให้ AppSheet เปิดดูได้ 100%
+          if (colName.indexOf('รูปภาพ') !== -1 && typeof val === 'string' && val.indexOf('data:image') === 0) {
+            try {
+              var folderName = 'การซ่อมบำรุง_Images';
+              var parentFolder = DriveApp.getFileById(ss.getId()).getParents().next();
+              var folders = parentFolder.getFoldersByName(folderName);
+              var folder = folders.hasNext() ? folders.next() : parentFolder.createFolder(folderName);
+              var base64Data = val.split(',')[1];
+              var contentType = val.split(';')[0].split(':')[1];
+              var fileExt = contentType.indexOf('png') !== -1 ? 'png' : 'jpg';
+              var fileName = historyId + '.' + colName + '.' + new Date().getTime() + '.' + fileExt;
+              var blob = Utilities.newBlob(Utilities.base64Decode(base64Data), contentType, fileName);
+              var file = folder.createFile(blob);
+              file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+              sheet.getRange(targetRow, c + 1).setValue(folderName + '/' + fileName);
+              updatedCols.push(colName);
+              continue;
+            } catch (imgErr) {}
+          }
+          sheet.getRange(targetRow, c + 1).setValue(val);
           updatedCols.push(colName);
         }
       }
@@ -142,7 +162,26 @@ function doPost(e) {
     for (var c = 0; c < headers.length; c++) {
       var headerName = headers[c].toString().trim();
       if (data.hasOwnProperty(headerName) && data[headerName] !== undefined) {
-        sheet.getRange(targetRow, c + 1).setValue(data[headerName]);
+        var valNew = data[headerName];
+        if (headerName.indexOf('รูปภาพ') !== -1 && typeof valNew === 'string' && valNew.indexOf('data:image') === 0) {
+          try {
+            var folderNameNew = 'การซ่อมบำรุง_Images';
+            var parentFolderNew = DriveApp.getFileById(ss.getId()).getParents().next();
+            var foldersNew = parentFolderNew.getFoldersByName(folderNameNew);
+            var folderNew = foldersNew.hasNext() ? foldersNew.next() : parentFolderNew.createFolder(folderNameNew);
+            var base64DataNew = valNew.split(',')[1];
+            var contentTypeNew = valNew.split(';')[0].split(':')[1];
+            var fileExtNew = contentTypeNew.indexOf('png') !== -1 ? 'png' : 'jpg';
+            var fileNameNew = historyId + '.' + headerName + '.' + new Date().getTime() + '.' + fileExtNew;
+            var blobNew = Utilities.newBlob(Utilities.base64Decode(base64DataNew), contentTypeNew, fileNameNew);
+            var fileNew = folderNew.createFile(blobNew);
+            fileNew.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+            sheet.getRange(targetRow, c + 1).setValue(folderNameNew + '/' + fileNameNew);
+            updatedColumns.push(headerName);
+            continue;
+          } catch (imgErrNew) {}
+        }
+        sheet.getRange(targetRow, c + 1).setValue(valNew);
         updatedColumns.push(headerName);
       }
     }
