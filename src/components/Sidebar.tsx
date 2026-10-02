@@ -2,7 +2,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   LayoutDashboard, ClipboardList, MapPin, BarChart3, 
   Settings, RefreshCw, Sun, Moon, LogOut, X, 
-  CheckCircle2, Clock, Hourglass, Shield, ExternalLink
+  CheckCircle2, Clock, Hourglass, Shield, ExternalLink,
+  PanelLeftClose
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,6 +22,8 @@ interface SidebarProps {
   onLogout: () => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export default function Sidebar({
@@ -39,6 +42,8 @@ export default function Sidebar({
   onLogout,
   isMobileOpen,
   onCloseMobile,
+  isCollapsed = false,
+  onToggleCollapse,
 }: SidebarProps) {
   const navItems = [
     {
@@ -106,13 +111,29 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Mobile close button */}
-        <button
-          onClick={onCloseMobile}
-          className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          <X size={18} />
-        </button>
+        {/* Header action buttons */}
+        <div className="flex items-center gap-1">
+          {/* Desktop Collapse Button */}
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer group"
+              title="ซ่อนแท็บด้านซ้าย"
+              aria-label="ซ่อนแท็บด้านซ้าย"
+            >
+              <PanelLeftClose size={18} className="group-hover:text-emerald-400 transition-colors" />
+            </button>
+          )}
+
+          {/* Mobile close button */}
+          <button
+            onClick={onCloseMobile}
+            className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            title="ปิดเมนู"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Nav List */}
@@ -287,8 +308,14 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop Fixed Left Sidebar */}
-      <aside className="hidden lg:block w-64 shrink-0 h-screen sticky top-0 z-30">
-        {sidebarContent}
+      <aside
+        className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 ease-in-out ${
+          isCollapsed ? 'w-0 opacity-0 overflow-hidden pointer-events-none' : 'w-64 opacity-100'
+        }`}
+      >
+        <div className="w-64 h-full">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile Drawer Overlay */}
