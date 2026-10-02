@@ -21,7 +21,8 @@ import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
-  Sun, Moon, Menu, ClipboardList, PanelLeftClose, PanelLeftOpen
+  Sun, Moon, Menu, ClipboardList, PanelLeftClose, PanelLeftOpen,
+  LayoutDashboard
 } from 'lucide-react';
 
 // Default target spreadsheet ID from user's request
@@ -136,10 +137,7 @@ export default function App() {
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
-    const element = document.getElementById(`section-${sectionId}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 1. Initialize Auth on mount
@@ -499,6 +497,39 @@ export default function App() {
               </div>
             </div>
 
+            {/* Middle: Tab Switcher pills */}
+            <div className="hidden md:flex items-center p-1 rounded-xl bg-slate-800/90 border border-slate-700 text-xs">
+              <button
+                onClick={() => handleNavigate('dashboard')}
+                className={`px-3.5 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeSection === 'dashboard'
+                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                <LayoutDashboard size={14} />
+                <span>ภาพรวม & แผนที่</span>
+              </button>
+              <button
+                onClick={() => handleNavigate('records')}
+                className={`px-3.5 py-1.5 rounded-lg font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeSection === 'records'
+                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                <ClipboardList size={14} />
+                <span>รายการแจ้งซ่อม</span>
+                {pendingCount > 0 && (
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    activeSection === 'records' ? 'bg-white/20 text-white' : 'bg-rose-500/20 text-rose-400'
+                  }`}>
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
             {/* Right: Actions, Sync Status & Quick Controls */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               {/* Sync Live Pill */}
@@ -555,8 +586,39 @@ export default function App() {
           </div>
         </header>
 
+        {/* Mobile Subheader Tab Switcher */}
+        <div className="md:hidden border-b border-slate-700/80 bg-[#1E293B] px-4 py-2 flex items-center gap-2">
+          <button
+            onClick={() => handleNavigate('dashboard')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              activeSection === 'dashboard'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-400 bg-slate-800/60 hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard size={14} />
+            <span>ภาพรวม & แผนที่</span>
+          </button>
+          <button
+            onClick={() => handleNavigate('records')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              activeSection === 'records'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-slate-400 bg-slate-800/60 hover:text-slate-200'
+            }`}
+          >
+            <ClipboardList size={14} />
+            <span>รายการแจ้งซ่อม</span>
+            {pendingCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-400 font-bold">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Scrollable Content Body */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
           {/* Error Alert */}
           {error && (
             <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-500/20 flex gap-3 text-rose-300 text-sm leading-normal font-sans">
@@ -580,97 +642,123 @@ export default function App() {
               <span className="text-sm font-sans font-medium">กำลังโหลดและจัดโครงสร้างข้อมูลซ่อมบำรุง...</span>
             </div>
           ) : (
-            <>
-              {/* Section 1: KPI Dashboard Overview & Analytics Charts */}
-              <section id="section-dashboard" className="scroll-mt-20 space-y-6">
-                <DashboardStats
-                  records={records}
-                  onStatusSelect={setSelectedStatusFilter}
-                  selectedStatus={selectedStatusFilter}
-                />
-                <AnalyticsCharts records={records} />
-              </section>
+            <AnimatePresence mode="wait">
+              {activeSection === 'dashboard' ? (
+                /* PAGE 1: ภาพรวมระบบ (KPI Cards + กราฟสถิติ + แผนที่ GIS) */
+                <motion.div
+                  key="view-dashboard"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-6"
+                  id="section-dashboard"
+                >
+                  {/* 1. KPI Status Cards */}
+                  <DashboardStats
+                    records={records}
+                    onStatusSelect={(status) => {
+                      setSelectedStatusFilter(status);
+                      if (status) {
+                        handleNavigate('records');
+                      }
+                    }}
+                    selectedStatus={selectedStatusFilter}
+                  />
 
-              {/* Section 2: Records Table & Detail */}
-              <section id="section-records" className="scroll-mt-20">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column (2/3 width) - Search & Records list */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
-                      <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
-                        <div className="flex items-center gap-2">
-                          <ClipboardList size={18} className="text-emerald-400" />
-                          <h4 className="text-base font-bold text-slate-100 font-sans">
-                            รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
-                          </h4>
+                  {/* 2. Analytics & Trends Charts */}
+                  <AnalyticsCharts records={records} />
+
+                  {/* 3. GIS Map Visualizer */}
+                  <div id="section-map">
+                    <MapVisualizer
+                      records={records}
+                      onSelectRecord={handleRecordSelect}
+                      selectedRecord={selectedRecord}
+                      theme={theme}
+                      appName={appSheetAppName}
+                      tableName={sheetName}
+                    />
+                  </div>
+                </motion.div>
+              ) : (
+                /* PAGE 2: รายการแจ้งซ่อม (รายการรับเรื่องแจ้งซ่อมทั้งหมด + รายละเอียดรายงานการซ่อมบำรุง) */
+                <motion.div
+                  key="view-records"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="space-y-6"
+                  id="section-records"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column (2/3 width) - Search & Records list */}
+                    <div className="lg:col-span-2 space-y-6">
+                      <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
+                        <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
+                          <div className="flex items-center gap-2">
+                            <ClipboardList size={18} className="text-emerald-400" />
+                            <h4 className="text-base font-bold text-slate-100 font-sans">
+                              รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
+                            </h4>
+                          </div>
+                          {selectedStatusFilter && (
+                            <button
+                              onClick={() => setSelectedStatusFilter(null)}
+                              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium underline cursor-pointer"
+                            >
+                              แสดงทั้งหมด (ล้างตัวกรอง: {selectedStatusFilter})
+                            </button>
+                          )}
                         </div>
-                        {selectedStatusFilter && (
-                          <button
-                            onClick={() => setSelectedStatusFilter(null)}
-                            className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
-                          >
-                            ล้างตัวกรองสถานะ
-                          </button>
-                        )}
+                        <RecordsList
+                          records={records}
+                          onSelectRecord={handleRecordSelect}
+                          onEditRecord={handleOpenEdit}
+                          selectedRecord={selectedRecord}
+                          selectedStatusFilter={selectedStatusFilter}
+                          onStatusFilterChange={setSelectedStatusFilter}
+                        />
                       </div>
-                      <RecordsList
-                        records={records}
-                        onSelectRecord={handleRecordSelect}
-                        onEditRecord={handleOpenEdit}
-                        selectedRecord={selectedRecord}
-                        selectedStatusFilter={selectedStatusFilter}
-                        onStatusFilterChange={setSelectedStatusFilter}
-                      />
+                    </div>
+
+                    {/* Right Column (1/3 width) - Detail Preview */}
+                    <div className="space-y-6">
+                      <AnimatePresence mode="wait">
+                        {selectedRecord ? (
+                          <motion.div
+                            key={selectedRecord.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <RecordDetail
+                              record={selectedRecord}
+                              appName={appSheetAppName}
+                              tableName={sheetName}
+                              onEdit={handleOpenEdit}
+                              onClose={() => setSelectedRecord(null)}
+                            />
+                          </motion.div>
+                        ) : (
+                          <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 text-center text-slate-400 min-h-[220px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
+                            <Lightbulb size={28} className="text-amber-400 animate-pulse" />
+                            <div className="space-y-1">
+                              <h5 className="text-sm font-bold text-slate-200">รายละเอียดรายงานการซ่อมบำรุง</h5>
+                              <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                                คลิกเลือกรายการจากตารางทางซ้ายเพื่อดูรายละเอียดภาพถ่าย พิกัด และอาการ หรือกดปุ่ม "แก้ไขข้อมูล" เพื่ออัปเดตลง Google Sheet ทันที
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
-
-                  {/* Right Column (1/3 width) - Detail Preview */}
-                  <div className="space-y-6">
-                    <AnimatePresence mode="wait">
-                      {selectedRecord ? (
-                        <motion.div
-                          key={selectedRecord.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <RecordDetail
-                            record={selectedRecord}
-                            appName={appSheetAppName}
-                            tableName={sheetName}
-                            onEdit={handleOpenEdit}
-                            onClose={() => setSelectedRecord(null)}
-                          />
-                        </motion.div>
-                      ) : (
-                        <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 text-center text-slate-400 min-h-[220px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
-                          <Lightbulb size={28} className="text-amber-400 animate-pulse" />
-                          <div className="space-y-1">
-                            <h5 className="text-sm font-bold text-slate-200">ข้อมูลรายละเอียดรายการซ่อม</h5>
-                            <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                              คลิกเลือกรายการจากตารางทางซ้ายเพื่อดูรายละเอียดภาพถ่าย พิกัด และอาการ หรือกดปุ่ม "แก้ไขข้อมูล" เพื่ออัปเดตลง Google Sheet ทันที
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </section>
-
-              {/* GIS Map Visualizer */}
-              <section id="section-map" className="scroll-mt-20">
-                <MapVisualizer
-                  records={records}
-                  onSelectRecord={handleRecordSelect}
-                  selectedRecord={selectedRecord}
-                  theme={theme}
-                  appName={appSheetAppName}
-                  tableName={sheetName}
-                />
-              </section>
-            </>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </main>
 

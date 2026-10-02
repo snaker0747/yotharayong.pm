@@ -49,7 +49,7 @@ export default function Sidebar({
     {
       id: 'dashboard',
       label: 'ภาพรวมระบบ',
-      sublabel: 'Dashboard Overview',
+      sublabel: 'แดชบอร์ด, กราฟ & แผนที่',
       icon: LayoutDashboard,
       badge: totalRecords > 0 ? `${totalRecords}` : null,
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
@@ -57,7 +57,7 @@ export default function Sidebar({
     {
       id: 'records',
       label: 'รายการแจ้งซ่อม',
-      sublabel: 'Maintenance List',
+      sublabel: 'รายการงาน & รายละเอียด',
       icon: ClipboardList,
       badge: pendingRecords > 0 ? `${pendingRecords} รอซ่อม` : null,
       badgeColor: 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
