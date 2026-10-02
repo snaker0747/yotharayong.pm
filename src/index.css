@@ -461,18 +461,25 @@ html.light .recharts-tooltip-label {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Official A4 Print Styles for Field Work Orders                              */
+/* Official A4 Print Styles for Field Work Orders (High-Density Multi-Job)    */
 /* -------------------------------------------------------------------------- */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm;
+    margin: 5mm 6mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   body {
     background-color: #FFFFFF !important;
     color: #000000 !important;
-    font-size: 12pt;
+    font-size: 10pt;
   }
 
   /* Hide all non-printable application elements */
@@ -504,12 +511,35 @@ html.light .recharts-tooltip-label {
   .printable-area {
     display: block !important;
     width: 100% !important;
+    max-width: 100% !important;
     border: none !important;
     box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
     background-color: #FFFFFF !important;
     color: #000000 !important;
+  }
+
+  .printable-area table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  .printable-area tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .printable-area thead {
+    display: table-header-group !important;
+  }
+
+  .printable-area th, 
+  .printable-area td {
+    padding: 4px 6px !important;
+    line-height: 1.25 !important;
+    border-color: #94A3B8 !important;
   }
 }
 

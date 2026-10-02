@@ -674,110 +674,110 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
         {/* The Printable A4 Sheet */}
         <div 
           id="printable-work-order" 
-          className="bg-white text-slate-900 rounded-2xl p-6 sm:p-10 shadow-xl border border-slate-200 max-w-5xl mx-auto printable-area font-sans"
+          className="bg-white text-slate-900 rounded-2xl p-4 sm:p-6 shadow-xl border border-slate-200 max-w-5xl mx-auto printable-area font-sans"
         >
-          {/* Header of Official Document */}
-          <div className="border-b-2 border-slate-800 pb-4 mb-5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+          {/* Header of Official Document (Compact & Streamlined) */}
+          <div className="border-b-2 border-slate-800 pb-2 mb-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
                 <img 
                   src="/logo.png" 
                   alt="ตราเทศบาลนครระยอง" 
-                  className="w-16 h-16 object-contain"
+                  className="w-10 h-10 object-contain shrink-0"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
                 <div>
-                  <h1 className="text-lg font-bold text-slate-950 font-sans">
-                    เทศบาลนครระยอง - สำนักช่าง
-                  </h1>
-                  <h2 className="text-sm font-semibold text-slate-700 font-sans">
-                    ฝ่ายสาธารณูปโภค ส่วนการโยธา
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    ระบบบริหารจัดการงานซ่อมบำรุงไฟฟ้าสาธารณะ
+                  <div className="flex items-baseline gap-2">
+                    <h1 className="text-sm font-extrabold text-slate-950 font-sans leading-tight">
+                      ใบสั่งงานซ่อมบำรุงไฟฟ้าสาธารณะ
+                    </h1>
+                    <span className="text-[11px] font-semibold text-slate-700 font-sans">
+                      ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    เอกสารมอบหมายช่างตรวจสอบ ซ่อมแซม และบันทึกผลการปฏิบัติงานหน้างาน
                   </p>
                 </div>
               </div>
 
-              <div className="text-right space-y-1">
-                <span className="inline-block px-3 py-1 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-xs text-slate-800">
-                  {reportNumber}
-                </span>
-                <p className="text-xs text-slate-600">
-                  วันที่สั่งงาน: {new Date(orderDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </p>
+              <div className="text-right shrink-0">
+                <div className="flex items-center gap-2 justify-end">
+                  <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-[11px] text-slate-800">
+                    เลขที่: {reportNumber}
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-800">
+                    วันที่: {new Date(orderDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-600 font-medium mt-0.5">
+                  จำนวนงานในใบงานนี้: <span className="font-bold text-slate-900">{workOrders.length}</span> รายการ
+                </div>
               </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-200 text-center">
-              <h3 className="text-base font-extrabold text-slate-900 tracking-wide font-sans uppercase">
-                ใบสั่งงานซ่อมบำรุงไฟฟ้าสาธารณะประจำวัน
-              </h3>
-              <p className="text-xs text-slate-600 mt-0.5">
-                (สำหรับมอบหมายให้ช่างผู้ปฏิบัติงานตรวจสอบ ซ่อมแซม และรายงานผล)
-              </p>
             </div>
           </div>
 
-          {/* Table of Jobs */}
+          {/* Table of Jobs (High-Density Multi-Job Layout) */}
           {workOrders.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg">
-              ยังไม่มีรายการแจ้งซ่อมในใบงานนี้
+            <div className="py-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg text-xs">
+              ยังไม่มีรายการแจ้งซ่อมในใบงานนี้ (กดเพิ่มรายการจากฟอร์มทางซ้าย หรือกดปุ่ม "ดึงงานรอซ่อมจากระบบ")
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse border border-slate-300">
+              <table className="w-full text-left text-[11px] border-collapse border border-slate-400">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-300">
-                    <th className="py-2.5 px-2 text-center border-r border-slate-300 w-10">ลำดับ</th>
-                    <th className="py-2.5 px-3 border-r border-slate-300 w-24">รหัสเสาไฟ</th>
-                    <th className="py-2.5 px-3 border-r border-slate-300">สถานที่ / ชุมชน / ซอย</th>
-                    <th className="py-2.5 px-3 border-r border-slate-300">ปัญหา / อาการชำรุด</th>
-                    <th className="py-2.5 px-2.5 border-r border-slate-300 w-24 text-center">ช่างผู้รับผิดชอบ</th>
-                    <th className="py-2.5 px-3 border-r border-slate-300 w-44">ผลการซ่อม / อะไหล่ที่ใช้ (บันทึกหน้างาน)</th>
-                    <th className="py-2.5 px-2 text-center w-16">ลงชื่อช่าง</th>
+                  <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-400">
+                    <th className="py-1 px-1.5 text-center border-r border-slate-400 w-8">ที่</th>
+                    <th className="py-1 px-2 border-r border-slate-400 w-24">รหัสเสาไฟ</th>
+                    <th className="py-1 px-2 border-r border-slate-400">สถานที่ / ชุมชน / ซอย / จุดสังเกต</th>
+                    <th className="py-1 px-2 border-r border-slate-400 w-44">ปัญหา / อาการชำรุด</th>
+                    <th className="py-1 px-1.5 border-r border-slate-400 w-20 text-center">พิกัด GPS</th>
+                    <th className="py-1 px-2 border-r border-slate-400 w-20 text-center">ช่าง</th>
+                    <th className="py-1 px-2 border-slate-400 w-48">ผลการซ่อม / อะไหล่ที่ใช้ (บันทึกหน้างาน)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-300">
                   {workOrders.map((job, idx) => (
-                    <tr key={job.id} className="hover:bg-slate-50">
-                      <td className="py-2.5 px-2 text-center font-bold font-mono border-r border-slate-300">
+                    <tr key={job.id} className="hover:bg-slate-50/50">
+                      <td className="py-1 px-1.5 text-center font-bold font-mono border-r border-slate-300 text-slate-700">
                         {idx + 1}
                       </td>
-                      <td className="py-2.5 px-3 font-mono font-bold text-slate-900 border-r border-slate-300">
+                      <td className="py-1 px-2 font-mono font-bold text-slate-900 border-r border-slate-300 whitespace-nowrap">
                         {job.poleId}
                         {job.urgency === 'ด่วนที่สุด' && (
-                          <span className="block text-[9px] text-red-600 font-sans font-bold">[ด่วนที่สุด]</span>
+                          <span className="block text-[8.5px] text-red-600 font-sans font-bold leading-none mt-0.5">[ด่วนที่สุด]</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 border-r border-slate-300">
+                      <td className="py-1 px-2 border-r border-slate-300 leading-tight">
                         <div className="font-semibold text-slate-900">
                           {job.community ? `ชุมชน${job.community}` : ''} {job.soi ? `ซอย${job.soi}` : ''}
                         </div>
                         {job.location && (
-                          <div className="text-[11px] text-slate-600">จุดสังเกต: {job.location}</div>
-                        )}
-                        {job.lat && job.lng && (
-                          <div className="text-[10px] text-slate-500 font-mono">
-                            GPS: {job.lat.toFixed(5)}, {job.lng.toFixed(5)}
-                          </div>
+                          <div className="text-[10px] text-slate-600 line-clamp-1">จุดสังเกต: {job.location}</div>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 border-r border-slate-300">
-                        <div className="font-bold text-slate-900">{job.issue}</div>
+                      <td className="py-1 px-2 border-r border-slate-300 leading-tight">
+                        <div className="font-medium text-slate-900">{job.issue}</div>
                         {job.remarks && (
-                          <div className="text-[11px] text-slate-600 italic">หมายเหตุ: {job.remarks}</div>
+                          <div className="text-[9.5px] text-slate-500 italic line-clamp-1">หมายเหตุ: {job.remarks}</div>
                         )}
                       </td>
-                      <td className="py-2.5 px-2.5 text-center font-medium border-r border-slate-300 text-slate-800">
+                      <td className="py-1 px-1.5 text-center font-mono text-[9px] text-slate-600 border-r border-slate-300 whitespace-nowrap">
+                        {job.lat && job.lng ? (
+                          <div>
+                            <div>{job.lat.toFixed(4)}</div>
+                            <div>{job.lng.toFixed(4)}</div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </td>
+                      <td className="py-1 px-2 text-center font-medium border-r border-slate-300 text-slate-800 text-[10.5px] whitespace-nowrap">
                         {job.technician || '-'}
                       </td>
-                      {/* Blank spaces for technicians to write on paper */}
-                      <td className="py-2.5 px-3 border-r border-slate-300 bg-slate-50/50">
-                        <div className="h-10 border-b border-dotted border-slate-400"></div>
-                      </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <div className="h-10 border-b border-dotted border-slate-400"></div>
+                      {/* Blank space for technicians to write on paper */}
+                      <td className="py-1 px-2 bg-slate-50/40">
+                        <div className="h-5 border-b border-dashed border-slate-400/80"></div>
                       </td>
                     </tr>
                   ))}
@@ -786,25 +786,10 @@ export default function WorkOrderReport({ records, onSyncNewRecord, theme }: Wor
             </div>
           )}
 
-          {/* Signatures Section */}
-          <div className="mt-8 pt-6 border-t border-slate-300 grid grid-cols-3 gap-6 text-center text-xs text-slate-800">
-            <div className="space-y-8">
-              <p className="font-bold">ผู้มอบหมายงาน</p>
-              <div className="border-b border-slate-400 w-36 mx-auto"></div>
-              <p className="text-[11px] text-slate-600">(......................................................)<br />วันที่ ......./......./.......</p>
-            </div>
-
-            <div className="space-y-8">
-              <p className="font-bold">ช่างผู้รับมอบหมายงาน</p>
-              <div className="border-b border-slate-400 w-36 mx-auto"></div>
-              <p className="text-[11px] text-slate-600">(......................................................)<br />วันที่ ......./......./.......</p>
-            </div>
-
-            <div className="space-y-8">
-              <p className="font-bold">ผู้ตรวจรับงาน / หัวหน้าฝ่าย</p>
-              <div className="border-b border-slate-400 w-36 mx-auto"></div>
-              <p className="text-[11px] text-slate-600">(......................................................)<br />วันที่ ......./......./.......</p>
-            </div>
+          {/* Minimal Document Footer (No signature boxes) */}
+          <div className="mt-2.5 pt-1.5 border-t border-slate-300 flex items-center justify-between text-[9.5px] text-slate-500 font-sans">
+            <span>* รายการใบสั่งงานบำรุงรักษาไฟฟ้าสาธารณะ เทศบาลนครระยอง (ฝ่ายสาธารณูปโภค ส่วนการโยธา)</span>
+            <span>จัดพิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</span>
           </div>
         </div>
       </div>
