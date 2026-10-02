@@ -7,6 +7,8 @@ import {
   fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
+import MapVisualizer from './components/MapVisualizer';
+import AnalyticsCharts from './components/AnalyticsCharts';
 import RecordsList from './components/RecordsList';
 import RecordDetail from './components/RecordDetail';
 import EditRecordModal from './components/EditRecordModal';
@@ -579,13 +581,14 @@ export default function App() {
             </div>
           ) : (
             <>
-              {/* Section 1: KPI Dashboard Overview */}
-              <section id="section-dashboard" className="scroll-mt-20">
+              {/* Section 1: KPI Dashboard Overview & Analytics Charts */}
+              <section id="section-dashboard" className="scroll-mt-20 space-y-6">
                 <DashboardStats
                   records={records}
                   onStatusSelect={setSelectedStatusFilter}
                   selectedStatus={selectedStatusFilter}
                 />
+                <AnalyticsCharts records={records} />
               </section>
 
               {/* Section 2: Records Table & Detail */}
@@ -654,6 +657,18 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                 </div>
+              </section>
+
+              {/* GIS Map Visualizer */}
+              <section id="section-map" className="scroll-mt-20">
+                <MapVisualizer
+                  records={records}
+                  onSelectRecord={handleRecordSelect}
+                  selectedRecord={selectedRecord}
+                  theme={theme}
+                  appName={appSheetAppName}
+                  tableName={sheetName}
+                />
               </section>
             </>
           )}
