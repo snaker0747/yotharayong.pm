@@ -249,7 +249,6 @@ export default function RecordsList({
                   layoutId={`record-card-${record.id}`}
                   onClick={() => {
                     onSelectRecord(record);
-                    if (onEditRecord) onEditRecord(record);
                   }}
                   className={`p-4 rounded-lg border text-left cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                     isSelected 
@@ -284,9 +283,24 @@ export default function RecordsList({
                         <User size={12} />
                         <span className="truncate max-w-[80px]">{record.technician}</span>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0 font-mono text-[11px]">
-                        <Calendar size={12} />
-                        <span>{record.fixedDate !== '-' ? record.fixedDate : (record.timestamp ? record.timestamp.split(' ')[0] : '-')}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 shrink-0 font-mono text-[11px]">
+                          <Calendar size={12} />
+                          <span>{record.fixedDate !== '-' ? record.fixedDate : (record.timestamp ? record.timestamp.split(' ')[0] : '-')}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectRecord(record);
+                            if (onEditRecord) onEditRecord(record);
+                          }}
+                          className="px-2 py-0.5 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 text-[10.5px] font-sans font-medium border border-blue-500/20 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          title="แก้ไขข้อมูลรายการนี้"
+                        >
+                          <Edit3 size={11} />
+                          <span>แก้ไข</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -323,7 +337,6 @@ export default function RecordsList({
                       key={record.id}
                       onClick={() => {
                         onSelectRecord(record);
-                        if (onEditRecord) onEditRecord(record);
                       }}
                       className={`cursor-pointer hover:bg-slate-800/40 transition-colors ${
                         isSelected ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-300'
