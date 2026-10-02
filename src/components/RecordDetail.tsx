@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { 
   X, MapPin, Calendar, User, CheckCircle2, Clock, 
   Hourglass, AlertTriangle, ExternalLink, Navigation, 
-  Database, Image as ImageIcon, HelpCircle, Edit3
+  Database, Image as ImageIcon, HelpCircle
 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 
@@ -119,49 +119,42 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
   const previewImage = getImageUrl(record.imageUrl);
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-full shadow-2xl relative" id="record-detail-panel">
+    <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl overflow-hidden flex flex-col h-full shadow-2xl relative" id="record-detail-panel">
       {/* Top Banner with Actions */}
-      <div className="flex justify-between items-center px-4 py-3 bg-slate-900/60 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <Database className="text-blue-500" size={15} />
-          <span className="text-base font-semibold text-slate-100 font-sans">
+      <div className="flex justify-between items-center px-4 sm:px-5 py-3.5 bg-slate-900/60 border-b border-slate-700/80">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+            <Database size={16} />
+          </div>
+          <span className="text-base font-bold text-slate-100 font-sans tracking-tight">
             รายละเอียดรายงานการซ่อมบำรุง
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          {onEdit && (
-            <button
-              onClick={() => onEdit(record)}
-              className="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/30 text-xs font-sans font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Edit3 size={13} />
-              <span>แก้ไขข้อมูล</span>
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="p-1 rounded bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-          >
-            <X size={16} />
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+          title="ปิดหน้าต่างนี้"
+        >
+          <X size={16} />
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Split container for Image and Core Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Left Column: Image (reduced to half size by splitting column) */}
-          <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        {/* Balanced 2-Column Grid (Eliminates the empty gap below photo) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          {/* Left Column: Image + Defect Details + Repair Action */}
+          <div className="space-y-3">
+            {/* Image Preview */}
             {previewImage ? (
-              <div className="relative aspect-video w-full rounded-lg overflow-hidden border border-slate-700 bg-slate-950 group">
+              <div className="relative aspect-[16/10] w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group shadow-md">
                 <img
                   src={previewImage}
                   alt={`Pole ${record.poleId} Issue`}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-2 right-2 bg-slate-950/90 px-2 py-1 rounded text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
-                  <ImageIcon size={12} />
+                <div className="absolute top-2 left-2 bg-slate-950/85 backdrop-blur-sm px-2 py-0.5 rounded-md text-[10px] font-mono text-slate-300 flex items-center gap-1.5 border border-slate-800">
+                  <ImageIcon size={11} className="text-emerald-400" />
                   IMAGE ATTACHED
                 </div>
                 <a
@@ -169,147 +162,153 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
                   target="_blank"
                   referrerPolicy="no-referrer"
                   rel="noopener noreferrer"
-                  className="absolute bottom-2 right-2 bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-bold"
+                  className="absolute bottom-2 right-2 bg-slate-900/90 hover:bg-blue-600 text-white px-2.5 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 text-[11px] font-semibold backdrop-blur-sm border border-slate-700"
                 >
-                  <ExternalLink size={13} />
+                  <ExternalLink size={12} />
                   ดูรูปขนาดเต็ม
                 </a>
               </div>
             ) : (
-              <div className="aspect-video w-full rounded-lg border border-dashed border-slate-700 bg-slate-950/50 flex flex-col items-center justify-center text-center text-slate-400 p-4">
-                <ImageIcon size={22} className="text-slate-600 mb-1" />
+              <div className="aspect-[16/10] w-full rounded-xl border border-dashed border-slate-700 bg-slate-950/50 flex flex-col items-center justify-center text-center text-slate-500 p-4">
+                <ImageIcon size={24} className="text-slate-600 mb-1" />
                 <span className="text-xs font-sans">ไม่มีไฟล์รูปภาพแนบในรายงาน</span>
+              </div>
+            )}
+
+            {/* Defect Details box (Placed directly under photo to fill the previous void) */}
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase font-sans flex items-center gap-1.5">
+                <AlertTriangle size={12} className="text-amber-400" />
+                อาการชำรุดที่พบ (Defect Details)
+              </span>
+              <div className="text-xs text-slate-200 bg-slate-950/40 border border-slate-800/80 p-2.5 rounded-xl font-sans leading-relaxed min-h-[44px]">
+                {record.issue || '-'}
+              </div>
+            </div>
+
+            {/* Repair Action (if any) */}
+            {record.repairAction && (
+              <div className="space-y-1">
+                <span className="text-[11px] font-bold text-emerald-400 uppercase font-sans flex items-center gap-1.5">
+                  <CheckCircle2 size={12} />
+                  การซ่อมบำรุงแก้ไข (Repair Action)
+                </span>
+                <div className="text-xs text-emerald-300 bg-emerald-950/20 border border-emerald-900/40 p-2.5 rounded-xl font-sans leading-relaxed">
+                  {record.repairAction}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Right Column: Detailed summary side-by-side with the image */}
+          {/* Right Column: Status + Pole ID + Technician & Date + Location & GPS + Remarks */}
           <div className="space-y-3">
-            {/* Title & Status */}
-            <div>
-              <div className="flex items-center justify-end mb-1">
+            {/* Header: Pole ID & Status Pill */}
+            <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] text-slate-400 font-sans font-medium">หมายเลขเสาไฟ</span>
                 {getStatusBadgeLarge(record.status, record.statusThai)}
               </div>
-              <h3 className="text-base font-bold text-slate-100 font-sans">
-                เสาไฟฟ้าหมายเลข: <span className="text-blue-400 font-mono font-bold">{record.poleId}</span>
+              <h3 className="text-xl font-extrabold text-blue-400 font-mono tracking-tight">
+                {record.poleId}
               </h3>
             </div>
 
-            {/* Core details list */}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700/60">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase font-sans">ช่างผู้รับผิดชอบ</span>
-                <div className="flex items-center gap-1 text-xs text-slate-300 font-sans">
-                  <User size={13} className="text-slate-500 shrink-0" />
-                  <span className="truncate" title={record.technician}>{record.technician || '-'}</span>
-                </div>
+            {/* Technician & Date Grid */}
+            <div className="grid grid-cols-2 gap-2 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-sans flex items-center gap-1">
+                  <User size={11} className="text-slate-500" /> ช่างผู้รับผิดชอบ
+                </span>
+                <p className="text-xs font-semibold text-slate-200 truncate font-sans" title={record.technician}>
+                  {record.technician || '-'}
+                </p>
               </div>
               
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-semibold text-slate-400 uppercase font-sans">วันที่ดำเนินการ</span>
-                <div className="flex items-center gap-1 text-xs text-slate-300 font-sans">
-                  <Calendar size={13} className="text-slate-500 shrink-0" />
-                  <span className="truncate" title={record.fixedDate}>{record.fixedDate || '-'}</span>
-                </div>
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase font-sans flex items-center gap-1">
+                  <Calendar size={11} className="text-slate-500" /> วันที่ดำเนินการ
+                </span>
+                <p className="text-xs font-semibold text-slate-200 truncate font-sans" title={record.fixedDate}>
+                  {record.fixedDate || '-'}
+                </p>
               </div>
             </div>
 
             {/* Location & GPS */}
-            <div className="space-y-1 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40 text-xs">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase font-sans block">รายละเอียดสถานที่</span>
-              <div className="flex items-start gap-1.5 text-slate-300 font-sans">
-                <MapPin size={14} className="text-rose-500 shrink-0 mt-0.5" />
-                <div className="space-y-0.5 flex-1 min-w-0">
-                  <p className="truncate">
-                    <strong className="text-slate-400 font-sans mr-1">ชุมชน:</strong> 
-                    <span>{getCommunityValue(record)}</span>
-                  </p>
-                  <p className="truncate">
-                    <strong className="text-slate-400 font-sans mr-1">ซอย:</strong> 
-                    <span>{getSoiValue(record)}</span>
-                  </p>
-                  {record.location && record.location !== 'ไม่ระบุสถานที่' && record.location !== '-' && (
-                    <p className="text-[11px] text-slate-400 leading-normal line-clamp-2 mt-1 border-t border-slate-800/40 pt-1" title={record.location}>
-                      <strong className="text-slate-500 font-sans mr-1">จุดอ้างอิง:</strong>
-                      {record.location}
-                    </p>
-                  )}
+            <div className="space-y-1.5 bg-slate-950/40 p-3 rounded-xl border border-slate-800/80 text-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase font-sans flex items-center gap-1">
+                <MapPin size={12} className="text-rose-400" /> รายละเอียดสถานที่
+              </span>
+              <div className="space-y-1 text-slate-300 font-sans">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium shrink-0">ชุมชน:</span>
+                  <span className="text-white font-semibold truncate">{getCommunityValue(record)}</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium shrink-0">ซอย:</span>
+                  <span className="text-slate-200 truncate">{getSoiValue(record)}</span>
+                </div>
+                {record.location && record.location !== 'ไม่ระบุสถานที่' && record.location !== '-' && (
+                  <div className="text-[11px] text-slate-400 pt-1 border-t border-slate-800/60 leading-relaxed line-clamp-2" title={record.location}>
+                    <span className="text-slate-500 mr-1">จุดอ้างอิง:</span>
+                    {record.location}
+                  </div>
+                )}
               </div>
               
               {record.lat && (
-                <div className="pt-1.5 border-t border-slate-800/40 flex items-center justify-between text-[10px] font-mono text-slate-400">
+                <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-400">
                   <span className="truncate">GPS: {record.lat.toFixed(5)}, {record.lng!.toFixed(5)}</span>
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${record.lat},${record.lng}`}
                     target="_blank"
                     referrerPolicy="no-referrer"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-0.5 text-blue-400 hover:text-blue-300 transition-colors font-bold shrink-0"
+                    className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 transition-colors"
                   >
                     <Navigation size={11} />
-                    นำทาง
-                    <ExternalLink size={11} />
+                    <span>นำทาง</span>
+                    <ExternalLink size={10} />
                   </a>
                 </div>
               )}
             </div>
-          </div>
-        </div>
 
-        {/* Issue, Repair Action & Remarks (Keep below the grid for spacious display) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-700/60">
-          {/* Issue detail */}
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-slate-400 uppercase font-sans">อาการชำรุดที่พบ (Defect Details)</span>
-            <p className="text-xs text-slate-200 bg-slate-950/20 border border-slate-800 p-2 rounded-lg font-sans leading-relaxed min-h-[48px]">
-              {record.issue || '-'}
-            </p>
-          </div>
-
-          {/* Repair Action & Remarks group */}
-          <div className="space-y-3">
-            {record.repairAction && (
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-slate-400 uppercase font-sans">การซ่อมบำรุงแก้ไข (Repair Action)</span>
-                <p className="text-xs text-emerald-400 bg-slate-950/20 border border-emerald-900/30 p-2 rounded-lg font-sans leading-relaxed">
-                  {record.repairAction}
-                </p>
-              </div>
-            )}
-
+            {/* Remarks box */}
             <div className="space-y-1">
-              <span className="text-xs font-semibold text-slate-400 uppercase font-sans">หมายเหตุ (Remarks)</span>
-              <p className="text-xs text-slate-400 font-sans italic bg-slate-950/10 p-2 rounded-md border border-slate-800/30">
+              <span className="text-[10px] font-bold text-slate-400 uppercase font-sans">
+                หมายเหตุ (Remarks)
+              </span>
+              <p className="text-xs text-slate-400 font-sans italic bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80 leading-relaxed min-h-[38px]">
                 {record.remarks || '-'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Dynamic sheet properties (The complete sheet row dump - stays below as requested) */}
-        <div className="space-y-1 pt-3 border-t border-slate-700/60 font-sans">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Database size={13} className="text-slate-500" />
-            <span className="text-xs font-semibold text-slate-400 uppercase font-sans">ข้อมูลทั้งหมดจาก Google Sheet</span>
+        {/* Full-width Google Sheet Data Dump */}
+        <div className="space-y-1.5 pt-3 border-t border-slate-700/60 font-sans">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Database size={13} className="text-slate-400" />
+            <span className="text-xs font-bold text-slate-300 uppercase font-sans">ข้อมูลทั้งหมดจาก Google Sheet</span>
           </div>
-          <div className="bg-slate-950 rounded-lg p-3 border border-slate-800 font-mono text-xs space-y-1.5 max-h-[160px] overflow-y-auto">
+          <div className="bg-slate-950/60 rounded-xl p-3 border border-slate-800 font-mono text-xs space-y-1.5 max-h-[160px] overflow-y-auto">
             {Object.entries(record.raw).map(([key, value]) => (
-              <div key={key} className="flex justify-between items-start gap-4 border-b border-slate-900 pb-1 last:border-0 last:pb-0">
-                <span className="text-slate-500 text-[11px] truncate max-w-[150px]" title={key}>{key}:</span>
-                <span className="text-slate-300 text-right word-break break-all max-w-[200px]">{value || '-'}</span>
+              <div key={key} className="flex justify-between items-start gap-4 border-b border-slate-900/80 pb-1 last:border-0 last:pb-0">
+                <span className="text-slate-500 text-[11px] truncate max-w-[160px]" title={key}>{key}:</span>
+                <span className="text-slate-300 text-right word-break break-all max-w-[220px]">{value || '-'}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* AppSheet / GAS sync info */}
-        <div className="text-xs font-sans text-slate-400 bg-slate-950/20 border border-slate-800/40 p-3 rounded-lg flex items-start gap-2">
-          <HelpCircle size={15} className="text-blue-500/60 shrink-0 mt-0.5" />
+        <div className="text-xs font-sans text-slate-400 bg-slate-950/30 border border-slate-800/50 p-3 rounded-xl flex items-start gap-2.5">
+          <HelpCircle size={15} className="text-emerald-400/80 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-slate-300">ระบบเชื่อมโยงข้อมูลอัตโนมัติ</p>
-            <p className="leading-relaxed text-slate-400">
-              เมื่อทำการบันทึกข้อมูลซ่อมบำรุงในสมาร์ทโฟนผ่าน AppSheet ข้อมูลจะอัพเดทเข้าสู่ Google Sheet ทันที และแสดงผลแบบเรียลไทม์บนแดชบอร์ดนี้โดยไม่ต้องดาวน์โหลดไฟล์ใหม่
+            <p className="font-bold text-slate-300 text-xs">ระบบเชื่อมโยงข้อมูลอัตโนมัติ (Live Google Sheet Sync)</p>
+            <p className="leading-relaxed text-[11px] text-slate-400">
+              เมื่อมีการรายงานหรือบันทึกข้อมูลซ่อมบำรุง ข้อมูลจะซิงค์ตรงกับ Google Sheet ทันที และแสดงผลแบบเรียลไทม์บนแดชบอร์ดนี้
             </p>
           </div>
         </div>

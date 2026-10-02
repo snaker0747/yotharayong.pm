@@ -692,9 +692,9 @@ export default function App() {
                   className="space-y-6"
                   id="section-records"
                 >
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column (2/3 width) - Search & Records list */}
-                    <div className="lg:col-span-2 space-y-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                    {/* Left Column (7/12 width) - Search & Records list */}
+                    <div className="xl:col-span-7 space-y-6">
                       <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
                         <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
                           <div className="flex items-center gap-2">
@@ -723,8 +723,8 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Right Column (1/3 width) - Detail Preview */}
-                    <div className="space-y-6">
+                    {/* Right Column (5/12 width) - Detail Preview */}
+                    <div className="xl:col-span-5 space-y-6">
                       <AnimatePresence mode="wait">
                         {selectedRecord ? (
                           <motion.div
