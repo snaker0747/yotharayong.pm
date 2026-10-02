@@ -168,13 +168,42 @@ export function getStoredRecordOverrides(): Record<string, Partial<MaintenanceRe
 export function saveRecordOverride(record: MaintenanceRecord): void {
   try {
     const current = getStoredRecordOverrides();
-    current[record.id] = record;
-    if (record.poleId) {
-      current[`pole_${record.poleId}`] = record;
+    const historyId = (record.raw?.['ID ประวัติ'] || record.raw?.['id ประวัติ'] || record.raw?.['History ID'] || '').trim();
+    if (historyId) {
+      current[`hist_${historyId}`] = record;
     }
+    if (record.poleId && record.poleId !== '-') {
+      current[`pole_${record.poleId.trim()}`] = record;
+    }
+    current[record.id] = record;
     localStorage.setItem('rayong_record_overrides', JSON.stringify(current));
   } catch (err) {
     console.warn('Failed to save record override to localStorage:', err);
+  }
+}
+
+export function deleteRecordOverride(idOrHistoryId: string, poleId?: string): void {
+  try {
+    const current = getStoredRecordOverrides();
+    const target = (idOrHistoryId || '').trim();
+    if (target) {
+      delete current[target];
+      delete current[`hist_${target}`];
+    }
+    if (poleId && poleId !== '-') {
+      delete current[`pole_${poleId.trim()}`];
+    }
+    Object.keys(current).forEach(k => {
+      const item = current[k];
+      if (!item) return;
+      const hId = (item.raw?.['ID ประวัติ'] || item.id || '').trim();
+      if (hId === target || (poleId && item.poleId === poleId)) {
+        delete current[k];
+      }
+    });
+    localStorage.setItem('rayong_record_overrides', JSON.stringify(current));
+  } catch (err) {
+    console.warn('Failed to delete record override:', err);
   }
 }
 
@@ -332,9 +361,13 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
       raw,
     };
 
-    // Apply any local user modifications/overrides
+    // Apply any local user modifications/overrides safely by historyId or poleId
+    const historyId = (raw['ID ประวัติ'] || raw['id ประวัติ'] || raw['History ID'] || '').trim();
     const overrides = getStoredRecordOverrides();
-    const customEdit = overrides[rowId] || (poleId ? overrides[`pole_${poleId}`] : null);
+    const customEdit = (historyId && overrides[`hist_${historyId}`]) 
+      ? overrides[`hist_${historyId}`] 
+      : (poleId && overrides[`pole_${poleId}`] ? overrides[`pole_${poleId}`] : null);
+
     if (customEdit) {
       recordObj = {
         ...recordObj,
@@ -348,6 +381,34 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
 
     records.push(recordObj);
   }
+
+  // Prune dead overrides for items that no longer exist in the Google Sheet (e.g. deleted directly in sheet)
+  try {
+    const activeHistIds = new Set(records.map(r => (r.raw?.['ID ประวัติ'] || '').trim()).filter(Boolean));
+    const activePoleIds = new Set(records.map(r => r.poleId.trim()).filter(Boolean));
+    const stored = getStoredRecordOverrides();
+    let hasPruned = false;
+
+    Object.keys(stored).forEach(k => {
+      if (k.startsWith('hist_')) {
+        const h = k.replace('hist_', '');
+        if (!activeHistIds.has(h)) {
+          delete stored[k];
+          hasPruned = true;
+        }
+      } else if (k.startsWith('pole_')) {
+        const p = k.replace('pole_', '');
+        if (!activePoleIds.has(p)) {
+          delete stored[k];
+          hasPruned = true;
+        }
+      }
+    });
+
+    if (hasPruned) {
+      localStorage.setItem('rayong_record_overrides', JSON.stringify(stored));
+    }
+  } catch {}
 
   // Sort by ID or Timestamp descending to show latest updates first
   return records.reverse();
@@ -583,6 +644,9 @@ export async function deleteRecordFromGoogleSheet(
   rowNumber?: number | null
 ): Promise<{ success: boolean; message?: string }> {
   const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || DEFAULT_APPS_SCRIPT_URL;
+
+  // Clear any local override immediately
+  deleteRecordOverride(historyId);
 
   const payload = {
     appsScriptUrl: url,

@@ -4,7 +4,7 @@ import {
   initAuth, googleSignIn, logout, getAccessToken 
 } from './auth';
 import { 
-  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet, deleteRecordFromGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
+  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, deleteRecordOverride, syncRecordToGoogleSheet, deleteRecordFromGoogleSheet, DEFAULT_APPS_SCRIPT_URL 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
 import MapVisualizer from './components/MapVisualizer';
@@ -173,24 +173,37 @@ export default function App() {
       setRecords(data);
       setLastRefreshed(new Date().toLocaleTimeString('th-TH'));
       
-      // Auto-select the first record if none is selected
-      if (data.length > 0 && !selectedRecord) {
-        setSelectedRecord(data[0]);
-      }
+      // Auto-reconcile selectedRecord: if selected item was deleted from sheet, select another or null
+      setSelectedRecord(prev => {
+        if (!prev) return data.length > 0 ? data[0] : null;
+        const prevId = (prev.raw?.['ID ประวัติ'] || prev.id || '').trim();
+        const stillExists = data.find(r => (r.raw?.['ID ประวัติ'] || r.id || '').trim() === prevId);
+        return stillExists || (data.length > 0 ? data[0] : null);
+      });
+
+      // Auto-reconcile editingRecord if open
+      setEditingRecord(prev => {
+        if (!prev) return null;
+        const prevId = (prev.raw?.['ID ประวัติ'] || prev.id || '').trim();
+        const stillExists = data.find(r => (r.raw?.['ID ประวัติ'] || r.id || '').trim() === prevId);
+        if (!stillExists) {
+          setIsEditModalOpen(false);
+          return null;
+        }
+        return stillExists;
+      });
     } catch (err: any) {
       console.error(err);
       // Fallback to offline mock data on failure
       setRecords(MOCK_RAYONG_RECORDS);
-      if (MOCK_RAYONG_RECORDS.length > 0 && !selectedRecord) {
-        setSelectedRecord(MOCK_RAYONG_RECORDS[0]);
-      }
+      setSelectedRecord(prev => prev || (MOCK_RAYONG_RECORDS.length > 0 ? MOCK_RAYONG_RECORDS[0] : null));
       setError(
         'กำลังใช้งานโหมดออฟไลน์/ข้อมูลตัวอย่างของระยอง (หากต้องการซิงค์สด กรุณาเปิดแชร์ไฟล์ชีตเป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือตั้งค่าบัญชี Google)'
       );
     } finally {
       setLoadingData(false);
     }
-  }, [selectedRecord]);
+  }, []);
 
   // Load when token, spreadsheetId, or sheetName changes
   useEffect(() => {
@@ -281,10 +294,28 @@ export default function App() {
   };
 
   const handleDeleteRecord = async (historyId: string) => {
+    const targetId = (historyId || '').trim();
+    if (!targetId) return { success: false, message: 'ไม่พบ ID ประวัติสำหรับลบ' };
+
     // 1. Optimistic update local state immediately
-    setRecords(prev => prev.filter(r => (r.raw?.['ID ประวัติ'] || r.id) !== historyId));
-    // 2. Sync deletion to Google Sheet
-    return await deleteRecordFromGoogleSheet(historyId, sheetName);
+    setRecords(prev => prev.filter(r => (r.raw?.['ID ประวัติ'] || r.id || '').trim() !== targetId));
+    setSelectedRecord(prev => {
+      if (!prev) return null;
+      const prevId = (prev.raw?.['ID ประวัติ'] || prev.id || '').trim();
+      return prevId === targetId ? null : prev;
+    });
+
+    // 2. Clear stored local override
+    deleteRecordOverride(targetId);
+
+    // 3. Sync deletion to Google Sheet via Apps Script
+    const result = await deleteRecordFromGoogleSheet(targetId, sheetName);
+
+    // 4. Background re-fetch to ensure fresh data and row indices
+    if (token) {
+      loadData(token, spreadsheetId, sheetName);
+    }
+    return result;
   };
 
   if (!isCustomLoggedIn) {
@@ -778,6 +809,7 @@ export default function App() {
                               appName={appSheetAppName}
                               tableName={sheetName}
                               onEdit={handleOpenEdit}
+                              onDelete={handleDeleteRecord}
                               onClose={() => setSelectedRecord(null)}
                             />
                           </motion.div>

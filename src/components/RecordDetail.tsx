@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   X, MapPin, Calendar, User, CheckCircle2, Clock, 
   Hourglass, AlertTriangle, ExternalLink, Navigation, 
-  Database, Image as ImageIcon, HelpCircle
+  Database, Image as ImageIcon, HelpCircle, Edit3, Trash2
 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 
@@ -11,10 +12,12 @@ interface DetailProps {
   appName?: string;
   tableName?: string;
   onEdit?: (record: MaintenanceRecord) => void;
+  onDelete?: (historyId: string) => Promise<any>;
   onClose: () => void;
 }
 
-export default function RecordDetail({ record, appName = '', tableName = '', onEdit, onClose }: DetailProps) {
+export default function RecordDetail({ record, appName = '', tableName = '', onEdit, onDelete, onClose }: DetailProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
   if (!record) return null;
 
   const getStatusBadgeLarge = (status: string, statusThai: string) => {
@@ -121,22 +124,60 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
   return (
     <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl overflow-hidden flex flex-col h-full shadow-2xl relative" id="record-detail-panel">
       {/* Top Banner with Actions */}
-      <div className="flex justify-between items-center px-4 sm:px-5 py-3.5 bg-slate-900/60 border-b border-slate-700/80">
-        <div className="flex items-center gap-2.5">
+      <div className="flex justify-between items-center px-4 sm:px-5 py-3 bg-slate-900/60 border-b border-slate-700/80 gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
             <Database size={16} />
           </div>
-          <span className="text-base font-bold text-slate-100 font-sans tracking-tight">
+          <span className="text-sm sm:text-base font-bold text-slate-100 font-sans tracking-tight">
             รายละเอียดรายงานการซ่อมบำรุง
           </span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
-          title="ปิดหน้าต่างนี้"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(record)}
+              className="px-2.5 py-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 border border-blue-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="แก้ไขข้อมูลรายการนี้"
+            >
+              <Edit3 size={13} />
+              <span>แก้ไข</span>
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={async () => {
+                const historyId = (record.raw?.['ID ประวัติ'] || record.id || '').trim();
+                const label = record.poleId || record.issue || 'รายการนี้';
+                if (!confirm(`ยืนยันลบรายการเสาไฟ "${label}" ออกจากระบบและ Google Sheet หรือไม่?`)) {
+                  return;
+                }
+                setIsDeleting(true);
+                try {
+                  await onDelete(historyId);
+                  onClose();
+                } catch (err) {
+                  console.error('Delete failed:', err);
+                } finally {
+                  setIsDeleting(false);
+                }
+              }}
+              disabled={isDeleting}
+              className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              title="ลบรายการนี้ออกจากระบบและ Google Sheet"
+            >
+              <Trash2 size={13} className={isDeleting ? 'animate-spin' : ''} />
+              <span>{isDeleting ? 'กำลังลบ...' : 'ลบ'}</span>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            title="ปิดหน้าต่างนี้"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">

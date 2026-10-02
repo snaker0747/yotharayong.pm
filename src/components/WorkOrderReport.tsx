@@ -122,6 +122,110 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     }
   }, [workOrders]);
 
+  // ซิงค์ข้อมูล 2 ทางระหว่าง Google Sheet กับ รายการใบงาน (Reconciliation Engine):
+  // 1. ถ้ามีแถว/รายการถูกลบออกจาก Google Sheet หรือ AppSheet -> ให้ลบออกจากรายการในเว็บทันที
+  // 2. ถ้ามีข้อมูลเปลี่ยนแปลง (สถานะ, การแก้ไข, ช่าง, วันที่, หมายเหตุ) ใน Google Sheet -> อัปเดตในรายการให้ตรงกันทันที 1:1
+  useEffect(() => {
+    if (!records || records.length === 0) return;
+
+    // รวบรวม ID ประวัติ และ ID โคมไฟ ทั้งหมดที่ยังมีอยู่ใน Google Sheet ขณะนี้
+    const activeHistoryIds = new Set<string>();
+    const activePoleIds = new Set<string>();
+
+    records.forEach(r => {
+      const hId = (r.raw?.['ID ประวัติ'] || r.raw?.['id ประวัติ'] || r.id || '').trim();
+      if (hId) activeHistoryIds.add(hId);
+      if (r.poleId && r.poleId !== '-') activePoleIds.add(r.poleId.trim());
+    });
+
+    setWorkOrders(prev => {
+      // 1. จัดการการลบ (Reconcile deletions):
+      // รายการที่เคยซิงค์หรือดึงมาจาก Google Sheet (isFromExisting หรือมี historyId)
+      // หากไม่มีอยู่ในชีทแล้ว (ถูกลบใน Sheet / AppSheet) ให้ตัดออกจากตารางในเว็บทันที
+      const remaining = prev.filter(w => {
+        const hId = (w.historyId || '').trim();
+        const pId = (w.poleId || '').trim();
+
+        if (hId || w.isFromExisting) {
+          const existsByHistory = hId ? activeHistoryIds.has(hId) : false;
+          const existsByPole = pId && pId !== '-' ? activePoleIds.has(pId) : false;
+          return existsByHistory || existsByPole;
+        }
+
+        // เก็บแบบร่างที่เพิ่งพิมพ์สร้างขึ้นใหม่ในเว็บที่ยังไม่เคยซิงค์
+        return true;
+      });
+
+      // 2. จัดการการอัปเดตข้อมูล (Reconcile updates):
+      // ปรับปรุงข้อมูลในช่องคอลัมน์ของรายการให้ตรงกับ Sheet สดเสมอ (สถานะ, ช่าง, วิธีซ่อม ฯลฯ)
+      let hasChanges = false;
+      const updated = remaining.map(w => {
+        const hId = (w.historyId || '').trim();
+        const pId = (w.poleId || '').trim();
+
+        const matched = records.find(r => {
+          const rHId = (r.raw?.['ID ประวัติ'] || r.raw?.['id ประวัติ'] || r.id || '').trim();
+          if (hId && rHId && hId === rHId) return true;
+          if (pId && r.poleId && pId === r.poleId.trim()) return true;
+          return false;
+        });
+
+        if (!matched) return w;
+
+        const latestStatus = matched.statusThai || matched.status || w.status;
+        const latestRepairAction = matched.repairAction || matched.raw?.['การซ่อมบำรุงแก้ไข'] || w.repairAction || '';
+        const latestRepairDetail = matched.raw?.['รายละเอียดการแก้ไขเพิ่มเติม'] || w.repairDetail || '';
+        const latestTechnician = matched.technician || matched.raw?.['ชื่อผู้ปฏิบัติงาน'] || w.technician || '';
+        const latestFixedDate = (matched.fixedDate && matched.fixedDate !== '-') ? matched.fixedDate : w.fixedDate;
+        const latestImage = matched.imageUrl || matched.raw?.['รูปภาพการซ่อมบำรุง'] || w.imageUrl || '';
+        const latestRemarks = (matched.remarks && matched.remarks !== '-') ? matched.remarks : w.remarks || '';
+        const latestCommunity = matched.community || matched.raw?.['ชุมชน/เขต'] || w.community || '';
+        const latestSoi = matched.soi || matched.raw?.['ซอย'] || w.soi || '';
+        const latestIssue = matched.issue || matched.raw?.['ปัญหาที่พบ'] || w.issue || '';
+        const matchedHistId = (matched.raw?.['ID ประวัติ'] || matched.id || w.historyId)?.trim();
+
+        if (
+          w.status !== latestStatus ||
+          w.repairAction !== latestRepairAction ||
+          w.repairDetail !== latestRepairDetail ||
+          w.technician !== latestTechnician ||
+          w.fixedDate !== latestFixedDate ||
+          w.imageUrl !== latestImage ||
+          w.remarks !== latestRemarks ||
+          w.community !== latestCommunity ||
+          w.soi !== latestSoi ||
+          w.issue !== latestIssue ||
+          w.historyId !== matchedHistId
+        ) {
+          hasChanges = true;
+          return {
+            ...w,
+            historyId: matchedHistId,
+            status: latestStatus,
+            repairAction: latestRepairAction,
+            repairDetail: latestRepairDetail,
+            technician: latestTechnician,
+            fixedDate: latestFixedDate,
+            imageUrl: latestImage,
+            remarks: latestRemarks,
+            community: latestCommunity,
+            soi: latestSoi,
+            issue: latestIssue,
+            lat: matched.lat !== null ? matched.lat : w.lat,
+            lng: matched.lng !== null ? matched.lng : w.lng,
+            isFromExisting: true,
+          };
+        }
+        return w;
+      });
+
+      if (remaining.length !== prev.length || hasChanges) {
+        return updated;
+      }
+      return prev;
+    });
+  }, [records]);
+
   // Form input states matching `การซ่อมบำรุง`
   const [poleId, setPoleId] = useState('');
   const [community, setCommunity] = useState('');
@@ -260,6 +364,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
       lat,
       lng,
       orderDate: fixedDate || new Date().toISOString().split('T')[0],
+      isFromExisting: syncToSheet,
     };
 
     setWorkOrders(prev => [newItem, ...prev]);
