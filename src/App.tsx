@@ -14,13 +14,14 @@ import RecordDetail from './components/RecordDetail';
 import EditRecordModal from './components/EditRecordModal';
 import SheetSettings from './components/SheetSettings';
 import AppsScriptHelper from './components/AppsScriptHelper';
+import Sidebar from './components/Sidebar';
 import LoginPage from './components/LoginPage';
 import { User } from 'firebase/auth';
 import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
-  Sun, Moon
+  Sun, Moon, Menu, ClipboardList
 } from 'lucide-react';
 
 // Default target spreadsheet ID from user's request
@@ -119,6 +120,16 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleNavigate = (sectionId: string) => {
+    setActiveSection(sectionId);
+    const element = document.getElementById(`section-${sectionId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // 1. Initialize Auth on mount
   useEffect(() => {
@@ -376,9 +387,14 @@ export default function App() {
     );
   }
 
+  // Summary counts for navigation badges
+  const pendingCount = records.filter(r => r.status === 'รอซ่อม' || !r.status).length;
+  const inProgressCount = records.filter(r => r.status === 'กำลังซ่อม').length;
+  const completedCount = records.filter(r => r.status === 'ซ่อมแล้วเสร็จ').length;
+
   // --- MAIN AUTHORIZED DASHBOARD ---
   return (
-    <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col font-sans relative pb-8" id="authorized-app-layout">
+    <div className="min-h-screen bg-[#0F172A] text-slate-100 flex font-sans relative" id="authorized-app-layout">
       {/* Dynamic Settings Modal overlay */}
       <AnimatePresence>
         {showSettings && (
@@ -401,158 +417,172 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Primary Top Bar Navigation */}
-      <header className="border-b border-slate-700 bg-[#1E293B] sticky top-0 backdrop-blur-md z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-          {/* Brand/Title */}
-          <div className="flex items-center gap-4">
-            <span className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-white border border-slate-600 shadow-md shrink-0">
-              <img src="/logo.png" alt="สำนักช่าง เทศบาลนครระยอง" className="w-full h-full object-cover p-1.5" onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.parentElement) e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-blue-600 text-white rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lightbulb"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div>';
-              }} />
-            </span>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-sans leading-snug">
-                ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
-              </h1>
-              <p className="text-sm sm:text-base font-semibold font-sans text-slate-400 mt-0.5">
-                ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง
-              </p>
-            </div>
-          </div>
+      {/* 1. Left Navigation Sidebar (Figma / Modern App UI) */}
+      <Sidebar
+        activeSection={activeSection}
+        onNavigate={handleNavigate}
+        totalRecords={records.length}
+        pendingRecords={pendingCount}
+        inProgressRecords={inProgressCount}
+        completedRecords={completedCount}
+        theme={theme}
+        onToggleTheme={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+        onOpenSettings={() => setShowSettings(true)}
+        onRefresh={() => loadData(token, spreadsheetId, sheetName)}
+        isRefreshing={loadingData}
+        lastRefreshed={lastRefreshed}
+        onLogout={handleLogout}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+      />
 
-          {/* Nav Links / Actions */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-end">
-            {/* Theme Toggle Button */}
-            <button
-              onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
-              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-amber-400 hover:text-amber-300 hover:border-amber-500/50 transition-colors cursor-pointer"
-              title={theme === 'light' ? 'เปลี่ยนเป็นโหมดมืด (Dark Mode)' : 'เปลี่ยนเป็นโหมดสว่าง (Light Mode)'}
-              id="header-theme-toggle"
-            >
-              {theme === 'light' ? <Moon size={18} className="text-indigo-400" /> : <Sun size={18} className="text-amber-400" />}
-            </button>
-
-            {/* Config & Auto refresh tools */}
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-blue-400 hover:text-blue-300 hover:border-blue-500/50 transition-colors cursor-pointer"
-              title="ตั้งค่าชีต"
-            >
-              <Settings size={18} />
-            </button>
-            
-            <button
-              onClick={() => loadData(token, spreadsheetId, sheetName)}
-              disabled={loadingData}
-              className="p-2 rounded-lg border border-slate-700 bg-slate-800 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/50 transition-colors disabled:opacity-50 cursor-pointer"
-              title="รีเฟรชข้อมูล"
-            >
-              <RefreshCw size={18} className={loadingData ? 'animate-spin' : ''} />
-            </button>
-
-            {/* Profile Detail */}
-            <div className="flex items-center gap-2.5 pl-2.5 border-l border-slate-700">
-              {user.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || 'Profile'}
-                  className="w-9 h-9 rounded-full border border-slate-700"
-                  referrerPolicy="no-referrer"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-300 font-bold uppercase border border-slate-600">
-                  {user.displayName?.charAt(0) || 'U'}
-                </div>
-              )}
+      {/* 2. Main Content Right Panel */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-[#0F172A]">
+        {/* Top Navbar Header */}
+        <header className="border-b border-slate-700/80 bg-[#1E293B]/90 backdrop-blur-md sticky top-0 z-20 px-4 sm:px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            {/* Left: Mobile Drawer Toggle & Branding / Breadcrumb */}
+            <div className="flex items-center gap-3 min-w-0">
               <button
-                onClick={handleLogout}
-                className="p-1.5 text-rose-500 hover:text-rose-400 transition-colors cursor-pointer ml-1"
-                title="ออกจากระบบ"
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+                title="เปิดเมนูด้านข้าง"
               >
-                <LogOut size={18} />
+                <Menu size={20} />
+              </button>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base sm:text-lg font-bold text-white font-sans tracking-tight truncate">
+                    ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
+                  </h1>
+                  <span className="hidden sm:inline-flex text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">
+                    เทศบาลนครระยอง
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 truncate hidden sm:block">
+                  ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Actions, Sync Status & Quick Controls */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Sync Live Pill */}
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-medium text-slate-200">ซิงค์สด Google Sheet</span>
+                {lastRefreshed && (
+                  <span className="text-slate-400 text-[11px]">({lastRefreshed} น.)</span>
+                )}
+              </div>
+
+              {/* Auto refresh checkbox */}
+              <label className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer hover:text-slate-200 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="accent-emerald-500 rounded bg-slate-950 border-slate-800"
+                />
+                <span>ออโต้ 60 วิ</span>
+              </label>
+
+              {/* Refresh button */}
+              <button
+                onClick={() => loadData(token, spreadsheetId, sheetName)}
+                disabled={loadingData}
+                className="p-2 rounded-xl border border-slate-700 bg-slate-800 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/50 transition-colors disabled:opacity-50 cursor-pointer"
+                title="รีเฟรชข้อมูลล่าสุด"
+              >
+                <RefreshCw size={17} className={loadingData ? 'animate-spin' : ''} />
+              </button>
+
+              {/* Settings button */}
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 rounded-xl border border-slate-700 bg-slate-800 text-blue-400 hover:text-blue-300 hover:border-blue-500/50 transition-colors cursor-pointer"
+                title="ตั้งค่าเชื่อมต่อ Sheet"
+              >
+                <Settings size={17} />
+              </button>
+
+              {/* Theme Toggle */}
+              <button
+                onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+                className="p-2 rounded-xl border border-slate-700 bg-slate-800 text-amber-400 hover:text-amber-300 hover:border-amber-500/50 transition-colors cursor-pointer"
+                title={theme === 'light' ? 'เปลี่ยนเป็นโหมดมืด (Dark)' : 'เปลี่ยนเป็นโหมดสว่าง (Light)'}
+              >
+                {theme === 'light' ? <Moon size={17} className="text-indigo-400" /> : <Sun size={17} className="text-amber-400" />}
               </button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content Body */}
-      <main className="max-w-7xl mx-auto px-4 mt-6 flex-1 w-full">
-        <div className="space-y-6" id="dashboard-active-view">
-            
-            {/* Real-time sync status line */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#1E293B] border border-slate-700 rounded-lg px-4 py-3 gap-3">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
-                <span className="font-bold text-slate-200 font-sans">เชื่อมโยงข้อมูล (Sync Active)</span>
-              </div>
-              
-              <div className="flex items-center gap-4 text-xs font-sans text-slate-400 w-full sm:w-auto justify-between sm:justify-end">
-                <label className="flex items-center gap-1.5 cursor-pointer hover:text-slate-200 transition-colors font-sans">
-                  <input
-                    type="checkbox"
-                    checked={autoRefresh}
-                    onChange={(e) => setAutoRefresh(e.target.checked)}
-                    className="accent-blue-500 rounded bg-slate-950 border-slate-800"
-                  />
-                  <span>รีเฟรชอัตโนมัติ (60 วิ)</span>
-                </label>
-                {lastRefreshed && (
-                  <span className="font-semibold text-slate-300">ข้อมูลล่าสุด: {lastRefreshed} น.</span>
-                )}
+        {/* Scrollable Content Body */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-8">
+          {/* Error Alert */}
+          {error && (
+            <div className="p-4 rounded-xl bg-rose-950/20 border border-rose-500/20 flex gap-3 text-rose-300 text-sm leading-normal font-sans">
+              <ShieldAlert size={20} className="shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="font-medium">{error}</p>
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 text-xs transition-colors cursor-pointer"
+                >
+                  ตั้งค่าชีตสเปรดชีตของคุณ
+                </button>
               </div>
             </div>
+          )}
 
-            {/* Error alerts */}
-            {error && (
-              <div className="p-4 rounded-lg bg-rose-950/20 border border-rose-500/20 flex gap-3 text-rose-300 text-sm leading-normal font-sans">
-                <ShieldAlert size={20} className="shrink-0 mt-0.5" />
-                <div className="space-y-2">
-                  <p className="font-medium">{error}</p>
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className="px-3 py-1.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 text-xs transition-colors cursor-pointer"
-                  >
-                    ตั้งค่าชีตสเปรดชีตของคุณ
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Load State Spinner */}
-            {loadingData && records.length === 0 ? (
-              <div className="py-24 flex flex-col items-center justify-center text-slate-500">
-                <Loader2 className="animate-spin text-blue-500 mb-2" size={24} />
-                <span className="text-xs font-sans">กำลังจัดลำดับและวิเคราะห์จุดพิกัดเสาไฟ...</span>
-              </div>
-            ) : (
-              <>
-                {/* 1. Metric KPI Cards */}
+          {/* Loading Spinner */}
+          {loadingData && records.length === 0 ? (
+            <div className="py-28 flex flex-col items-center justify-center text-slate-400">
+              <Loader2 className="animate-spin text-emerald-500 mb-3" size={32} />
+              <span className="text-sm font-sans font-medium">กำลังโหลดและจัดโครงสร้างข้อมูลซ่อมบำรุง...</span>
+            </div>
+          ) : (
+            <>
+              {/* Section 1: KPI Dashboard Overview */}
+              <section id="section-dashboard" className="scroll-mt-20">
                 <DashboardStats
                   records={records}
                   onStatusSelect={setSelectedStatusFilter}
                   selectedStatus={selectedStatusFilter}
                 />
+              </section>
 
-                {/* 2. Visual & Analytics Charts (Top Section) */}
-                <div className="mb-6">
-                  <AnalyticsCharts records={records} />
-                </div>
+              {/* Section 2: Analytics & Trends */}
+              <section id="section-analytics" className="scroll-mt-20">
+                <AnalyticsCharts records={records} />
+              </section>
 
-                {/* 3. Data List & Detail Panel (Bottom Section) */}
+              {/* Section 3: Records Table & Detail */}
+              <section id="section-records" className="scroll-mt-20">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column (2/3 width) - Search & Records list + Map Visualizer */}
+                  {/* Left Column (2/3 width) - Search & Records list */}
                   <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-4">
+                    <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm">
                       <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
-                        <h4 className="text-base font-semibold text-slate-100 font-sans">
-                          รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <ClipboardList size={18} className="text-emerald-400" />
+                          <h4 className="text-base font-bold text-slate-100 font-sans">
+                            รายการรับเรื่องแจ้งซ่อมทั้งหมด ({records.length} งาน)
+                          </h4>
+                        </div>
+                        {selectedStatusFilter && (
+                          <button
+                            onClick={() => setSelectedStatusFilter(null)}
+                            className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
+                          >
+                            ล้างตัวกรองสถานะ
+                          </button>
+                        )}
                       </div>
                       <RecordsList
                         records={records}
@@ -563,10 +593,9 @@ export default function App() {
                         onStatusFilterChange={setSelectedStatusFilter}
                       />
                     </div>
-
                   </div>
 
-                  {/* Right Column (1/3 width) - Deep Info Selected Panel / Instructions */}
+                  {/* Right Column (1/3 width) - Detail Preview */}
                   <div className="space-y-6">
                     <AnimatePresence mode="wait">
                       {selectedRecord ? (
@@ -586,12 +615,12 @@ export default function App() {
                           />
                         </motion.div>
                       ) : (
-                        <div className="bg-[#1E293B] border border-slate-700 rounded-lg p-6 text-center text-slate-400 min-h-[160px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
-                          <Lightbulb size={24} className="text-blue-500 animate-pulse" />
+                        <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-6 text-center text-slate-400 min-h-[220px] flex flex-col items-center justify-center gap-3 font-sans shadow-sm">
+                          <Lightbulb size={28} className="text-amber-400 animate-pulse" />
                           <div className="space-y-1">
-                            <h5 className="text-xs font-bold text-slate-300">ข้อมูลรายละเอียดรายการซ่อม</h5>
-                            <p className="text-[11px] text-slate-500 max-w-xs">
-                              คลิกเลือกรายการแจ้งซ่อมจากตารางด้านซ้าย เพื่อดูข้อมูลพิกัด อาการชำรุด ลิงก์รูปภาพถ่ายจริง และหมายเหตุโดยละเอียด
+                            <h5 className="text-sm font-bold text-slate-200">ข้อมูลรายละเอียดรายการซ่อม</h5>
+                            <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                              คลิกเลือกรายการจากตารางทางซ้ายเพื่อดูรายละเอียดภาพถ่าย พิกัด และอาการ หรือกดปุ่ม "แก้ไขข้อมูล" เพื่ออัปเดตลง Google Sheet ทันที
                             </p>
                           </div>
                         </div>
@@ -599,23 +628,28 @@ export default function App() {
                     </AnimatePresence>
                   </div>
                 </div>
+              </section>
 
-                {/* Map Visualizer (Moved to the very bottom) */}
-                <div className="mt-6">
-                  <MapVisualizer
-                    records={records}
-                    onSelectRecord={handleRecordSelect}
-                    selectedRecord={selectedRecord}
-                    theme={theme}
-                    appName={appSheetAppName}
-                    tableName={sheetName}
-                  />
-                </div>
-              </>
-            )}
+              {/* Section 4: GIS Map Visualizer */}
+              <section id="section-map" className="scroll-mt-20">
+                <MapVisualizer
+                  records={records}
+                  onSelectRecord={handleRecordSelect}
+                  selectedRecord={selectedRecord}
+                  theme={theme}
+                  appName={appSheetAppName}
+                  tableName={sheetName}
+                />
+              </section>
+            </>
+          )}
+        </main>
 
-          </div>
-      </main>
+        {/* Footer */}
+        <footer className="mt-auto border-t border-slate-800 bg-[#0F172A] px-6 py-4 text-center text-xs text-slate-500 font-sans">
+          ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง © 2569 | เชื่อมโยงข้อมูลผ่าน Google Sheets & Google Apps Script
+        </footer>
+      </div>
 
       {/* Edit Record Popup Modal */}
       <EditRecordModal
