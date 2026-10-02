@@ -480,7 +480,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     if (!itemToRemove) return;
 
     const label = itemToRemove.poleId || itemToRemove.issue || 'รายการนี้';
-    if (!confirm(`ยืนยันลบรายการ "${label}" ออกจากระบบและ Google Sheet หรือไม่?`)) {
+    if (!confirm(`ยืนยันลบรายการ "${label}" ออกจากฐานข้อมูลระบบหรือไม่?`)) {
       return;
     }
 
@@ -525,7 +525,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
           technician: r.technician || 'ทีมบำรุงรักษา',
           status: 'รอดำเนินการ',
           repairAction: r.repairAction || '',
-          remarks: r.remarks || 'ดึงจากระบบ Google Sheet',
+          remarks: r.remarks || 'ดึงจากฐานข้อมูลระบบ',
           orderDate: new Date().toISOString().split('T')[0],
           fixedDate: new Date().toISOString().split('T')[0],
           isFromExisting: true,
@@ -1446,7 +1446,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       onChange={(e) => setSyncToSheet(e.target.checked)}
                       className="rounded bg-slate-950 border-slate-800 text-emerald-500 focus:ring-0"
                     />
-                    <span>ซิงค์บันทึกข้อมูลลง Google Sheet ทันที</span>
+                    <span>ซิงค์บันทึกข้อมูลเข้าสู่ฐานข้อมูลระบบทันที</span>
                   </label>
                 </div>
 
@@ -1847,7 +1847,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <CheckCircle size={15} />
-                  <span>บันทึกและซิงค์ลง Google Sheet</span>
+                  <span>บันทึกและซิงค์ข้อมูลลงระบบ</span>
                 </button>
               </div>
             </motion.div>

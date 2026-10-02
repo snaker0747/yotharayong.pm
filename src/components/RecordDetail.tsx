@@ -138,7 +138,7 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
               onClick={async () => {
                 const historyId = (record.raw?.['ID ประวัติ'] || record.id || '').trim();
                 const label = record.poleId || record.issue || 'รายการนี้';
-                if (!confirm(`ยืนยันลบรายการเสาไฟ "${label}" ออกจากระบบและ Google Sheet หรือไม่?`)) {
+                if (!confirm(`ยืนยันลบรายการเสาไฟ "${label}" ออกจากฐานข้อมูลระบบหรือไม่?`)) {
                   return;
                 }
                 setIsDeleting(true);
@@ -153,7 +153,7 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
               }}
               disabled={isDeleting}
               className="px-2.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-              title="ลบรายการนี้ออกจากระบบและ Google Sheet"
+              title="ลบรายการนี้ออกจากฐานข้อมูลระบบ"
             >
               <Trash2 size={13} className={isDeleting ? 'animate-spin' : ''} />
               <span>{isDeleting ? 'กำลังลบ...' : 'ลบ'}</span>
@@ -348,16 +348,16 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
             className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 transition-all cursor-pointer"
           >
             <Edit3 size={15} />
-            <span>แก้ไขข้อมูลและอัปเดตลง Google Sheet</span>
+            <span>แก้ไขข้อมูลและบันทึกอัปเดตลงระบบ</span>
           </button>
         )}
 
-        {/* 7. Collapsible Google Sheet Raw Data */}
+        {/* 7. Collapsible Database Raw Data */}
         <details className="group border border-slate-800 rounded-xl overflow-hidden bg-slate-950/30">
           <summary className="flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer select-none">
             <div className="flex items-center gap-2">
               <Database size={13} className="text-slate-500" />
-              <span>ข้อมูลทั้งหมดจาก Google Sheet ({Object.keys(record.raw || {}).length} รายการ)</span>
+              <span>ข้อมูลรายละเอียดทั้งหมดในระบบ ({Object.keys(record.raw || {}).length} รายการ)</span>
             </div>
             <ChevronDown size={14} className="group-open:rotate-180 transition-transform text-slate-500" />
           </summary>
@@ -375,7 +375,7 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
         <div className="text-xs font-sans text-slate-400 bg-slate-950/20 border border-slate-800/40 p-2.5 rounded-xl flex items-center gap-2">
           <HelpCircle size={14} className="text-emerald-400/80 shrink-0" />
           <span className="text-[11px] text-slate-400">
-            ระบบเชื่อมโยงสดเรียลไทม์กับ Google Sheet และ AppSheet อัตโนมัติ
+            ระบบเชื่อมโยงข้อมูลและซิงค์บันทึกแบบเรียลไทม์อัตโนมัติ
           </span>
         </div>
       </div>

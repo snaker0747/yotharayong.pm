@@ -90,13 +90,13 @@ function doPost(e) {
         sheet.deleteRow(rowToDelete);
         return responseJson({
           success: true,
-          message: 'ลบแถวที่ ' + rowToDelete + ' (ID: ' + historyId + ') ออกจาก Google Sheet สำเร็จแล้ว',
+          message: 'ลบแถวที่ ' + rowToDelete + ' (ID: ' + historyId + ') ออกจากฐานข้อมูลระบบสำเร็จแล้ว',
           deletedRow: rowToDelete
         });
       } else {
         return responseJson({
           success: false,
-          error: 'ไม่พบรายการที่ต้องการลบใน Google Sheet (ID: ' + historyId + ')'
+          error: 'ไม่พบรายการที่ต้องการลบในฐานข้อมูลระบบ (ID: ' + historyId + ')'
         });
       }
     }
@@ -188,7 +188,7 @@ function doPost(e) {
     
     return responseJson({
       success: true,
-      message: 'บันทึกข้อมูลลง Google Sheet แถวที่ ' + targetRow + ' (' + (action === 'insert' ? 'เพิ่มแถวใหม่' : 'อัปเดตข้อมูล') + ') สำเร็จแล้ว',
+      message: 'บันทึกข้อมูลลงฐานข้อมูลระบบแถวที่ ' + targetRow + ' (' + (action === 'insert' ? 'เพิ่มแถวใหม่' : 'อัปเดตข้อมูล') + ') สำเร็จแล้ว',
       row: targetRow,
       action: action,
       updatedColumns: updatedColumns
@@ -207,7 +207,7 @@ function doPost(e) {
 function doGet(e) {
   return responseJson({
     status: 'online',
-    message: 'ระบบเชื่อมต่อ Google Apps Script Web App สำหรับเทศบาลนครระยอง พร้อมใช้งาน',
+    message: 'ระบบเชื่อมต่อ Service Webhook สำหรับเทศบาลนครระยอง พร้อมใช้งาน',
     timestamp: new Date().toISOString()
   });
 }
@@ -259,7 +259,7 @@ export default function SheetSettings({
       setAppsScriptUrl(trimmed);
       localStorage.setItem('rayong_apps_script_url', trimmed);
       setInputValue(currentSpreadsheetId || '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40');
-      setAutoRedirectNotice('ตรวจพบ Apps Script URL! ระบบได้ย้ายไปยังช่อง "Apps Script Web App URL (บันทึกสด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
+      setAutoRedirectNotice('ตรวจพบ Service URL! ระบบได้ย้ายไปยังช่อง "API Service Webhook URL (บริการซิงค์สด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
       setError(null);
       return;
     }
@@ -276,7 +276,7 @@ export default function SheetSettings({
       setAppsScriptUrl(targetId.trim());
       localStorage.setItem('rayong_apps_script_url', targetId.trim());
       setInputValue(currentSpreadsheetId || '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40');
-      setAutoRedirectNotice('ตรวจพบ Apps Script URL! ระบบได้ย้ายไปยังช่อง "Apps Script Web App URL (บันทึกสด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
+      setAutoRedirectNotice('ตรวจพบ Service URL! ระบบได้ย้ายไปยังช่อง "API Service Webhook URL (บริการซิงค์สด)" ด้านล่างให้โดยอัตโนมัติแล้วครับ ✨');
       setError(null);
       return;
     }
@@ -329,7 +329,7 @@ export default function SheetSettings({
           <div className="flex items-center gap-2">
             <Settings className="text-blue-500 animate-spin-slow" size={17} />
             <h3 className="text-sm font-bold text-slate-100 font-sans">
-              ตั้งค่าการเชื่อมต่อ Google Sheets & ระบบบันทึกสด
+              ตั้งค่าการเชื่อมต่อฐานข้อมูลระบบ & บริการบันทึกสด
             </h3>
           </div>
           <button 
@@ -344,12 +344,12 @@ export default function SheetSettings({
           {/* Section 1: Spreadsheet Input */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-slate-300 font-sans block">
-              Google Spreadsheet Link หรือ ID
+              รหัสการเชื่อมต่อฐานข้อมูล (Database ID / URL)
             </label>
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="วางลิ้งค์หรือรหัส Google Sheet ที่นี่..."
+                placeholder="วางลิ้งค์หรือรหัสเชื่อมต่อฐานข้อมูลที่นี่..."
                 value={inputValue}
                 onChange={(e) => handleSpreadsheetInputChange(e.target.value)}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500"
@@ -420,7 +420,7 @@ export default function SheetSettings({
               {/* AppSheet App Name */}
               <div className="space-y-1 pt-2 border-t border-slate-800/80">
                 <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block font-sans">
-                  AppSheet App Name (สำหรับรูปภาพ Google Drive)
+                  รหัสเชื่อมโยงคลังภาพ (Media Asset ID)
                 </label>
                 <input
                   type="text"
@@ -433,17 +433,17 @@ export default function SheetSettings({
             </motion.div>
           )}
 
-          {/* Section 2: Two-way sync to Google Sheets (Apps Script) */}
+          {/* Section 2: Two-way sync to Backend (Webhook API) */}
           <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Link2 className="text-blue-400 shrink-0" size={16} />
                 <div>
                   <h4 className="text-xs font-bold text-blue-300 font-sans">
-                    ระบบบันทึกแก้ไขข้อมูลกลับ Google Sheet โดยตรง
+                    ระบบบันทึกแก้ไขข้อมูลกลับฐานข้อมูลกลางโดยตรง
                   </h4>
                   <p className="text-[10.5px] text-slate-400 mt-0.5">
-                    เมื่อคุณแก้ไขในหน้าเว็บ ระบบจะไปอัปเดตบรรทัดใน Google Sheet ให้ทันที
+                    เมื่อคุณแก้ไขในหน้าเว็บ ระบบจะไปอัปเดตข้อมูลในฐานข้อมูลให้ทันที
                   </p>
                 </div>
               </div>
@@ -459,7 +459,7 @@ export default function SheetSettings({
 
             <div className="space-y-1.5">
               <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                <span>Apps Script Web App URL (บันทึกสด)</span>
+                <span>API Service Webhook URL (บริการซิงค์สด)</span>
                 {appsScriptUrl ? (
                   <span className="text-[10px] text-emerald-400 font-normal flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -473,13 +473,13 @@ export default function SheetSettings({
               </label>
               <input
                 type="text"
-                placeholder="วาง Web App URL ที่ได้จาก Apps Script เช่น https://script.google.com/macros/s/.../exec"
+                placeholder="วาง API Service URL เช่น https://.../exec"
                 value={appsScriptUrl}
                 onChange={(e) => setAppsScriptUrl(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono text-[11px]"
               />
               <p className="text-[10px] text-slate-500 leading-relaxed font-sans">
-                หากยังไม่มี URL ให้กดปุ่ม <span className="text-blue-400 font-medium">"วิธีติดตั้ง & โค้ด"</span> ด้านบน เพื่อนำโค้ดไปวางในชีตของท่าน ใช้เวลาเพียง 1 นาที
+                หากยังไม่มี URL ให้กดปุ่ม <span className="text-blue-400 font-medium">"วิธีติดตั้ง & โค้ด"</span> ด้านบน เพื่อนำสคริปต์ไปติดตั้งในระบบ ใช้เวลาเพียง 1 นาที
               </p>
             </div>
           </div>
@@ -525,7 +525,7 @@ export default function SheetSettings({
                 <div className="flex items-center gap-2">
                   <Sparkles className="text-amber-400" size={17} />
                   <h3 className="text-sm font-bold text-slate-100 font-sans">
-                    วิธีติดตั้ง Google Apps Script สำหรับบันทึกข้อมูลแบบ 2-Way Sync
+                    วิธีเชื่อมต่อระบบ API สำหรับบันทึกข้อมูลแบบ 2-Way Sync
                   </h3>
                 </div>
                 <button 
@@ -541,17 +541,17 @@ export default function SheetSettings({
                 <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs text-slate-300">
                   <h4 className="font-bold text-blue-400 text-xs">ขั้นตอนการติดตั้ง (ทำครั้งเดียว):</h4>
                   <div className="p-2.5 bg-blue-900/20 border border-blue-500/20 rounded-lg text-[11px] text-blue-200 space-y-1">
-                    <p className="font-semibold text-blue-300">🛡️ ความปลอดภัยต่อระบบงานอื่นใน Sheet นี้:</p>
+                    <p className="font-semibold text-blue-300">🛡️ ความปลอดภัยต่อระบบฐานข้อมูลส่วนอื่น:</p>
                     <p className="text-slate-300">
-                      สคริปต์นี้ถูกล็อกให้ค้นหาและแก้ไขเฉพาะแถวในแท็บ <strong>"การซ่อมบำรุง"</strong> เท่านั้น จะ<strong>ไม่แตะต้อง</strong>แท็บข้อมูลเสาไฟ หรือแท็บระบบงานอื่นในสเปรดชีตนี้ 100%
+                      สคริปต์นี้ถูกล็อกให้ค้นหาและแก้ไขเฉพาะข้อมูลในตาราง <strong>"การซ่อมบำรุง"</strong> เท่านั้น จะ<strong>ไม่แตะต้อง</strong>ข้อมูลส่วนอื่นในระบบ 100%
                     </p>
                   </div>
                   <ol className="list-decimal pl-4 space-y-2 leading-relaxed text-slate-300 font-sans text-[11.5px]">
                     <li>
-                      เปิดไฟล์ Google Sheet ของท่าน (<a href="https://docs.google.com/spreadsheets/d/1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40" target="_blank" rel="noreferrer" className="text-blue-400 underline inline-flex items-center gap-1">เปิดสเปรดชีตระยอง <ExternalLink size={10} /></a>)
+                      เปิดฐานข้อมูลระบบของท่าน (<a href="https://docs.google.com/spreadsheets/d/1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40" target="_blank" rel="noreferrer" className="text-blue-400 underline inline-flex items-center gap-1">เปิดลิงก์ฐานข้อมูล <ExternalLink size={10} /></a>)
                     </li>
                     <li>
-                      ไปที่เมนูด้านบน <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">ส่วนขยาย (Extensions)</span> &gt; <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">Apps Script</span>
+                      ไปที่เมนูด้านบน <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">ส่วนขยาย (Extensions)</span> &gt; <span className="font-semibold text-white bg-slate-800 px-1.5 py-0.5 rounded">ตัวจัดการสคริปต์ API</span>
                     </li>
                     <li>
                       <strong>หากมีโค้ดเดิมอยู่แล้ว:</strong> กดเครื่องหมาย <span className="font-semibold text-amber-400">+</span> ด้านซ้าย เลือก <em>สคริปต์</em> แล้วตั้งชื่อว่า <code className="text-amber-300">MaintenanceSync</code> (จะได้ไม่ทับโค้ดเดิม) หรือหากเป็นไฟล์ว่าง ให้วางโค้ดด้านล่างนี้แทนที่ แล้วกด <strong>บันทึก (Ctrl+S)</strong>
@@ -576,7 +576,7 @@ export default function SheetSettings({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-slate-300 font-mono">
-                      Code.gs (Google Apps Script Code)
+                      Code.gs (Service Webhook Script)
                     </span>
                     <button
                       onClick={handleCopyCode}

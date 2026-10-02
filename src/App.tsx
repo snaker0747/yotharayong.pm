@@ -13,7 +13,6 @@ import RecordsList from './components/RecordsList';
 import RecordDetail from './components/RecordDetail';
 import EditRecordModal from './components/EditRecordModal';
 import SheetSettings from './components/SheetSettings';
-import AppsScriptHelper from './components/AppsScriptHelper';
 import Sidebar from './components/Sidebar';
 import LoginPage from './components/LoginPage';
 import WorkOrderReport from './components/WorkOrderReport';
@@ -372,7 +371,7 @@ export default function App() {
           <div className="flex-1 space-y-6 text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold">
               <Globe size={13} />
-              ระบบแดชบอร์ดซิงค์ตรงจาก Google Sheets
+              ระบบแดชบอร์ดซิงค์ข้อมูลเรียลไทม์
             </div>
             
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-100 tracking-tight leading-tight">
@@ -383,7 +382,7 @@ export default function App() {
             </h1>
 
             <p className="text-sm text-slate-400 leading-relaxed max-w-lg">
-              ช่วยให้ช่างและเจ้าหน้าที่ตรวจสอบสถานะการแจ้งซ่อมเสาไฟฟ้าแบบเรียลไทม์ เชื่อมโยงตรงผ่านแอปพลิเคชันภาคสนาม (AppSheet) สู่ Google Sheets พร้อมแสดงจุดเสียบนแผนที่วิเคราะห์ความถี่ปัญหาได้อย่างแม่นยำ
+              ช่วยให้ช่างและเจ้าหน้าที่ตรวจสอบสถานะการแจ้งซ่อมเสาไฟฟ้าแบบเรียลไทม์ เชื่อมโยงตรงผ่านแอปพลิเคชันภาคสนามสู่ฐานข้อมูลกลาง พร้อมแสดงจุดเสียบนแผนที่วิเคราะห์ความถี่ปัญหาได้อย่างแม่นยำ
             </p>
 
             <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
@@ -415,7 +414,7 @@ export default function App() {
               <div className="flex gap-3">
                 <span className="h-6 w-6 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold shrink-0">1</span>
                 <div>
-                  <h4 className="font-semibold text-neutral-200">เจ้าหน้าที่ภาคสนามกรอกผ่าน AppSheet</h4>
+                  <h4 className="font-semibold text-neutral-200">เจ้าหน้าที่ภาคสนามรายงานผ่านระบบมือถือ</h4>
                   <p className="text-neutral-500 mt-0.5">พิกัด GPS, รหัสเสาไฟฟ้า และสถานะการเสีย อัพเดทเรียลไทม์</p>
                 </div>
               </div>
@@ -423,8 +422,8 @@ export default function App() {
               <div className="flex gap-3">
                 <span className="h-6 w-6 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold shrink-0">2</span>
                 <div>
-                  <h4 className="font-semibold text-neutral-200">Google Sheets เก็บฐานข้อมูลแบบรวมศูนย์</h4>
-                  <p className="text-neutral-500 mt-0.5">ทำงานร่วมกับสเปรดชีตหลัก เพื่อส่งต่อพิกัดเข้าสู่ระบบวิเคราะห์</p>
+                  <h4 className="font-semibold text-neutral-200">ระบบฐานข้อมูลคลาวด์แบบรวมศูนย์ (Cloud Database)</h4>
+                  <p className="text-neutral-500 mt-0.5">ทำงานร่วมกับฐานข้อมูลหลัก เพื่อส่งต่อพิกัดเข้าสู่ระบบวิเคราะห์</p>
                 </div>
               </div>
 
@@ -600,7 +599,7 @@ export default function App() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span className="font-medium text-slate-200">ซิงค์สด Google Sheet</span>
+                <span className="font-medium text-slate-200">ซิงค์ข้อมูลเรียลไทม์</span>
                 {lastRefreshed && (
                   <span className="text-slate-400 text-[11px]">({lastRefreshed} น.)</span>
                 )}
@@ -833,7 +832,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="mt-auto border-t border-slate-800 bg-[#0F172A] px-6 py-4 text-center text-xs text-slate-500 font-sans">
-          ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง © 2569 | เชื่อมโยงข้อมูลผ่าน Google Sheets & Google Apps Script
+          ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง © 2569 | ระบบบริหารจัดการและซ่อมบำรุงไฟฟ้าสาธารณะอัจฉริยะ
         </footer>
       </div>
 

@@ -296,7 +296,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
         </div>
         <h4 className="text-sm font-semibold text-slate-300">ไม่พบบันทึกที่มีพิกัด GPS</h4>
         <p className="text-xs text-slate-500 mt-1 max-w-xs font-sans">
-          กรุณากรอกข้อมูล ละติจูด, ลองจิจูด ใน Google Sheets / AppSheet เพื่อแสดงเสาไฟบนแผนที่นำทาง
+          กรุณากรอกข้อมูล ละติจูด, ลองจิจูด ในระบบ เพื่อแสดงเสาไฟบนแผนที่นำทาง
         </p>
       </div>
     );

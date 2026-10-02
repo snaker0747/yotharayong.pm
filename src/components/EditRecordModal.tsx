@@ -432,7 +432,7 @@ export default function EditRecordModal({
               {/* รูปภาพแนบ */}
               <div className="space-y-1.5 pt-1">
                 <label className="text-xs font-semibold text-slate-300 font-sans block">
-                  ลิงก์รูปภาพการซ่อมบำรุง (Image URL หรือ AppSheet File Name)
+                  ลิงก์รูปภาพการซ่อมบำรุง (Image URL หรือชื่อไฟล์รูปภาพ)
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">

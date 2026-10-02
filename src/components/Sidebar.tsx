@@ -208,7 +208,7 @@ export default function Sidebar({
                   <RefreshCw size={17} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
                 </div>
                 <div>
-                  <div className="text-xs font-medium">ซิงค์ข้อมูล Google Sheet</div>
+                  <div className="text-xs font-medium">ซิงค์ข้อมูลระบบ</div>
                   <div className="text-[10px] text-slate-400">
                     {lastRefreshed ? `อัปเดต ${lastRefreshed}` : 'กดเพื่อดึงข้อมูลสด'}
                   </div>
@@ -230,7 +230,7 @@ export default function Sidebar({
                 </div>
                 <div>
                   <div className="text-xs font-medium">ตั้งค่าการเชื่อมต่อ</div>
-                  <div className="text-[10px] text-slate-400">Google Sheet & Apps Script</div>
+                  <div className="text-[10px] text-slate-400">ฐานข้อมูล & บริการ API</div>
                 </div>
               </div>
             </button>

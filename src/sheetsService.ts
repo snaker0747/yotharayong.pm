@@ -606,7 +606,7 @@ export async function syncRecordToGoogleSheet(
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
-        return { success: true, message: data.result?.message || 'บันทึกข้อมูลลง Google Sheet สำเร็จเรียบร้อย' };
+        return { success: true, message: data.result?.message || 'บันทึกข้อมูลลงฐานข้อมูลระบบสำเร็จเรียบร้อย' };
       }
     }
   } catch (err: any) {
@@ -628,7 +628,7 @@ export async function syncRecordToGoogleSheet(
         data: payload.data,
       }),
     });
-    return { success: true, message: 'ส่งข้อมูลบันทึกลง Google Sheet เรียบร้อยแล้ว' };
+    return { success: true, message: 'ส่งข้อมูลบันทึกลงฐานข้อมูลระบบเรียบร้อยแล้ว' };
   } catch (directErr: any) {
     return { success: false, message: directErr.message };
   }
@@ -666,7 +666,7 @@ export async function deleteRecordFromGoogleSheet(
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
-        return { success: true, message: data.result?.message || 'ลบข้อมูลออกจาก Google Sheet เรียบร้อยแล้ว' };
+        return { success: true, message: data.result?.message || 'ลบข้อมูลออกจากฐานข้อมูลระบบเรียบร้อยแล้ว' };
       }
     }
   } catch (err: any) {
@@ -681,7 +681,7 @@ export async function deleteRecordFromGoogleSheet(
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(payload),
     });
-    return { success: true, message: 'ส่งคำสั่งลบข้อมูลไปยัง Google Sheet เรียบร้อยแล้ว' };
+    return { success: true, message: 'ส่งคำสั่งลบข้อมูลไปยังฐานข้อมูลระบบเรียบร้อยแล้ว' };
   } catch (err: any) {
     return { success: false, message: err.message };
   }
