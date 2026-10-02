@@ -151,7 +151,7 @@ export default function AnalyticsCharts({ records }: ChartsProps) {
                       backgroundColor: '#0F172A',
                       borderColor: '#334155',
                       borderRadius: '8px',
-                      fontFamily: "'FC Vision Superfamily', 'FC Vision', 'Prompt', sans-serif",
+                      fontFamily: "'Sukhumvit Set', 'Sukhumvit', 'Prompt', sans-serif",
                       fontSize: '11px',
                     }}
                     itemStyle={{ color: '#f8fafc' }}

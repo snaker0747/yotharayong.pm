@@ -249,7 +249,7 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
 
       // Bind informative popup
       marker.bindPopup(`
-        <div style="font-family: 'FC Vision Superfamily', 'FC Vision', 'Prompt', sans-serif; font-size: 11px; line-height: 1.4; color: ${theme === 'light' ? '#0f172a' : '#f1f5f9'}; padding: 2px; width: 170px;">
+        <div style="font-family: 'Sukhumvit Set', 'Sukhumvit', 'Prompt', sans-serif; font-size: 11px; line-height: 1.4; color: ${theme === 'light' ? '#0f172a' : '#f1f5f9'}; padding: 2px; width: 170px;">
           <strong style="color: #3b82f6; font-size: 12px; font-family: monospace; display: block; border-bottom: 1px solid #475569; padding-bottom: 3px; margin-bottom: 5px;">📍 ${record.poleId}</strong>
           <div style="margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>ตำแหน่ง:</strong> ${record.location || 'ไม่ระบุ'}</div>
           <div style="margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><strong>อาการ:</strong> ${record.issue || 'ไม่ระบุ'}</div>

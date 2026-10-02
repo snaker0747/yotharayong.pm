@@ -2,88 +2,99 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: 'FC Vision Superfamily';
-  src: url('/fonts/FC-Vision-Regular.otf') format('opentype'),
-       local('FC Vision [Non-commercial]'),
-       local('FC Vision Superfamily'),
-       local('FC Vision');
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-Thin.ttf') format('truetype'),
+       local('Sukhumvit Set Thin'),
+       local('SukhumvitSet-Thin');
+  font-weight: 100;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-Light.ttf') format('truetype'),
+       local('Sukhumvit Set Light'),
+       local('SukhumvitSet-Light');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-Text.ttf') format('truetype'),
+       local('Sukhumvit Set Text'),
+       local('Sukhumvit Set'),
+       local('SukhumvitSet-Text'),
+       local('SukhumvitSet');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'FC Vision Superfamily';
-  src: url('/fonts/FC-Vision-Regular.otf') format('opentype'),
-       local('FC Vision [Non-commercial]'),
-       local('FC Vision Superfamily'),
-       local('FC Vision');
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-Medium.ttf') format('truetype'),
+       local('Sukhumvit Set Medium'),
+       local('SukhumvitSet-Medium');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'FC Vision Superfamily';
-  src: url('/fonts/FC-Vision-Expanded.otf') format('opentype'),
-       local('FC Vision Expanded [Non-commercial]'),
-       local('FC Vision Expanded');
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-SemiBold.ttf') format('truetype'),
+       local('Sukhumvit Set SemiBold'),
+       local('SukhumvitSet-SemiBold');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'FC Vision Superfamily';
-  src: url('/fonts/FC-Vision-Expanded.otf') format('opentype'),
-       local('FC Vision Expanded [Non-commercial]'),
-       local('FC Vision Expanded');
+  font-family: 'Sukhumvit Set';
+  src: url('/fonts/SukhumvitSet-Bold.ttf') format('truetype'),
+       local('Sukhumvit Set Bold'),
+       local('SukhumvitSet-Bold');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
+/* Alias 'Sukhumvit' to Sukhumvit Set */
 @font-face {
-  font-family: 'FC Vision Superfamily';
-  src: url('/fonts/FC-Vision-ExtraExpanded.otf') format('opentype'),
-       local('FC Vision ExtraExpanded [Non-commercial]'),
-       local('FC Vision ExtraExpanded');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'FC Vision';
-  src: url('/fonts/FC-Vision-Regular.otf') format('opentype'),
-       local('FC Vision [Non-commercial]'),
-       local('FC Vision Superfamily'),
-       local('FC Vision');
+  font-family: 'Sukhumvit';
+  src: url('/fonts/SukhumvitSet-Text.ttf') format('truetype'),
+       local('Sukhumvit Set Text'),
+       local('Sukhumvit Set'),
+       local('Sukhumvit');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'FC Vision';
-  src: url('/fonts/FC-Vision-Expanded.otf') format('opentype'),
-       local('FC Vision Expanded [Non-commercial]'),
-       local('FC Vision Expanded');
+  font-family: 'Sukhumvit';
+  src: url('/fonts/SukhumvitSet-Bold.ttf') format('truetype'),
+       local('Sukhumvit Set Bold'),
+       local('Sukhumvit Bold');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "FC Vision Superfamily", "FC Vision", "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "FC Vision Superfamily", "FC Vision", "Prompt", monospace;
+  --font-sans: "Sukhumvit Set", "Sukhumvit", -apple-system, BlinkMacSystemFont, "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Sukhumvit Set", monospace;
 }
 
 /* Custom classes for the Professional Polish theme */
 body {
   background-color: #0F172A;
   color: #CBD5E1;
-  font-family: "FC Vision Superfamily", "FC Vision", "Prompt", "Inter", sans-serif;
+  font-family: "Sukhumvit Set", "Sukhumvit", -apple-system, BlinkMacSystemFont, "Prompt", "Inter", sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -116,7 +127,7 @@ body {
   box-sizing: border-box;
   color: #F8FAFC;
   cursor: pointer;
-  font-family: 'FC Vision Superfamily', 'FC Vision', 'Prompt', 'Inter', sans-serif;
+  font-family: 'Sukhumvit Set', 'Sukhumvit', -apple-system, 'Prompt', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 500;
   height: 42px;
@@ -156,7 +167,7 @@ body {
 .gsi-material-button .gsi-material-button-contents {
   -webkit-flex-grow: 1;
   flex-grow: 1;
-  font-family: 'FC Vision Superfamily', 'FC Vision', 'Prompt', 'Inter', sans-serif;
+  font-family: 'Sukhumvit Set', 'Sukhumvit', -apple-system, 'Prompt', 'Inter', sans-serif;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
