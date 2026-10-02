@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @font-face {
@@ -86,15 +86,15 @@
 }
 
 @theme {
-  --font-sans: "Sukhumvit Set", "Sukhumvit", -apple-system, BlinkMacSystemFont, "Prompt", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Sukhumvit Set", monospace;
+  --font-sans: "Inter", "Noto Sans Thai", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Inter", "Noto Sans Thai", monospace;
 }
 
 /* Custom classes for the Professional Polish theme */
 body {
   background-color: #0F172A;
   color: #CBD5E1;
-  font-family: "Sukhumvit Set", "Sukhumvit", -apple-system, BlinkMacSystemFont, "Prompt", "Inter", sans-serif;
+  font-family: "Inter", "Noto Sans Thai", -apple-system, BlinkMacSystemFont, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -127,7 +127,7 @@ body {
   box-sizing: border-box;
   color: #F8FAFC;
   cursor: pointer;
-  font-family: 'Sukhumvit Set', 'Sukhumvit', -apple-system, 'Prompt', 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Thai', sans-serif;
   font-size: 13px;
   font-weight: 500;
   height: 42px;
@@ -167,7 +167,7 @@ body {
 .gsi-material-button .gsi-material-button-contents {
   -webkit-flex-grow: 1;
   flex-grow: 1;
-  font-family: 'Sukhumvit Set', 'Sukhumvit', -apple-system, 'Prompt', 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans Thai', sans-serif;
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
