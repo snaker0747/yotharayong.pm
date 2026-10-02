@@ -4,13 +4,14 @@ import {
   initAuth, googleSignIn, logout, getAccessToken 
 } from './auth';
 import { 
-  fetchSheetRecords, MaintenanceRecord 
+  fetchSheetRecords, MaintenanceRecord, saveRecordOverride 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
 import MapVisualizer from './components/MapVisualizer';
 import AnalyticsCharts from './components/AnalyticsCharts';
 import RecordsList from './components/RecordsList';
 import RecordDetail from './components/RecordDetail';
+import EditRecordModal from './components/EditRecordModal';
 import SheetSettings from './components/SheetSettings';
 import AppsScriptHelper from './components/AppsScriptHelper';
 import LoginPage from './components/LoginPage';
@@ -86,8 +87,10 @@ export default function App() {
     return localStorage.getItem('pole_appsheet_name') || 'ข้อมูลไฟฟ้าแสงสว่าง-724677635';
   });
 
-  // Selected state
+  // Selected and Editing state
   const [selectedRecord, setSelectedRecord] = useState<MaintenanceRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string | null>(null);
 
   // Modal open states
@@ -202,6 +205,19 @@ export default function App() {
 
   const handleRecordSelect = (record: MaintenanceRecord) => {
     setSelectedRecord(record);
+  };
+
+  const handleOpenEdit = (record: MaintenanceRecord) => {
+    setSelectedRecord(record);
+    setEditingRecord(record);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveRecord = (updatedRecord: MaintenanceRecord) => {
+    setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
+    setSelectedRecord(updatedRecord);
+    setEditingRecord(updatedRecord);
+    saveRecordOverride(updatedRecord);
   };
 
   if (!isCustomLoggedIn) {
@@ -508,7 +524,8 @@ export default function App() {
                       </div>
                       <RecordsList
                         records={records}
-                        onSelectRecord={handleRecordSelect}
+                        onSelectRecord={handleOpenEdit}
+                        onEditRecord={handleOpenEdit}
                         selectedRecord={selectedRecord}
                         selectedStatusFilter={selectedStatusFilter}
                         onStatusFilterChange={setSelectedStatusFilter}
@@ -532,6 +549,7 @@ export default function App() {
                             record={selectedRecord}
                             appName={appSheetAppName}
                             tableName={sheetName}
+                            onEdit={handleOpenEdit}
                             onClose={() => setSelectedRecord(null)}
                           />
                         </motion.div>
@@ -566,6 +584,14 @@ export default function App() {
 
           </div>
       </main>
+
+      {/* Edit Record Popup Modal */}
+      <EditRecordModal
+        isOpen={isEditModalOpen}
+        record={editingRecord}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveRecord}
+      />
     </div>
   );
 }

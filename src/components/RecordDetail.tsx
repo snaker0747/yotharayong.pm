@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { 
   X, MapPin, Calendar, User, CheckCircle2, Clock, 
   Hourglass, AlertTriangle, ExternalLink, Navigation, 
-  Database, Image as ImageIcon, HelpCircle
+  Database, Image as ImageIcon, HelpCircle, Edit3
 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 
@@ -10,10 +10,11 @@ interface DetailProps {
   record: MaintenanceRecord | null;
   appName?: string;
   tableName?: string;
+  onEdit?: (record: MaintenanceRecord) => void;
   onClose: () => void;
 }
 
-export default function RecordDetail({ record, appName = '', tableName = '', onClose }: DetailProps) {
+export default function RecordDetail({ record, appName = '', tableName = '', onEdit, onClose }: DetailProps) {
   if (!record) return null;
 
   const getStatusBadgeLarge = (status: string, statusThai: string) => {
@@ -127,12 +128,23 @@ export default function RecordDetail({ record, appName = '', tableName = '', onC
             รายละเอียดรายงานการซ่อมบำรุง
           </span>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 rounded bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          {onEdit && (
+            <button
+              onClick={() => onEdit(record)}
+              className="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/30 text-xs font-sans font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Edit3 size={13} />
+              <span>แก้ไขข้อมูล</span>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 rounded bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">

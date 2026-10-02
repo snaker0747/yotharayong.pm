@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Search, Grid, List as ListIcon, MapPin, Calendar, 
   User, CheckCircle2, Clock, Hourglass, AlertTriangle, 
-  ChevronRight, ExternalLink, SlidersHorizontal, Image as ImageIcon 
+  ChevronRight, ExternalLink, SlidersHorizontal, Image as ImageIcon,
+  Edit3
 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 
@@ -12,6 +13,7 @@ interface ListProps {
   appName?: string;
   tableName?: string;
   onSelectRecord: (record: MaintenanceRecord) => void;
+  onEditRecord?: (record: MaintenanceRecord) => void;
   selectedRecord: MaintenanceRecord | null;
   selectedStatusFilter: string | null;
   onStatusFilterChange: (status: string | null) => void;
@@ -22,6 +24,7 @@ export default function RecordsList({
   appName = '',
   tableName = '',
   onSelectRecord, 
+  onEditRecord,
   selectedRecord,
   selectedStatusFilter,
   onStatusFilterChange
@@ -244,7 +247,10 @@ export default function RecordsList({
                 <motion.div
                   key={record.id}
                   layoutId={`record-card-${record.id}`}
-                  onClick={() => onSelectRecord(record)}
+                  onClick={() => {
+                    onSelectRecord(record);
+                    if (onEditRecord) onEditRecord(record);
+                  }}
                   className={`p-4 rounded-lg border text-left cursor-pointer transition-all duration-300 relative overflow-hidden group ${
                     isSelected 
                       ? 'bg-slate-800 border-blue-500 shadow-lg shadow-blue-500/10' 
@@ -315,7 +321,10 @@ export default function RecordsList({
                   return (
                     <tr
                       key={record.id}
-                      onClick={() => onSelectRecord(record)}
+                      onClick={() => {
+                        onSelectRecord(record);
+                        if (onEditRecord) onEditRecord(record);
+                      }}
                       className={`cursor-pointer hover:bg-slate-800/40 transition-colors ${
                         isSelected ? 'bg-slate-800 text-blue-400 font-bold' : 'text-slate-300'
                       }`}
@@ -327,8 +336,17 @@ export default function RecordsList({
                       <td className="p-3 text-slate-300 leading-normal">{record.technician}</td>
                       <td className="p-3">{getStatusBadge(record.status, record.statusThai)}</td>
                       <td className="p-3 text-right">
-                        <button className="p-1.5 rounded hover:bg-slate-800 text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 text-xs font-sans font-medium cursor-pointer">
-                          ดูรายละเอียด <ChevronRight size={13} />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectRecord(record);
+                            if (onEditRecord) onEditRecord(record);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 inline-flex items-center gap-1.5 text-xs font-sans font-medium transition-colors cursor-pointer"
+                        >
+                          <Edit3 size={13} />
+                          <span>แก้ไขข้อมูล</span>
                         </button>
                       </td>
                     </tr>

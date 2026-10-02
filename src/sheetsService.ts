@@ -13,6 +13,8 @@ export interface MaintenanceRecord {
   imageUrl: string;
   remarks: string;
   repairAction?: string;
+  community?: string;
+  soi?: string;
   raw: Record<string, string>; // original key-value pairs
 }
 
@@ -32,11 +34,17 @@ function mapHeaderToKey(header: string): string {
   if (h.includes('ประวัติ') || h.includes('history')) {
     return 'historyId';
   }
-  if (h.includes('รหัสเสา') || h.includes('หมายเลขเสา') || h.includes('pole') || h.includes('เสาไฟ') || (h.includes('id') && !h.includes('ประวัติ'))) {
+  if (h.includes('รหัสเสา') || h.includes('หมายเลขเสา') || h.includes('โคมไฟ') || h.includes('pole') || h.includes('เสาไฟ') || (h.includes('id') && !h.includes('ประวัติ'))) {
     return 'poleId';
   }
   if (h.includes('อาการ') || h.includes('ปัญหา') || h.includes(' defect') || h.includes('issue') || h.includes('ชำรุด')) {
     return 'issue';
+  }
+  if (h.includes('ชุมชน') || h.includes('เขต') || h.includes('community')) {
+    return 'community';
+  }
+  if (h.includes('ซอย') || h.includes('ถนน') || h.includes('soi') || h.includes('road')) {
+    return 'soi';
   }
   if (h.includes('สถานที่') || h.includes('ที่อยู่') || h.includes('บริเวณ') || h.includes('location') || h.includes('จุดอ้างอิง')) {
     return 'location';
@@ -148,6 +156,34 @@ export function parseCSV(csvText: string): string[][] {
   return lines;
 }
 
+export function getStoredRecordOverrides(): Record<string, Partial<MaintenanceRecord>> {
+  try {
+    const raw = localStorage.getItem('rayong_record_overrides');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveRecordOverride(record: MaintenanceRecord): void {
+  try {
+    const current = getStoredRecordOverrides();
+    current[record.id] = record;
+    if (record.poleId) {
+      current[`pole_${record.poleId}`] = record;
+    }
+    localStorage.setItem('rayong_record_overrides', JSON.stringify(current));
+  } catch (err) {
+    console.warn('Failed to save record override to localStorage:', err);
+  }
+}
+
+export function clearRecordOverrides(): void {
+  try {
+    localStorage.removeItem('rayong_record_overrides');
+  } catch {}
+}
+
 export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
   if (rows.length === 0) {
     return [];
@@ -169,6 +205,8 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
     let timestamp = '';
     let issue = '';
     let location = '';
+    let community = '';
+    let soi = '';
     let lat: number | null = null;
     let lng: number | null = null;
     let statusVal = '';
@@ -191,6 +229,12 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
           break;
         case 'issue':
           if (value && !issue) issue = value;
+          break;
+        case 'community':
+          if (value && !community) community = value;
+          break;
+        case 'soi':
+          if (value && !soi) soi = value;
           break;
         case 'location':
           if (value && !location) location = value;
@@ -240,12 +284,12 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
     const statusMap = mapStatus(statusVal);
 
     // If pole ID is missing but we have some details, generate a placeholder ID
-    if (!poleId && (issue || location || timestamp)) {
+    if (!poleId && (issue || location || community || timestamp)) {
       poleId = `POLE-${i}`;
     }
 
     // Skip entirely empty rows
-    if (!poleId && !issue && !location) {
+    if (!poleId && !issue && !location && !community) {
       continue;
     }
 
@@ -259,12 +303,23 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
       continue;
     }
 
-    records.push({
-      id: String(i + 1), // row number in Sheet (1-based index, row 1 is header, so row 2 is index 2)
+    // Compose location if empty
+    if (!location || location === 'ไม่ระบุสถานที่' || location === '-') {
+      const parts = [community, soi].filter(Boolean);
+      if (parts.length > 0) {
+        location = parts.join(' - ');
+      }
+    }
+
+    const rowId = String(i + 1);
+    let recordObj: MaintenanceRecord = {
+      id: rowId, // row number in Sheet (1-based index, row 1 is header, so row 2 is index 2)
       timestamp,
       poleId,
       issue: issue || 'ไม่ระบุอาการเสีย / ทั่วไป',
       location: location || 'ไม่ระบุสถานที่',
+      community,
+      soi,
       lat,
       lng,
       status: statusMap.eng,
@@ -275,7 +330,23 @@ export function parseRowsToRecords(rows: string[][]): MaintenanceRecord[] {
       remarks: remarks || '-',
       repairAction: repairAction || '',
       raw,
-    });
+    };
+
+    // Apply any local user modifications/overrides
+    const overrides = getStoredRecordOverrides();
+    const customEdit = overrides[rowId] || (poleId ? overrides[`pole_${poleId}`] : null);
+    if (customEdit) {
+      recordObj = {
+        ...recordObj,
+        ...customEdit,
+        raw: {
+          ...recordObj.raw,
+          ...(customEdit.raw || {}),
+        }
+      };
+    }
+
+    records.push(recordObj);
   }
 
   // Sort by ID or Timestamp descending to show latest updates first
