@@ -241,16 +241,11 @@ export default function App() {
         {/* Header decoration */}
         <div className="max-w-4xl mx-auto w-full flex justify-between items-center z-10">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-blue-600/10 text-blue-500">
-              <Lightbulb size={20} className="stroke-[2.5] animate-pulse" />
-            </span>
+            <img src="/maintenance-icon.png" alt="maintenance plan" className="w-7 h-7 object-contain" />
             <span className="text-sm font-bold tracking-tight font-sans text-slate-200">
-              Public Lighting Command Center
+              maintenance plan
             </span>
           </div>
-          <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-2 py-1 rounded">
-            Rayong City Works v1.0
-          </span>
         </div>
 
         {/* Hero Section */}

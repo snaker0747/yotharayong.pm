@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { User, Lock, Eye, EyeOff, Lightbulb, LogIn, AlertCircle, Sun, Moon } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, LogIn, AlertCircle, Sun, Moon } from 'lucide-react';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -89,19 +89,20 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="p-4 rounded-2xl bg-blue-600/10 text-blue-400 mb-4 border border-blue-500/20"
+            className="w-20 h-20 mb-3 flex items-center justify-center"
           >
-            <Lightbulb size={36} className="stroke-[2.5]" />
+            <img 
+              src="/maintenance-icon.png" 
+              alt="ระบบงานซ่อมบำรุง" 
+              className="w-full h-full object-contain drop-shadow-md"
+            />
           </motion.div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            ระบบจัดการและซ่อมบำรุงไฟฟ้าสาธารณะ
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            ระบบงานซ่อมบำรุง
           </h1>
           <p className="text-xs font-mono text-slate-400 mt-1 uppercase tracking-wider">
-            Public Lighting Command Center
+            maintenance plan
           </p>
-          <span className="text-[10px] font-mono text-slate-500 bg-slate-900/60 px-2.5 py-0.5 rounded mt-3 border border-slate-800">
-            Rayong City Works v1.0
-          </span>
         </div>
 
         {/* Login Form */}
@@ -199,9 +200,10 @@ export default function LoginPage({ onLoginSuccess, theme, onThemeToggle }: Logi
           </button>
         </form>
 
-        {/* Demo Credentials Help */}
-        <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 font-sans text-center">
-          <span>กรุณาใช้บัญชีที่ระบบกำหนดในการเข้าใช้งานแดชบอร์ด</span>
+        {/* Organization Attribution */}
+        <div className="mt-6 pt-4 border-t border-slate-800 text-xs text-slate-400 font-sans text-center leading-relaxed">
+          <p>จัดทำโดย ฝ่ายสาธารณูปโภค ส่วนการโยธา</p>
+          <p>สำนักการช่าง เทศบาลนครระยอง</p>
         </div>
       </motion.div>
     </div>
