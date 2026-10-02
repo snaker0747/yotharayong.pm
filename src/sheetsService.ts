@@ -410,11 +410,22 @@ export async function fetchSheetRecords(
   sheetName: string,
   accessToken: string | null
 ): Promise<MaintenanceRecord[]> {
+  const targetSheetId = (
+    spreadsheetId && 
+    !spreadsheetId.includes('script.google.com') && 
+    !spreadsheetId.startsWith('AKfycb') &&
+    spreadsheetId !== '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0'
+  ) ? spreadsheetId : '1ItTEV7wSB5M-99TUgYzl8v2YL0NZoZXYREzwE-a9u40';
+
+  const targetSheetName = (sheetName && sheetName !== 'Form Responses 1' && sheetName !== 'ชีต1') 
+    ? sheetName 
+    : 'การซ่อมบำรุง';
+
   // Try fetching public CSV first if token is empty or mock
   if (!accessToken || accessToken === 'mock-rayong-token-888') {
     try {
-      const gidParam = sheetName === 'การซ่อมบำรุง' ? 'gid=1789715931' : `sheet=${encodeURIComponent(sheetName)}`;
-      const proxyUrl = `/api/sheets-proxy?spreadsheetId=${spreadsheetId}&${gidParam}&t=${Date.now()}`;
+      const gidParam = (targetSheetName === 'การซ่อมบำรุง') ? 'gid=1789715931' : `sheet=${encodeURIComponent(targetSheetName)}`;
+      const proxyUrl = `/api/sheets-proxy?spreadsheetId=${targetSheetId}&${gidParam}&t=${Date.now()}`;
       const response = await fetch(proxyUrl);
       if (response.ok) {
         const text = await response.text();
@@ -424,7 +435,23 @@ export async function fetchSheetRecords(
         }
       }
     } catch (publicErr) {
-      console.warn('Failed to fetch public sheet CSV, fallback to token or mock:', publicErr);
+      console.warn('Failed to fetch public sheet CSV, fallback to direct or mock:', publicErr);
+    }
+
+    // Direct Google Sheets CSV export fallback
+    try {
+      const gidParam = (targetSheetName === 'การซ่อมบำรุง') ? 'gid=1789715931' : `sheet=${encodeURIComponent(targetSheetName)}`;
+      const directUrl = `https://docs.google.com/spreadsheets/d/${targetSheetId}/export?format=csv&${gidParam}&t=${Date.now()}`;
+      const directRes = await fetch(directUrl);
+      if (directRes.ok) {
+        const text = await directRes.text();
+        const rows = parseCSV(text);
+        if (rows.length > 0) {
+          return parseRowsToRecords(rows);
+        }
+      }
+    } catch (directErr) {
+      console.warn('Direct CSV fetch failed:', directErr);
     }
   }
 

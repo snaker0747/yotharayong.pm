@@ -47,11 +47,23 @@ export default function App() {
     localStorage.setItem('rayong_app_theme', theme);
   }, [theme]);
 
-  // Pre-configure the default Rayong Apps Script Web App URL
+  // Pre-configure the default Rayong Apps Script Web App URL & self-heal spreadsheet ID
   useEffect(() => {
     const current = localStorage.getItem('rayong_apps_script_url');
     if (!current || !current.includes('script.google.com')) {
       localStorage.setItem('rayong_apps_script_url', DEFAULT_APPS_SCRIPT_URL);
+    }
+
+    const savedId = localStorage.getItem('pole_spreadsheet_id');
+    if (!savedId || savedId.includes('script.google.com') || savedId.startsWith('AKfycb') || savedId === '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0') {
+      localStorage.setItem('pole_spreadsheet_id', DEFAULT_SPREADSHEET_ID);
+      setSpreadsheetId(DEFAULT_SPREADSHEET_ID);
+    }
+
+    const savedSheet = localStorage.getItem('pole_sheet_name');
+    if (!savedSheet || savedSheet === 'Form Responses 1' || savedSheet === 'ชีต1') {
+      localStorage.setItem('pole_sheet_name', DEFAULT_SHEET_NAME);
+      setSheetName(DEFAULT_SHEET_NAME);
     }
   }, []);
   const [user, setUser] = useState<User | null>(() => {
@@ -79,14 +91,16 @@ export default function App() {
   // Sheet connection config
   const [spreadsheetId, setSpreadsheetId] = useState(() => {
     const saved = localStorage.getItem('pole_spreadsheet_id');
-    if (!saved || saved === '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0') {
+    if (!saved || saved === '1jt7vq78sOvRlb2rjAZqxhwF5YvEozrvEXPZSr9I3S-0' || saved.includes('script.google.com') || saved.startsWith('AKfycb')) {
+      localStorage.setItem('pole_spreadsheet_id', DEFAULT_SPREADSHEET_ID);
       return DEFAULT_SPREADSHEET_ID;
     }
     return saved;
   });
   const [sheetName, setSheetName] = useState(() => {
     const saved = localStorage.getItem('pole_sheet_name');
-    if (!saved || saved === 'Form Responses 1') {
+    if (!saved || saved === 'Form Responses 1' || saved === 'ชีต1') {
+      localStorage.setItem('pole_sheet_name', DEFAULT_SHEET_NAME);
       return DEFAULT_SHEET_NAME;
     }
     return saved;
