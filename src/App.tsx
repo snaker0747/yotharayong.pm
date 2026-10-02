@@ -556,7 +556,7 @@ export default function App() {
                       </div>
                       <RecordsList
                         records={records}
-                        onSelectRecord={handleOpenEdit}
+                        onSelectRecord={handleRecordSelect}
                         onEditRecord={handleOpenEdit}
                         selectedRecord={selectedRecord}
                         selectedStatusFilter={selectedStatusFilter}
