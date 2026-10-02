@@ -1197,20 +1197,23 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm no-print"
             />
 
-            {/* Modal Box */}
+            {/* Modal Box (Optimized for A4 Landscape view) */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-5xl bg-[#1E293B] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh] print:max-h-none print:border-none print:shadow-none print:bg-white print:w-full print:max-w-none print:m-0 print:p-0 print:rounded-none"
+              className="relative w-full max-w-6xl bg-[#1E293B] border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[94vh] print:max-h-none print:border-none print:shadow-none print:bg-white print:w-full print:max-w-none print:m-0 print:p-0 print:rounded-none"
             >
               {/* Modal Top Bar */}
-              <div className="px-5 py-3.5 bg-slate-900 border-b border-slate-700/80 flex items-center justify-between gap-3 no-print">
+              <div className="px-5 py-3.5 bg-slate-900 border-b border-slate-700/80 flex items-center justify-between gap-3 no-print flex-wrap">
                 <div className="flex items-center gap-2">
                   <Printer size={18} className="text-blue-400" />
                   <h3 className="text-sm font-bold text-white">
-                    ตัวอย่างเอกสารใบสั่งงาน A4 ({filteredWorkOrders.length} รายการ)
+                    ตัวอย่างเอกสารใบสั่งงาน ({filteredWorkOrders.length} รายการ)
                   </h3>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    📄 A4 แนวนอน (Landscape)
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -1220,7 +1223,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
                     <Printer size={14} />
-                    <span>สั่งพิมพ์ A4</span>
+                    <span>สั่งพิมพ์ A4 แนวนอน</span>
                   </button>
                   <button
                     type="button"
@@ -1241,53 +1244,53 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               </div>
 
               {/* Printable Content Container inside modal */}
-              <div className="p-4 sm:p-6 overflow-y-auto bg-slate-950/40 print:p-0 print:bg-white print:overflow-visible">
+              <div className="p-3 sm:p-5 overflow-y-auto bg-slate-950/40 print:p-0 print:bg-white print:overflow-visible">
                 <div 
                   id="printable-work-order" 
-                  className="bg-white text-slate-900 rounded-xl p-4 sm:p-6 shadow-xl border border-slate-300 max-w-5xl mx-auto printable-area font-sans print:p-0 print:m-0 print:border-none print:shadow-none print:rounded-none print:w-full"
+                  className="bg-white text-slate-900 rounded-xl p-5 sm:p-6 shadow-xl border border-slate-300 w-full mx-auto printable-area font-sans print:p-0 print:m-0 print:border-none print:shadow-none print:rounded-none print:w-full"
                 >
                   {/* Header of Official Document */}
-                  <div className="border-b-2 border-slate-800 pb-2 mb-3">
-                    <div className="flex items-center justify-between gap-3">
+                  <div className="border-b-2 border-slate-800 pb-2.5 mb-3">
+                    <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <img 
                           src="/logo.png" 
                           alt="ตราเทศบาลนครระยอง" 
-                          className="w-10 h-10 object-contain shrink-0"
+                          className="w-11 h-11 object-contain shrink-0"
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                         <div>
-                          <div className="flex items-baseline gap-2">
-                            <h1 className="text-sm font-extrabold text-slate-950 font-sans leading-tight">
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <h1 className="text-base font-extrabold text-slate-950 font-sans leading-tight">
                               ใบสั่งงานซ่อมบำรุงไฟฟ้าสาธารณะ
                             </h1>
-                            <span className="text-[11px] font-semibold text-slate-700 font-sans">
+                            <span className="text-xs font-semibold text-slate-700 font-sans">
                               ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง เทศบาลนครระยอง
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
-                            เอกสารมอบหมายช่างตรวจสอบ ซ่อมแซม และบันทึกผลการปฏิบัติงานหน้างาน
+                          <p className="text-[11px] text-slate-600 mt-0.5">
+                            เอกสารมอบหมายช่างตรวจสอบ ซ่อมแซม และบันทึกผลการปฏิบัติงานหน้างาน (A4 แนวนอน)
                           </p>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
                         <div className="flex items-center gap-2 justify-end">
-                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-[11px] text-slate-800">
+                          <span className="px-2.5 py-0.5 bg-slate-100 border border-slate-300 rounded font-mono font-bold text-xs text-slate-800">
                             เลขที่: {reportNumber}
                           </span>
-                          <span className="text-[11px] font-semibold text-slate-800">
+                          <span className="text-xs font-semibold text-slate-800">
                             วันที่: {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
                         </div>
-                        <div className="text-[10px] text-slate-600 font-medium mt-0.5">
-                          จำนวนงาน: <span className="font-bold text-slate-900">{filteredWorkOrders.length}</span> รายการ
+                        <div className="text-[11px] text-slate-600 font-medium mt-0.5">
+                          จำนวนงานทั้งหมด: <span className="font-bold text-slate-900">{filteredWorkOrders.length}</span> รายการ
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Table of Jobs */}
+                  {/* Table of Jobs (Wide format for A4 Landscape) */}
                   {filteredWorkOrders.length === 0 ? (
                     <div className="py-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg text-xs">
                       ยังไม่มีรายการแจ้งซ่อมในใบงานนี้
@@ -1297,59 +1300,64 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       <table className="w-full text-left text-[11px] border-collapse border border-slate-400">
                         <thead>
                           <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-400">
-                            <th className="py-1 px-1.5 text-center border-r border-slate-400 w-8">ที่</th>
-                            <th className="py-1 px-2 border-r border-slate-400 w-24">ID โคมไฟ</th>
-                            <th className="py-1 px-2 border-r border-slate-400">สถานที่ / ชุมชน / ซอย</th>
-                            <th className="py-1 px-2 border-r border-slate-400 w-40">ปัญหาที่พบ</th>
-                            <th className="py-1 px-2 border-r border-slate-400 w-36">การซ่อมบำรุง</th>
-                            <th className="py-1 px-1.5 border-r border-slate-400 w-20 text-center">พิกัด GPS</th>
-                            <th className="py-1 px-2 border-r border-slate-400 w-20 text-center">ช่าง</th>
-                            <th className="py-1 px-2 border-slate-400 w-36">บันทึกผลซ่อม / อะไหล่</th>
+                            <th className="py-1.5 px-2 text-center border-r border-slate-400 w-10">ที่</th>
+                            <th className="py-1.5 px-2.5 border-r border-slate-400 w-28">ID โคมไฟ</th>
+                            <th className="py-1.5 px-3 border-r border-slate-400 min-w-[160px]">สถานที่ / ชุมชน / ซอย</th>
+                            <th className="py-1.5 px-2.5 border-r border-slate-400 w-44">ปัญหาที่พบ</th>
+                            <th className="py-1.5 px-2.5 border-r border-slate-400 w-44">การซ่อมบำรุงแก้ไข</th>
+                            <th className="py-1.5 px-2 border-r border-slate-400 w-28 text-center">พิกัด GPS</th>
+                            <th className="py-1.5 px-2 border-r border-slate-400 w-24 text-center">ผู้ปฏิบัติงาน</th>
+                            <th className="py-1.5 px-3 border-slate-400 w-44">บันทึกผลซ่อม / อะไหล่ / ลายมือชื่อ</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-300">
                           {filteredWorkOrders.map((job, idx) => (
                             <tr key={job.id} className="hover:bg-slate-50/50">
-                              <td className="py-1 px-1.5 text-center font-bold font-mono border-r border-slate-300 text-slate-700">
+                              <td className="py-1.5 px-2 text-center font-bold font-mono border-r border-slate-300 text-slate-700">
                                 {idx + 1}
                               </td>
-                              <td className="py-1 px-2 font-mono font-bold text-slate-900 border-r border-slate-300 whitespace-nowrap">
-                                {job.poleId}
-                                <span className={`block text-[8.5px] font-sans font-bold leading-none mt-0.5 ${
-                                  job.status === 'เสร็จสิ้น' ? 'text-emerald-600' : 'text-rose-600'
+                              <td className="py-1.5 px-2.5 font-mono font-bold text-slate-900 border-r border-slate-300 whitespace-nowrap">
+                                <div>{job.poleId}</div>
+                                <span className={`inline-block text-[9px] font-sans font-bold leading-none mt-0.5 px-1.5 py-0.5 rounded border ${
+                                  job.status === 'เสร็จสิ้น' 
+                                    ? 'text-emerald-700 bg-emerald-50 border-emerald-300' 
+                                    : 'text-rose-700 bg-rose-50 border-rose-300'
                                 }`}>
-                                  [{job.status}]
+                                  {job.status}
                                 </span>
                               </td>
-                              <td className="py-1 px-2 border-r border-slate-300 leading-tight">
+                              <td className="py-1.5 px-3 border-r border-slate-300 leading-tight">
                                 <div className="font-semibold text-slate-900">
                                   {job.community ? `ชุมชน${job.community}` : ''} {job.soi ? `ซอย${job.soi}` : ''}
                                 </div>
                                 {job.remarks && (
-                                  <div className="text-[9.5px] text-slate-500 italic line-clamp-1">{job.remarks}</div>
+                                  <div className="text-[10px] text-slate-500 italic mt-0.5 line-clamp-1">{job.remarks}</div>
                                 )}
                               </td>
-                              <td className="py-1 px-2 border-r border-slate-300 leading-tight">
+                              <td className="py-1.5 px-2.5 border-r border-slate-300 leading-tight">
                                 <div className="font-medium text-slate-900">{job.issue}</div>
                               </td>
-                              <td className="py-1 px-2 border-r border-slate-300 leading-tight">
-                                <div className="text-[10px] text-slate-800">{job.repairAction || '-'}</div>
+                              <td className="py-1.5 px-2.5 border-r border-slate-300 leading-tight">
+                                <div className="text-[10.5px] text-slate-800">{job.repairAction || '-'}</div>
+                                {job.repairDetail && (
+                                  <div className="text-[9.5px] text-slate-500">{job.repairDetail}</div>
+                                )}
                               </td>
-                              <td className="py-1 px-1.5 text-center font-mono text-[9px] text-slate-600 border-r border-slate-300 whitespace-nowrap">
+                              <td className="py-1.5 px-2 text-center font-mono text-[9.5px] text-slate-600 border-r border-slate-300 whitespace-nowrap">
                                 {job.lat && job.lng ? (
                                   <div>
-                                    <div>{job.lat.toFixed(4)}</div>
-                                    <div>{job.lng.toFixed(4)}</div>
+                                    <div>{job.lat.toFixed(5)}</div>
+                                    <div>{job.lng.toFixed(5)}</div>
                                   </div>
                                 ) : (
                                   <span className="text-slate-400">-</span>
                                 )}
                               </td>
-                              <td className="py-1 px-2 text-center font-medium border-r border-slate-300 text-slate-800 text-[10.5px] whitespace-nowrap">
+                              <td className="py-1.5 px-2 text-center font-medium border-r border-slate-300 text-slate-800 text-[11px] whitespace-nowrap">
                                 {job.technician || '-'}
                               </td>
-                              <td className="py-1 px-2 bg-slate-50/40">
-                                <div className="h-5 border-b border-dashed border-slate-400/80"></div>
+                              <td className="py-1.5 px-3 bg-slate-50/40">
+                                <div className="h-6 border-b border-dashed border-slate-400/80"></div>
                               </td>
                             </tr>
                           ))}
@@ -1359,8 +1367,8 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   )}
 
                   {/* Document Footer */}
-                  <div className="mt-2.5 pt-1.5 border-t border-slate-300 flex items-center justify-between text-[9.5px] text-slate-500 font-sans">
-                    <span>* รายการใบสั่งงานบำรุงรักษาไฟฟ้าสาธารณะ เทศบาลนครระยอง (ฝ่ายสาธารณูปโภค ส่วนการโยธา)</span>
+                  <div className="mt-3 pt-2 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500 font-sans">
+                    <span>* รายการใบสั่งงานบำรุงรักษาไฟฟ้าสาธารณะ เทศบาลนครระยอง (ฝ่ายสาธารณูปโภค ส่วนการโยธา) — กระดาษ A4 แนวนอน</span>
                     <span>พิมพ์เมื่อ: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.</span>
                   </div>
                 </div>
