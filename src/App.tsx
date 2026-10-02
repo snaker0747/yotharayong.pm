@@ -4,7 +4,7 @@ import {
   initAuth, googleSignIn, logout, getAccessToken 
 } from './auth';
 import { 
-  fetchSheetRecords, MaintenanceRecord, saveRecordOverride 
+  fetchSheetRecords, MaintenanceRecord, saveRecordOverride, syncRecordToGoogleSheet 
 } from './sheetsService';
 import DashboardStats from './components/DashboardStats';
 import MapVisualizer from './components/MapVisualizer';
@@ -190,13 +190,16 @@ export default function App() {
     setIsCustomLoggedIn(false);
   };
 
-  const handleSaveSettings = (newId: string, newName: string, newAppName: string) => {
+  const handleSaveSettings = (newId: string, newName: string, newAppName: string, newAppsScriptUrl?: string) => {
     setSpreadsheetId(newId);
     setSheetName(newName);
     setAppSheetAppName(newAppName);
     localStorage.setItem('pole_spreadsheet_id', newId);
     localStorage.setItem('pole_sheet_name', newName);
     localStorage.setItem('pole_appsheet_name', newAppName);
+    if (newAppsScriptUrl !== undefined) {
+      localStorage.setItem('rayong_apps_script_url', newAppsScriptUrl.trim());
+    }
     setShowSettings(false);
     if (token) {
       loadData(token, newId, newName);
@@ -213,11 +216,18 @@ export default function App() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveRecord = (updatedRecord: MaintenanceRecord) => {
+  const handleSaveRecord = async (updatedRecord: MaintenanceRecord) => {
+    // 1. Optimistic update local state immediately
     setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
     setSelectedRecord(updatedRecord);
     setEditingRecord(updatedRecord);
+    
+    // 2. Persist in localStorage so it stays upon refresh
     saveRecordOverride(updatedRecord);
+
+    // 3. Sync to Google Sheets
+    const result = await syncRecordToGoogleSheet(updatedRecord, sheetName);
+    return result;
   };
 
   if (!isCustomLoggedIn) {

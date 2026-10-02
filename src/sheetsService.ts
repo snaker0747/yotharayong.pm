@@ -466,3 +466,79 @@ export async function fetchSheetRecords(
   // If both failed and we don't have token, throw a descriptive error
   throw new Error('ไม่สามารถเข้าถึงข้อมูลสเปรดชีตได้ กรุณาแชร์สเปรดชีตเป็นแบบ "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือเชื่อมต่อผ่านบัญชี Google ของคุณ');
 }
+
+export async function syncRecordToGoogleSheet(
+  record: MaintenanceRecord,
+  sheetName: string = 'การซ่อมบำรุง',
+  appsScriptUrl?: string
+): Promise<{ success: boolean; message?: string }> {
+  const url = appsScriptUrl || localStorage.getItem('rayong_apps_script_url') || '';
+  if (!url) {
+    return { 
+      success: false, 
+      message: 'บันทึกในระบบเรียบร้อย (หากต้องการซิงค์เข้า Google Sheet อัตโนมัติ กรุณาระบุ Apps Script Web App URL ในเมนูตั้งค่า)' 
+    };
+  }
+
+  const historyId = (record.raw?.['ID ประวัติ'] || record.raw?.['id ประวัติ'] || record.raw?.['History ID'] || '').trim();
+  const rowNumber = Number(record.id) || null;
+
+  const payload = {
+    appsScriptUrl: url,
+    rowId: historyId || record.id,
+    rowNumber,
+    historyId,
+    sheetName,
+    data: {
+      'ID โคมไฟ': record.poleId,
+      'ปัญหาที่พบ': record.issue,
+      'ชุมชน/เขต': record.community || '',
+      'ซอย': record.soi || '',
+      'สถานะ': record.statusThai,
+      'ชื่อผู้ปฏิบัติงาน': record.technician,
+      'วันที่ซ่อมบำรุงแก้ไข': record.fixedDate,
+      'การซ่อมบำรุงแก้ไข': record.repairAction || '',
+      'รายละเอียดการแก้ไขเพิ่มเติม': record.remarks || '',
+      'หมายเหตุ': record.remarks || '',
+      'พิกัดซ่อมบำรุง': record.lat && record.lng ? `${record.lat}, ${record.lng}` : '',
+      'รูปภาพการซ่อมบำรุง': record.imageUrl || '',
+    }
+  };
+
+  try {
+    const res = await fetch('/api/update-sheet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) {
+        return { success: true, message: data.result?.message || 'บันทึกข้อมูลลง Google Sheet สำเร็จเรียบร้อย' };
+      }
+    }
+  } catch (err: any) {
+    console.warn('Vercel proxy failed, trying direct fetch:', err);
+  }
+
+  // Fallback: direct fetch to Apps Script URL
+  try {
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        rowId: historyId || record.id,
+        rowNumber,
+        historyId,
+        sheetName,
+        data: payload.data,
+      }),
+    });
+    return { success: true, message: 'ส่งข้อมูลบันทึกลง Google Sheet เรียบร้อยแล้ว' };
+  } catch (directErr: any) {
+    return { success: false, message: directErr.message };
+  }
+}
+
+

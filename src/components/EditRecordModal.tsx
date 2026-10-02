@@ -11,7 +11,7 @@ interface EditRecordModalProps {
   isOpen: boolean;
   record: MaintenanceRecord | null;
   onClose: () => void;
-  onSave: (updatedRecord: MaintenanceRecord) => void;
+  onSave: (updatedRecord: MaintenanceRecord) => Promise<{ success: boolean; message?: string } | void> | void;
 }
 
 export default function EditRecordModal({
@@ -25,6 +25,7 @@ export default function EditRecordModal({
   const [soi, setSoi] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   // Initialize form when record changes
   useEffect(() => {
@@ -52,9 +53,10 @@ export default function EditRecordModal({
     }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    setStatusMessage('กำลังบันทึกข้อมูล...');
 
     // Build composite location if community/soi exists
     let finalLocation = formData.location || '';
@@ -101,15 +103,29 @@ export default function EditRecordModal({
       }
     };
 
-    setTimeout(() => {
-      onSave(updated);
+    try {
+      const res = await onSave(updated);
       setIsSaving(false);
       setSaveSuccess(true);
+      if (res && res.message) {
+        setStatusMessage(res.message);
+      } else {
+        setStatusMessage('บันทึกข้อมูลเรียบร้อยแล้ว');
+      }
       setTimeout(() => {
         setSaveSuccess(false);
+        setStatusMessage(null);
         onClose();
-      }, 700);
-    }, 400);
+      }, 1200);
+    } catch (err: any) {
+      setIsSaving(false);
+      setStatusMessage('บันทึกในเครื่องเรียบร้อยแล้ว');
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setStatusMessage(null);
+        onClose();
+      }, 1200);
+    }
   };
 
   const statusOptions = [
@@ -420,11 +436,18 @@ export default function EditRecordModal({
             </div>
 
             {/* Modal Actions Footer */}
-            <div className="pt-4 border-t border-slate-700 flex items-center justify-between gap-3">
-              <span className="text-[11px] text-slate-500 font-mono">
-                แถวข้อมูลที่ #{record.id}
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] text-slate-500 font-mono">
+                  แถว #{record.id} {record.raw?.['ID ประวัติ'] ? `(${record.raw['ID ประวัติ']})` : ''}
+                </span>
+                {statusMessage && (
+                  <span className={`text-[11px] font-sans ${saveSuccess ? 'text-emerald-400 font-semibold' : 'text-amber-400'}`}>
+                    • {statusMessage}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button
                   type="button"
                   onClick={onClose}
@@ -443,7 +466,10 @@ export default function EditRecordModal({
                   }`}
                 >
                   {isSaving ? (
-                    <span className="inline-block border-2 border-white/30 border-t-white rounded-full h-3.5 w-3.5 animate-spin" />
+                    <>
+                      <span className="inline-block border-2 border-white/30 border-t-white rounded-full h-3.5 w-3.5 animate-spin" />
+                      <span>กำลังบันทึก...</span>
+                    </>
                   ) : saveSuccess ? (
                     <>
                       <CheckCircle2 size={14} />
