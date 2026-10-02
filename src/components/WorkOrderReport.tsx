@@ -249,6 +249,9 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
   // Print Preview Modal state
   const [showPrintPreview, setShowPrintPreview] = useState(false);
 
+  // Add Record Modal state (เปิด/ปิด Popup กรอกข้อมูลซ่อมบำรุง)
+  const [showAddModal, setShowAddModal] = useState(false);
+
   // Quick Edit / Update Status Modal
   const [editingItem, setEditingItem] = useState<WorkOrderItem | null>(null);
 
@@ -806,6 +809,16 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
+          {/* Add Record Button */}
+          <button
+            type="button"
+            onClick={() => setShowAddModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-900/30"
+          >
+            <Plus size={16} />
+            <span>เพิ่มรายการ</span>
+          </button>
+
           {/* Print Preview Button */}
           <button
             type="button"
@@ -850,476 +863,275 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
         </div>
       </div>
 
-      {/* 2. Main Content Grid (Input Form + Work Orders Queue) */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start no-print">
-        {/* Left Column: Form matching `การซ่อมบำรุง` (5/12 on XL, full width on mobile/tablet) */}
-        <div className="xl:col-span-5 bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
-          <div className="border-b border-slate-700/80 pb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Plus size={18} className="text-emerald-400" />
-              <h3 className="text-base font-bold text-slate-100">
-                กรอกข้อมูลซ่อมบำรุง
-              </h3>
+      {/* 2. Main Content: Comprehensive Work Orders List (เต็มพื้นที่หน้าเว็บ เพื่อประหยัดหน้าเว็บและแสดงรายการซ่อมบำรุงอย่างชัดเจน) */}
+      <div className="bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5 no-print">
+        {/* Header bar of the Work Orders List */}
+        <div className="border-b border-slate-700/80 pb-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+              <FileText size={20} />
             </div>
-            <span className="text-[11px] text-slate-400">
-              ชีต การซ่อมบำรุง
-            </span>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base font-bold text-slate-100">
+                  รวมรายการซ่อมบำรุง
+                </h3>
+                <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-semibold">
+                  ทั้งหมด {workOrders.length} รายการ
+                </span>
+                {filterByDate && (
+                  <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-0.5 rounded-full font-semibold">
+                    กรองแสดง {filteredWorkOrders.length} รายการ
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                ตารางสรุปรายการงานซ่อมบำรุงไฟฟ้าสาธารณะ ตรวจสอบ อัปเดตสถานะงาน และพิมพ์ออกใบงาน A4 แนวนอน
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={handleAddItem} className="space-y-3.5">
-            {/* 1. Pole ID & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  ID โคมไฟ / รหัสเสา
-                </label>
-                <input
-                  type="text"
-                  placeholder="รหัสโคมไฟ"
-                  value={poleId}
-                  onChange={(e) => setPoleId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  สถานะ
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                >
-                  {STATUS_OPTIONS.map(opt => (
-                    <option key={opt.val} value={opt.val}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* 2. Community & Soi (Searchable Combobox from Google Sheet gid=89735667) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <SearchableCombobox
-                  label="ชุมชน / เขต"
-                  badge={loadingCommData ? 'กำลังโหลด...' : `${communityData.communities.length} ชุมชน`}
-                  value={community}
-                  onChange={setCommunity}
-                  options={communityData.communities}
-                  placeholder="เลือกหรือพิมพ์ชุมชน"
-                  emptyText="ไม่พบชื่อชุมชนในชีต"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <SearchableCombobox
-                  label="ซอย / ถนน"
-                  badge={
-                    community && communityData.communitySoiMap[community.trim()]
-                      ? `${availableSois.length} ซอยในชุมชน`
-                      : `${availableSois.length || communityData.sois.length} ซอย`
-                  }
-                  value={soi}
-                  onChange={setSoi}
-                  options={availableSois}
-                  placeholder="เลือกหรือพิมพ์ซอย/ถนน"
-                  emptyText="ไม่พบชื่อซอยในชีต"
-                />
-              </div>
-            </div>
-
-            {/* 3. Issue */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                ปัญหาที่พบ
-              </label>
-              <input
-                type="text"
-                placeholder="ระบุอาการชำรุด"
-                value={issue}
-                onChange={(e) => setIssue(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-              />
-              {/* Quick Issue Chips */}
-              <div className="flex flex-wrap gap-1 pt-0.5">
-                {COMMON_ISSUES.slice(0, 4).map((iss) => (
-                  <button
-                    key={iss}
-                    type="button"
-                    onClick={() => setIssue(iss)}
-                    className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors cursor-pointer"
-                  >
-                    {iss}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 4. Repair Action (การซ่อมบำรุงแก้ไข) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                การซ่อมบำรุงแก้ไข
-              </label>
-              <input
-                type="text"
-                placeholder="ระบุการปฏิบัติงาน เช่น เปลี่ยนหลอด LED, On breaker"
-                value={repairAction}
-                onChange={(e) => setRepairAction(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-              />
-              <div className="flex flex-wrap gap-1 pt-0.5">
-                {COMMON_REPAIRS.slice(0, 4).map((rep) => (
-                  <button
-                    key={rep}
-                    type="button"
-                    onClick={() => setRepairAction(rep)}
-                    className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/40 transition-colors cursor-pointer"
-                  >
-                    {rep}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 5. Technician & Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  ชื่อผู้ปฏิบัติงาน
-                </label>
-                <input
-                  type="text"
-                  placeholder="ระบุชื่อช่าง"
-                  value={technician}
-                  onChange={(e) => setTechnician(e.target.value)}
-                  list="rep-tech-list"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                />
-                <datalist id="rep-tech-list">
-                  {COMMON_TECHNICIANS.map(t => <option key={t} value={t} />)}
-                </datalist>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-300">
-                  วันที่ซ่อมบำรุงแก้ไข
-                </label>
-                <input
-                  type="date"
-                  value={fixedDate}
-                  onChange={(e) => setFixedDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* 6. GPS Coordinates */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-300">
-                  พิกัดซ่อมบำรุง (GPS)
-                </label>
-                <button
-                  type="button"
-                  onClick={handleGetLocation}
-                  className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
-                >
-                  <Navigation size={11} />
-                  <span>ดึงพิกัดปัจจุบัน</span>
-                </button>
-              </div>
-              <input
-                type="text"
-                placeholder="เช่น 12.682379, 101.246283"
-                value={gpsStr}
-                onChange={(e) => setGpsStr(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-blue-500 transition-colors"
-              />
-            </div>
-
-            {/* 7. Image Upload (รูปภาพการซ่อมบำรุง) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">
-                รูปภาพการซ่อมบำรุง
-              </label>
-              <div className="flex items-center gap-3">
-                {imageUrl ? (
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 group shrink-0">
-                    <img src={imageUrl} alt="รูปซ่อมบำรุง" className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setImageUrl('')}
-                      className="absolute top-1 right-1 p-1 bg-rose-600/90 hover:bg-rose-500 text-white rounded-full transition-colors cursor-pointer"
-                      title="ลบรูปภาพ"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-24 h-18 border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-xl cursor-pointer bg-slate-950/60 hover:bg-slate-900/60 transition-colors shrink-0">
-                    <Camera size={18} className="text-slate-400 mb-0.5" />
-                    <span className="text-[10px] text-slate-400">แนบ/ถ่ายรูป</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className="hidden"
-                      onChange={(e) => handleImageFileChange(e, false)}
-                    />
-                  </label>
-                )}
-                <div className="text-[11px] text-slate-400">
-                  <p className="text-slate-300 font-medium">ภาพถ่ายหน้างาน (ก่อน/หลังซ่อม)</p>
-                  <p className="text-[10px] text-slate-500">สามารถถ่ายจากมือถือหรือเลือกไฟล์</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 8. Remarks & Details */}
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-slate-300">
-                รายละเอียดการแก้ไขเพิ่มเติม / หมายเหตุ
-              </label>
-              <textarea
-                rows={2}
-                placeholder="ระบุรายละเอียดเพิ่มเติม"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
-              />
-            </div>
-
-            {/* Sync Checkbox */}
-            <div className="pt-1">
-              <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={syncToSheet}
-                  onChange={(e) => setSyncToSheet(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-emerald-500 focus:ring-0"
-                />
-                <span>ซิงค์บันทึกข้อมูลลง Google Sheet ทันที</span>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-50"
-            >
-              <Plus size={16} />
-              <span>{isSubmitting ? 'กำลังบันทึกลงระบบ...' : 'บันทึกเข้ารายการซ่อมบำรุง'}</span>
-            </button>
-          </form>
-        </div>
-
-        {/* Right Column: Work Orders List & Date Range Filter (7/12 on XL) */}
-        <div className="xl:col-span-7 bg-[#1E293B] border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
-          <div className="border-b border-slate-700/80 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <FileText size={18} className="text-blue-400" />
-              <h3 className="text-base font-bold text-slate-100">
-                รายการซ่อมบำรุง ({workOrders.length} งาน)
-              </h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">เลขที่ใบงาน:</span>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+              <span className="text-xs text-slate-400">เลขที่ใบงาน:</span>
               <input
                 type="text"
                 value={reportNumber}
                 onChange={(e) => setReportNumber(e.target.value)}
-                className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs text-blue-400 font-mono font-bold w-36 text-center"
+                className="px-2 py-0.5 rounded bg-slate-950 border border-slate-700 text-xs text-blue-400 font-mono font-bold w-36 text-center focus:outline-none focus:border-blue-500"
                 title="เลขที่ใบสั่งงาน สามารถแก้ไขได้"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-900/30"
+            >
+              <Plus size={16} />
+              <span>เพิ่มรายการ</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Date Range Filter Bar for Print & View */}
+        <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+              <Filter size={14} className="text-blue-400" />
+              <span>ตัวกรองช่วงวันที่พิมพ์รายงาน</span>
+            </div>
+            <label className="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterByDate}
+                onChange={(e) => setFilterByDate(e.target.checked)}
+                className="rounded bg-slate-950 border-slate-800 text-blue-500"
+              />
+              <span>เปิดใช้งานตัวกรอง</span>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 shrink-0">ตั้งแต่:</span>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setFilterByDate(true);
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 shrink-0">ถึงวันที่:</span>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setFilterByDate(true);
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* Date Range Filter Bar for Print & View */}
-          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
-                <Filter size={14} className="text-blue-400" />
-                <span>ตัวกรองช่วงวันที่พิมพ์รายงาน</span>
-              </div>
-              <label className="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterByDate}
-                  onChange={(e) => setFilterByDate(e.target.checked)}
-                  className="rounded bg-slate-950 border-slate-800 text-blue-500"
-                />
-                <span>เปิดใช้งานตัวกรอง</span>
-              </label>
+          {/* Quick date presets */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date().toISOString().split('T')[0];
+                setStartDate(today);
+                setEndDate(today);
+                setFilterByDate(true);
+              }}
+              className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                filterByDate && startDate === new Date().toISOString().split('T')[0] && endDate === new Date().toISOString().split('T')[0]
+                  ? 'bg-blue-600 text-white font-semibold'
+                  : 'bg-slate-800 text-slate-400 hover:text-white'
+              }`}
+            >
+              วันนี้
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const today = new Date();
+                const prev7 = new Date();
+                prev7.setDate(today.getDate() - 7);
+                setStartDate(prev7.toISOString().split('T')[0]);
+                setEndDate(today.toISOString().split('T')[0]);
+                setFilterByDate(true);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              7 วันล่าสุด
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterByDate(false)}
+              className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                !filterByDate ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400 hover:text-white'
+              }`}
+            >
+              แสดงทั้งหมด ({workOrders.length})
+            </button>
+
+            <span className="ml-auto text-[11px] text-slate-400 font-medium">
+              พบ {filteredWorkOrders.length} รายการ
+            </span>
+          </div>
+        </div>
+
+        {/* List Cards */}
+        {filteredWorkOrders.length === 0 ? (
+          <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3 bg-slate-900/40 rounded-xl border border-slate-800/80">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500">
+              <FileText size={28} />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 shrink-0">ตั้งแต่:</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    setStartDate(e.target.value);
-                    setFilterByDate(true);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-slate-400 shrink-0">ถึงวันที่:</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => {
-                    setEndDate(e.target.value);
-                    setFilterByDate(true);
-                  }}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
-                />
-              </div>
+            <div className="space-y-1">
+              <p className="text-sm font-bold text-slate-200">
+                {filterByDate ? 'ไม่พบรายการงานในช่วงวันที่เลือก' : 'ยังไม่มีรายการงานในชุดนี้'}
+              </p>
+              <p className="text-xs text-slate-400 max-w-sm">
+                คลิกปุ่ม "เพิ่มรายการ" เพื่อเปิดหน้ากรอกข้อมูล หรือคลิก "ดึงงานรอซ่อม" เพื่อนำรายการเข้ามา
+              </p>
             </div>
-
-            {/* Quick date presets */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+            <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  setStartDate(today);
-                  setEndDate(today);
-                  setFilterByDate(true);
-                }}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                  filterByDate && startDate === new Date().toISOString().split('T')[0] && endDate === new Date().toISOString().split('T')[0]
-                    ? 'bg-blue-600 text-white font-semibold'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md"
               >
-                วันนี้
+                <Plus size={15} />
+                <span>เพิ่มรายการ</span>
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  const today = new Date();
-                  const prev7 = new Date();
-                  prev7.setDate(today.getDate() - 7);
-                  setStartDate(prev7.toISOString().split('T')[0]);
-                  setEndDate(today.toISOString().split('T')[0]);
-                  setFilterByDate(true);
-                }}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                onClick={handleImportPending}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                7 วันล่าสุด
+                <ListPlus size={15} className="text-amber-400" />
+                <span>ดึงงานรอซ่อม</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setFilterByDate(false)}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
-                  !filterByDate ? 'bg-emerald-600 text-white font-semibold' : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                แสดงทั้งหมด ({workOrders.length})
-              </button>
-
-              <span className="ml-auto text-[11px] text-slate-400 font-medium">
-                พบ {filteredWorkOrders.length} รายการ
-              </span>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[680px] overflow-y-auto pr-1">
+            {filteredWorkOrders.map((item, index) => {
+              const statusColor = 
+                item.status === 'เสร็จสิ้น' 
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
+                  : item.status === 'กำลังดำเนินการ' 
+                  ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' 
+                  : item.status === 'รออะไหล่/วัสดุ'
+                  ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                  : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
 
-          {/* List Cards */}
-          {filteredWorkOrders.length === 0 ? (
-            <div className="py-14 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500">
-                <FileText size={24} />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-300">
-                  {filterByDate ? 'ไม่พบรายการงานในช่วงวันที่เลือก' : 'ยังไม่มีรายการงานในชุดนี้'}
-                </p>
-                <p className="text-xs text-slate-500 max-w-sm">
-                  กรอกข้อมูลผ่านฟอร์มทางซ้าย หรือกดปุ่ม "ดึงงานรอซ่อม" เพื่อนำรายการเข้ามาในชุดงาน
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
-              {filteredWorkOrders.map((item, index) => {
-                const statusColor = 
-                  item.status === 'เสร็จสิ้น' 
-                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
-                    : item.status === 'กำลังดำเนินการ' 
-                    ? 'bg-blue-500/15 text-blue-400 border-blue-500/30' 
-                    : item.status === 'รออะไหล่/วัสดุ'
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
-                    : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-950/80 transition-all flex flex-col justify-between gap-3 shadow-sm"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    {/* Thumbnail if photo exists */}
+                    {item.imageUrl ? (
+                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-slate-700 shrink-0 bg-slate-900">
+                        <img src={item.imageUrl} alt="รูปงาน" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <span className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-slate-300 shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                    )}
 
-                return (
-                  <div
-                    key={item.id}
-                    className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col sm:flex-row justify-between items-start gap-3"
-                  >
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      {/* Thumbnail if photo exists */}
-                      {item.imageUrl ? (
-                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-slate-700 shrink-0 bg-slate-900">
-                          <img src={item.imageUrl} alt="รูปงาน" className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <span className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-slate-300 shrink-0 mt-0.5">
-                          {index + 1}
+                    <div className="min-w-0 space-y-1.5 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-bold text-sm text-white">
+                          {item.poleId || 'ไม่ระบุรหัส'}
                         </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${statusColor}`}>
+                          {item.status}
+                        </span>
+                        {item.fixedDate && (
+                          <span className="text-[11px] text-slate-400 font-mono">
+                            {item.fixedDate}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-slate-200 font-medium line-clamp-2">
+                        {item.issue}
+                      </p>
+
+                      {item.repairAction && (
+                        <p className="text-[11px] text-blue-400 truncate">
+                          การแก้ไข: {item.repairAction}
+                        </p>
                       )}
 
-                      <div className="min-w-0 space-y-1 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-sm text-white">
-                            {item.poleId || 'ไม่ระบุรหัส'}
-                          </span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${statusColor}`}>
-                            {item.status}
-                          </span>
-                          {item.fixedDate && (
-                            <span className="text-[11px] text-slate-400 font-mono">
-                              {item.fixedDate}
+                      <div className="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
+                        {(item.community || item.soi) && (
+                          <span className="flex items-center gap-1 truncate max-w-[200px]">
+                            <MapPin size={11} className="text-slate-500 shrink-0" />
+                            <span className="truncate">
+                              {item.community} {item.soi}
                             </span>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-slate-200 font-medium truncate">
-                          {item.issue}
-                        </p>
-
-                        {item.repairAction && (
-                          <p className="text-[11px] text-blue-400 truncate">
-                            การแก้ไข: {item.repairAction}
-                          </p>
+                          </span>
                         )}
-
-                        <div className="flex items-center gap-3 text-[11px] text-slate-400 flex-wrap">
-                          {(item.community || item.soi) && (
-                            <span className="flex items-center gap-1 truncate">
-                              <MapPin size={11} className="text-slate-500 shrink-0" />
-                              <span className="truncate">
-                                {item.community} {item.soi}
-                              </span>
-                            </span>
-                          )}
-                          {item.technician && (
-                            <span className="flex items-center gap-1">
-                              <User size={11} className="text-slate-500 shrink-0" />
-                              <span>{item.technician}</span>
-                            </span>
-                          )}
-                        </div>
+                        {item.technician && (
+                          <span className="flex items-center gap-1">
+                            <User size={11} className="text-slate-500 shrink-0" />
+                            <span>{item.technician}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Actions on right */}
-                    <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                  {/* Actions Bar on card */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 gap-2">
+                    <div className="flex items-center gap-2">
+                      {item.lat && item.lng && (
+                        <a
+                          href={`https://maps.google.com/?q=${item.lat},${item.lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-300 hover:text-emerald-400 border border-slate-800 text-[11px] flex items-center gap-1 transition-colors"
+                          title="ดูพิกัดบน Google Maps"
+                        >
+                          <Navigation size={12} />
+                          <span>แผนที่</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
                       {/* Update Status / Edit Button */}
                       <button
                         type="button"
@@ -1331,18 +1143,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                         <span>อัปเดตงาน</span>
                       </button>
 
-                      {item.lat && item.lng && (
-                        <a
-                          href={`https://maps.google.com/?q=${item.lat},${item.lng}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-emerald-400 border border-slate-800 transition-colors"
-                          title="ดูพิกัดบน Google Maps"
-                        >
-                          <Navigation size={13} />
-                        </a>
-                      )}
-
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
@@ -1353,12 +1153,326 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
+      {/* 2.5 Add Record Modal (Popup หน้า กรอกข้อมูลซ่อมบำรุง) */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddModal(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-2xl bg-[#1E293B] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col max-h-[92vh] my-auto"
+            >
+              {/* Modal Top Bar */}
+              <div className="px-5 py-4 bg-slate-900 border-b border-slate-700/80 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <Plus size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      กรอกข้อมูลซ่อมบำรุง
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      บันทึกข้อมูลงานซ่อมและซิงค์ตรงกับชีต 'การซ่อมบำรุง'
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Form Content */}
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  await handleAddItem(e);
+                  setShowAddModal(false);
+                }} 
+                className="overflow-y-auto p-4 sm:p-6 space-y-4"
+              >
+                {/* 1. Pole ID & Status */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">
+                      ID โคมไฟ / รหัสเสา
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="รหัสโคมไฟ"
+                      value={poleId}
+                      onChange={(e) => setPoleId(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">
+                      สถานะ
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    >
+                      {STATUS_OPTIONS.map(opt => (
+                        <option key={opt.val} value={opt.val}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* 2. Community & Soi (Searchable Combobox from Google Sheet gid=89735667) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <SearchableCombobox
+                      label="ชุมชน / เขต"
+                      badge={loadingCommData ? 'กำลังโหลด...' : `${communityData.communities.length} ชุมชน`}
+                      value={community}
+                      onChange={setCommunity}
+                      options={communityData.communities}
+                      placeholder="เลือกหรือพิมพ์ชุมชน"
+                      emptyText="ไม่พบชื่อชุมชนในชีต"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <SearchableCombobox
+                      label="ซอย / ถนน"
+                      badge={
+                        community && communityData.communitySoiMap[community.trim()]
+                          ? `${availableSois.length} ซอยในชุมชน`
+                          : `${availableSois.length || communityData.sois.length} ซอย`
+                      }
+                      value={soi}
+                      onChange={setSoi}
+                      options={availableSois}
+                      placeholder="เลือกหรือพิมพ์ซอย/ถนน"
+                      emptyText="ไม่พบชื่อซอยในชีต"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Issue */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    ปัญหาที่พบ
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ระบุอาการชำรุด"
+                    value={issue}
+                    onChange={(e) => setIssue(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                  {/* Quick Issue Chips */}
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {COMMON_ISSUES.slice(0, 4).map((iss) => (
+                      <button
+                        key={iss}
+                        type="button"
+                        onClick={() => setIssue(iss)}
+                        className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60 transition-colors cursor-pointer"
+                      >
+                        {iss}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Repair Action (การซ่อมบำรุงแก้ไข) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    การซ่อมบำรุงแก้ไข
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ระบุการปฏิบัติงาน เช่น เปลี่ยนหลอด LED, On breaker"
+                    value={repairAction}
+                    onChange={(e) => setRepairAction(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {COMMON_REPAIRS.slice(0, 4).map((rep) => (
+                      <button
+                        key={rep}
+                        type="button"
+                        onClick={() => setRepairAction(rep)}
+                        className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/40 transition-colors cursor-pointer"
+                      >
+                        {rep}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 5. Technician & Date */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">
+                      ชื่อผู้ปฏิบัติงาน
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ระบุชื่อช่าง"
+                      value={technician}
+                      onChange={(e) => setTechnician(e.target.value)}
+                      list="rep-tech-list"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                    <datalist id="rep-tech-list">
+                      {COMMON_TECHNICIANS.map(t => <option key={t} value={t} />)}
+                    </datalist>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">
+                      วันที่ซ่อมบำรุงแก้ไข
+                    </label>
+                    <input
+                      type="date"
+                      value={fixedDate}
+                      onChange={(e) => setFixedDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* 6. GPS Coordinates */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-300">
+                      พิกัดซ่อมบำรุง (GPS)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Navigation size={11} />
+                      <span>ดึงพิกัดปัจจุบัน</span>
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="เช่น 12.682379, 101.246283"
+                    value={gpsStr}
+                    onChange={(e) => setGpsStr(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-blue-500 transition-colors"
+                  />
+                </div>
+
+                {/* 7. Image Upload (รูปภาพการซ่อมบำรุง) */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-300">
+                    รูปภาพการซ่อมบำรุง
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {imageUrl ? (
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 group shrink-0">
+                        <img src={imageUrl} alt="รูปซ่อมบำรุง" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setImageUrl('')}
+                          className="absolute top-1 right-1 p-1 bg-rose-600/90 hover:bg-rose-500 text-white rounded-full transition-colors cursor-pointer"
+                          title="ลบรูปภาพ"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-24 h-18 border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-xl cursor-pointer bg-slate-950/60 hover:bg-slate-900/60 transition-colors shrink-0">
+                        <Camera size={18} className="text-slate-400 mb-0.5" />
+                        <span className="text-[10px] text-slate-400">แนบ/ถ่ายรูป</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          onChange={(e) => handleImageFileChange(e, false)}
+                        />
+                      </label>
+                    )}
+                    <div className="text-[11px] text-slate-400">
+                      <p className="text-slate-300 font-medium">ภาพถ่ายหน้างาน (ก่อน/หลังซ่อม)</p>
+                      <p className="text-[10px] text-slate-500">สามารถถ่ายจากมือถือหรือเลือกไฟล์</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 8. Remarks & Details */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">
+                    รายละเอียดการแก้ไขเพิ่มเติม / หมายเหตุ
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="ระบุรายละเอียดเพิ่มเติม"
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                  />
+                </div>
+
+                {/* Sync Checkbox */}
+                <div className="pt-1">
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncToSheet}
+                      onChange={(e) => setSyncToSheet(e.target.checked)}
+                      className="rounded bg-slate-950 border-slate-800 text-emerald-500 focus:ring-0"
+                    />
+                    <span>ซิงค์บันทึกข้อมูลลง Google Sheet ทันที</span>
+                  </label>
+                </div>
+
+                {/* Modal Footer Buttons */}
+                <div className="pt-3 border-t border-slate-700/80 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(false)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus size={16} />
+                    <span>{isSubmitting ? 'กำลังบันทึกลงระบบ...' : 'บันทึกเข้ารายการซ่อมบำรุง'}</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* 3. Print Preview Modal (Opens when user clicks "ดูตัวอย่างก่อนพิมพ์ A4") */}
       <AnimatePresence>
