@@ -6,7 +6,7 @@ import {
   Share2, Wrench, Clock, Database, ChevronRight, Sparkles,
   ExternalLink, Navigation, HelpCircle, ArrowRight, ListPlus,
   Camera, Eye, Filter, RefreshCw, X, Image as ImageIcon,
-  Edit, CheckCircle, Search
+  Edit, CheckCircle, Search, Grid, List as ListIcon, Hourglass
 } from 'lucide-react';
 import { 
   MaintenanceRecord, 
@@ -305,6 +305,97 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
 
   // Quick Edit / Update Status Modal
   const [editingItem, setEditingItem] = useState<WorkOrderItem | null>(null);
+
+  // View mode state: 'grid' (การ์ด) vs 'table' (ตารางรายการ)
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
+    const saved = localStorage.getItem('rayong_workorders_view_mode');
+    return (saved as 'grid' | 'table') || 'grid';
+  });
+
+  const handleViewModeChange = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('rayong_workorders_view_mode', mode);
+  };
+
+  // Helper to render Status Icon Badge (แทนที่รูปภาพด้วยไอคอนสถานะตามความต้องการของผู้ใช้)
+  const renderStatusIconBadge = (itemStatus: string, size: 'card' | 'table' = 'card') => {
+    const isDone = itemStatus === 'เสร็จสิ้น' || itemStatus === 'ซ่อมเสร็จสิ้น' || itemStatus === 'Completed';
+    const isInProgress = itemStatus === 'กำลังดำเนินการ' || itemStatus === 'กำลังซ่อม' || itemStatus === 'In Progress';
+    const isWaiting = itemStatus === 'รออะไหล่/วัสดุ' || itemStatus === 'รออะไหล่' || itemStatus === 'Waiting for Parts';
+
+    if (size === 'table') {
+      if (isDone) {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 shrink-0 whitespace-nowrap">
+            <CheckCircle2 size={13} className="shrink-0" />
+            <span>{itemStatus || 'เสร็จสิ้น'}</span>
+          </span>
+        );
+      }
+      if (isInProgress) {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/25 shrink-0 whitespace-nowrap">
+            <Clock size={13} className="shrink-0 animate-pulse" />
+            <span>{itemStatus || 'กำลังดำเนินการ'}</span>
+          </span>
+        );
+      }
+      if (isWaiting) {
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25 shrink-0 whitespace-nowrap">
+            <Hourglass size={13} className="shrink-0" />
+            <span>{itemStatus || 'รออะไหล่'}</span>
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/25 shrink-0 whitespace-nowrap">
+          <AlertTriangle size={13} className="shrink-0" />
+          <span>{itemStatus || 'รอดำเนินการ'}</span>
+        </span>
+      );
+    }
+
+    // Card view: 48x48px icon box
+    if (isDone) {
+      return (
+        <div 
+          className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0 shadow-sm"
+          title={`สถานะ: ${itemStatus || 'เสร็จสิ้น'}`}
+        >
+          <CheckCircle2 size={24} />
+        </div>
+      );
+    }
+    if (isInProgress) {
+      return (
+        <div 
+          className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 shadow-sm"
+          title={`สถานะ: ${itemStatus || 'กำลังดำเนินการ'}`}
+        >
+          <Clock size={24} className="animate-pulse" />
+        </div>
+      );
+    }
+    if (isWaiting) {
+      return (
+        <div 
+          className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-sm"
+          title={`สถานะ: ${itemStatus || 'รออะไหล่'}`}
+        >
+          <Hourglass size={24} />
+        </div>
+      );
+    }
+    return (
+      <div 
+        className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0 shadow-sm"
+        title={`สถานะ: ${itemStatus || 'รอดำเนินการ'}`}
+      >
+        <AlertTriangle size={24} />
+      </div>
+    );
+  };
 
   // UI state
   const [copiedLine, setCopiedLine] = useState(false);
@@ -1062,13 +1153,45 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               แสดงทั้งหมด ({workOrders.length})
             </button>
 
-            <span className="ml-auto text-[11px] text-slate-400 font-medium">
-              พบ {filteredWorkOrders.length} รายการ
-            </span>
+            <div className="flex items-center gap-2.5 ml-auto">
+              {/* View Mode Toggle Buttons (สลับมุมมอง การ์ด vs ตารางรายการ) */}
+              <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('grid')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-all cursor-pointer ${
+                    viewMode === 'grid'
+                      ? 'bg-slate-800 text-emerald-400 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="มุมมองการ์ด (Grid View)"
+                >
+                  <Grid size={13} />
+                  <span className="hidden sm:inline text-[11px]">การ์ด</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleViewModeChange('table')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-all cursor-pointer ${
+                    viewMode === 'table'
+                      ? 'bg-slate-800 text-emerald-400 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="มุมมองตารางรายการ (Table / List View)"
+                >
+                  <ListIcon size={13} />
+                  <span className="hidden sm:inline text-[11px]">ตาราง</span>
+                </button>
+              </div>
+
+              <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+                พบ {filteredWorkOrders.length} รายการ
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* List Cards */}
+        {/* Work Orders List (Grid View vs Table / List View) */}
         {filteredWorkOrders.length === 0 ? (
           <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3 bg-slate-900/40 rounded-xl border border-slate-800/80">
             <div className="w-14 h-14 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500">
@@ -1101,7 +1224,8 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               </button>
             </div>
           </div>
-        ) : (
+        ) : viewMode === 'grid' ? (
+          /* 1. มุมมองการ์ด (Grid View) พร้อมไอคอนสถานะ */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[680px] overflow-y-auto pr-1">
             {filteredWorkOrders.map((item, index) => {
               const statusColor = 
@@ -1119,16 +1243,13 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-950/80 transition-all flex flex-col justify-between gap-3 shadow-sm"
                 >
                   <div className="flex items-start gap-3 min-w-0">
-                    {/* Thumbnail if photo exists */}
-                    {item.imageUrl ? (
-                      <div className="w-14 h-14 rounded-lg overflow-hidden border border-slate-700 shrink-0 bg-slate-900">
-                        <img src={item.imageUrl} alt="รูปงาน" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <span className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-slate-300 shrink-0 mt-0.5">
+                    {/* Status Icon Badge (แทนที่กรอบรูปเสียด้วยไอคอนสถานะตามความต้องการของผู้ใช้) */}
+                    <div className="relative shrink-0">
+                      {renderStatusIconBadge(item.status, 'card')}
+                      <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-slate-900 border border-slate-700 text-[10px] font-mono font-bold text-slate-400 flex items-center justify-center shadow-sm">
                         {index + 1}
                       </span>
-                    )}
+                    </div>
 
                     <div className="min-w-0 space-y-1.5 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1141,6 +1262,11 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                         {item.fixedDate && (
                           <span className="text-[11px] text-slate-400 font-mono">
                             {item.fixedDate}
+                          </span>
+                        )}
+                        {item.imageUrl && (
+                          <span title="มีรูปภาพแนบ" className="text-slate-500 hover:text-slate-300">
+                            <ImageIcon size={12} />
                           </span>
                         )}
                       </div>
@@ -1216,6 +1342,117 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 </div>
               );
             })}
+          </div>
+        ) : (
+          /* 2. มุมมองตารางรายการ (Table / List View) แบบสวยงามกะทัดรัด */
+          <div className="overflow-x-auto bg-slate-950/60 border border-slate-800 rounded-xl max-h-[680px] overflow-y-auto shadow-sm">
+            <table className="w-full text-left text-xs font-sans">
+              <thead className="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 sticky top-0 z-10 backdrop-blur-sm">
+                <tr>
+                  <th className="py-3 px-3 w-12 text-center">#</th>
+                  <th className="py-3 px-3">สถานะ</th>
+                  <th className="py-3 px-3">รหัสโคมไฟ</th>
+                  <th className="py-3 px-3 min-w-[200px]">ปัญหาที่พบ</th>
+                  <th className="py-3 px-3 min-w-[170px]">การซ่อมบำรุงแก้ไข</th>
+                  <th className="py-3 px-3 min-w-[160px]">สถานที่ (ชุมชน/ซอย)</th>
+                  <th className="py-3 px-3">ผู้ปฏิบัติงาน</th>
+                  <th className="py-3 px-3 text-center">วันที่</th>
+                  <th className="py-3 px-3 text-right">การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {filteredWorkOrders.map((item, index) => (
+                  <tr 
+                    key={item.id} 
+                    className="hover:bg-slate-900/60 transition-colors text-slate-300 group"
+                  >
+                    <td className="py-3 px-3 text-center font-mono text-slate-500 text-[11px]">
+                      {index + 1}
+                    </td>
+                    <td className="py-3 px-3 whitespace-nowrap">
+                      {renderStatusIconBadge(item.status, 'table')}
+                    </td>
+                    <td className="py-3 px-3 font-mono font-bold text-white whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span>{item.poleId || 'ไม่ระบุรหัส'}</span>
+                        {item.imageUrl && (
+                          <span title="มีรูปภาพแนบ" className="text-slate-500">
+                            <ImageIcon size={11} />
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-slate-200">
+                      <span className="line-clamp-2 leading-relaxed" title={item.issue}>
+                        {item.issue}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-blue-400">
+                      <span className="line-clamp-2" title={item.repairAction || '-'}>
+                        {item.repairAction || '-'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-400">
+                      {(item.community || item.soi) ? (
+                        <span className="flex items-center gap-1">
+                          <MapPin size={11} className="text-slate-500 shrink-0" />
+                          <span className="truncate max-w-[180px]">
+                            {item.community} {item.soi}
+                          </span>
+                        </span>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-slate-300 whitespace-nowrap">
+                      {item.technician ? (
+                        <span className="flex items-center gap-1">
+                          <User size={11} className="text-slate-500 shrink-0" />
+                          <span>{item.technician}</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono text-[11px] text-slate-400 whitespace-nowrap">
+                      {item.fixedDate || item.orderDate || '-'}
+                    </td>
+                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {item.lat && item.lng && (
+                          <a
+                            href={`https://maps.google.com/?q=${item.lat},${item.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-emerald-400 border border-slate-800 transition-colors"
+                            title="ดูพิกัดบน Google Maps"
+                          >
+                            <Navigation size={13} />
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setEditingItem(item)}
+                          className="px-2.5 py-1 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 border border-blue-500/25 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="อัปเดตสถานะงาน / บันทึกผลการซ่อม"
+                        >
+                          <Wrench size={12} />
+                          <span>อัปเดต</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-900 transition-colors cursor-pointer"
+                          title="ลบออกจากชุดงาน"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
