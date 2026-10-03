@@ -1618,7 +1618,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                         key={rep}
                         type="button"
                         onClick={() => setRepairAction(rep)}
-                        className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/40 transition-colors cursor-pointer"
+                        className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25 transition-colors cursor-pointer"
                       >
                         {rep}
                       </button>
@@ -2042,7 +2042,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                         key={r}
                         type="button"
                         onClick={() => setEditingItem(prev => prev ? { ...prev, repairAction: r } : null)}
-                        className="text-[10px] px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60"
+                        className="text-[10px] px-2 py-0.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/25 transition-colors cursor-pointer"
                       >
                         {r}
                       </button>
