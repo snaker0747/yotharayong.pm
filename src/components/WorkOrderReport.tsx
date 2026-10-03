@@ -317,6 +317,21 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     localStorage.setItem('rayong_workorders_view_mode', mode);
   };
 
+  // Checkbox selection state for selective printing and export
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
+    return new Set(workOrders.map(w => w.id));
+  });
+  const initialSelectedSetRef = useRef(false);
+
+  useEffect(() => {
+    if (!initialSelectedSetRef.current && workOrders.length > 0) {
+      setSelectedIds(new Set(workOrders.map(w => w.id)));
+      initialSelectedSetRef.current = true;
+    }
+  }, [workOrders]);
+
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
+
   // Helper to render Status Icon Badge (แทนที่รูปภาพด้วยไอคอนสถานะตามความต้องการของผู้ใช้)
   const renderStatusIconBadge = (itemStatus: string, size: 'card' | 'table' = 'card') => {
     const isDone = itemStatus === 'เสร็จสิ้น' || itemStatus === 'ซ่อมเสร็จสิ้น' || itemStatus === 'Completed';
@@ -513,6 +528,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     };
 
     setWorkOrders(prev => [newItem, ...prev]);
+    setSelectedIds(prev => new Set(prev).add(newItem.id));
 
     // Optional sync to Google Sheet (Action: insert -> always append new row)
     if (syncToSheet && onSyncNewRecord) {
@@ -628,6 +644,11 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
 
     // 1. ลบออกจากตารางในเว็บทันที
     setWorkOrders(prev => prev.filter(item => item.id !== id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
 
     // 2. ซิงค์ลบแถวใน Google Sheet
     const targetHistoryId = itemToRemove.historyId || itemToRemove.id;
@@ -644,6 +665,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
   const handleClearAll = () => {
     if (confirm('ยืนยันล้างรายการซ่อมบำรุงทั้งหมดในชุดนี้หรือไม่?')) {
       setWorkOrders([]);
+      setSelectedIds(new Set());
     }
   };
 
@@ -690,6 +712,11 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     }
 
     setWorkOrders(prev => [...toAdd, ...prev]);
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      toAdd.forEach(item => next.add(item.id));
+      return next;
+    });
     alert(`นำเข้างานที่รอดำเนินการ ${toAdd.length} งาน เข้ารายการเรียบร้อยแล้ว`);
   };
 
@@ -705,11 +732,76 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
     });
   }, [workOrders, filterByDate, startDate, endDate]);
 
+  // รายการที่ถูกเลือกสำหรับพิมพ์ใบงาน A4 และส่งสรุป LINE
+  const itemsToPrint = useMemo(() => {
+    return filteredWorkOrders.filter(item => selectedIds.has(item.id));
+  }, [filteredWorkOrders, selectedIds]);
+
+  // ตรวจสอบว่าเลือกครบทุกรายการที่แสดงอยู่หรือไม่
+  const isAllSelected = useMemo(() => {
+    if (filteredWorkOrders.length === 0) return false;
+    return filteredWorkOrders.every(w => selectedIds.has(w.id));
+  }, [filteredWorkOrders, selectedIds]);
+
+  // ตรวจสอบว่ามีการเลือกบางส่วนหรือไม่ (Indeterminate state สำหรับ checkbox หัวตาราง)
+  const isIndeterminate = useMemo(() => {
+    if (filteredWorkOrders.length === 0) return false;
+    const selectedCount = filteredWorkOrders.filter(w => selectedIds.has(w.id)).length;
+    return selectedCount > 0 && selectedCount < filteredWorkOrders.length;
+  }, [filteredWorkOrders, selectedIds]);
+
+  // ซิงค์สถานะ indeterminate ของ checkbox หัวตาราง
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = isIndeterminate;
+    }
+  }, [isIndeterminate]);
+
+  // ฟังก์ชันสลับการเลือกรายรายการ
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // ฟังก์ชันเลือกรายการที่มองเห็นทั้งหมด
+  const handleSelectAllVisible = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      filteredWorkOrders.forEach(w => next.add(w.id));
+      return next;
+    });
+  };
+
+  // ฟังก์ชันยกเลิกการเลือกรายการที่มองเห็นทั้งหมด
+  const handleDeselectAllVisible = () => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      filteredWorkOrders.forEach(w => next.delete(w.id));
+      return next;
+    });
+  };
+
+  // ฟังก์ชันสลับการเลือกทั้งหมด/ยกเลิกทั้งหมด
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      handleDeselectAllVisible();
+    } else {
+      handleSelectAllVisible();
+    }
+  };
+
   // Format summary text for LINE Messenger
   const handleCopyForLine = () => {
-    const listToExport = filteredWorkOrders.length > 0 ? filteredWorkOrders : workOrders;
+    const listToExport = itemsToPrint.length > 0 ? itemsToPrint : filteredWorkOrders;
     if (listToExport.length === 0) {
-      alert('ไม่มีรายการงานในชุดสำหรับคัดลอก');
+      alert('กรุณาเลือกรายการงานที่ต้องการส่ง LINE (ทำเครื่องหมายที่ช่องด้านหน้ารายการ)');
       return;
     }
 
@@ -973,11 +1065,19 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
           {/* Print Preview Button */}
           <button
             type="button"
-            onClick={() => setShowPrintPreview(true)}
-            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+            onClick={() => {
+              if (itemsToPrint.length === 0) {
+                alert('กรุณาเลือกรายการที่ต้องการพิมพ์อย่างน้อย 1 รายการ โดยทำเครื่องหมายที่ช่องสี่เหลี่ยมด้านหน้ารายการ');
+                return;
+              }
+              setShowPrintPreview(true);
+            }}
+            disabled={workOrders.length === 0}
+            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+            title="ดูตัวอย่างเอกสารก่อนสั่งพิมพ์ A4 แนวนอน (เฉพาะรายการที่เลือก)"
           >
             <Eye size={15} />
-            <span>ดูตัวอย่างก่อนพิมพ์ A4</span>
+            <span>ดูตัวอย่างก่อนพิมพ์ A4 {itemsToPrint.length > 0 ? `(${itemsToPrint.length})` : ''}</span>
           </button>
 
           {/* Quick Import Button */}
@@ -994,11 +1094,12 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
           <button
             type="button"
             onClick={handleCopyForLine}
-            disabled={workOrders.length === 0}
+            disabled={workOrders.length === 0 || itemsToPrint.length === 0}
             className="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+            title="ส่งสรุปรายการงานที่เลือกไปยัง LINE"
           >
             {copiedLine ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
-            <span>{copiedLine ? 'คัดลอกแล้ว' : 'ส่ง LINE ช่าง'}</span>
+            <span>{copiedLine ? 'คัดลอกแล้ว' : `ส่ง LINE ช่าง (${itemsToPrint.length})`}</span>
           </button>
 
           {workOrders.length > 0 && (
@@ -1035,6 +1136,9 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     กรองแสดง {filteredWorkOrders.length} รายการ
                   </span>
                 )}
+                <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-semibold">
+                  เลือกพิมพ์ {itemsToPrint.length} รายการ
+                </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 ตารางสรุปรายการงานซ่อมบำรุงไฟฟ้าสาธารณะ ตรวจสอบ อัปเดตสถานะงาน และพิมพ์ออกใบงาน A4 แนวนอน
@@ -1184,9 +1288,30 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 </button>
               </div>
 
-              <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
-                พบ {filteredWorkOrders.length} รายการ
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+                  เลือกพิมพ์ <span className="font-bold text-blue-400 font-mono">{itemsToPrint.length}</span> / {filteredWorkOrders.length} รายการ
+                </span>
+                {filteredWorkOrders.length > 0 && (
+                  <div className="flex items-center gap-1.5 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={handleSelectAllVisible}
+                      className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer font-medium"
+                    >
+                      เลือกทั้งหมด
+                    </button>
+                    <span className="text-slate-600">•</span>
+                    <button
+                      type="button"
+                      onClick={handleDeselectAllVisible}
+                      className="text-slate-400 hover:text-slate-300 hover:underline cursor-pointer font-medium"
+                    >
+                      ยกเลิก
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1228,6 +1353,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
           /* 1. มุมมองการ์ด (Grid View) พร้อมไอคอนสถานะ */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 max-h-[680px] overflow-y-auto pr-1">
             {filteredWorkOrders.map((item, index) => {
+              const isSelected = selectedIds.has(item.id);
               const statusColor = 
                 (item.status === 'เสร็จสิ้น' || item.status === 'ซ่อมเสร็จสิ้น' || item.status === 'Completed')
                   ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' 
@@ -1240,9 +1366,24 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               return (
                 <div
                   key={item.id}
-                  className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-950/80 transition-all flex flex-col justify-between gap-3 shadow-sm"
+                  className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 shadow-sm ${
+                    isSelected
+                      ? 'bg-blue-950/20 border-blue-500/40 shadow-blue-950/20'
+                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-950/80'
+                  }`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
+                    {/* Checkbox เลือกรายการพิมพ์ */}
+                    <div className="pt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelect(item.id)}
+                        className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600 align-middle"
+                        title="เลือกรายการนี้เพื่อพิมพ์ใบงาน A4"
+                      />
+                    </div>
+
                     {/* Status Icon Badge (แทนที่กรอบรูปเสียด้วยไอคอนสถานะตามความต้องการของผู้ใช้) */}
                     <div className="relative shrink-0">
                       {renderStatusIconBadge(item.status, 'card')}
@@ -1349,7 +1490,17 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
             <table className="w-full text-left text-xs font-sans">
               <thead className="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 sticky top-0 z-10 backdrop-blur-sm">
                 <tr>
-                  <th className="py-3 px-3 w-12 text-center">#</th>
+                  <th className="py-3 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      ref={headerCheckboxRef}
+                      checked={isAllSelected}
+                      onChange={handleToggleSelectAll}
+                      className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600 align-middle"
+                      title={isAllSelected ? "ยกเลิกการเลือกทั้งหมด" : "เลือกทั้งหมด"}
+                    />
+                  </th>
+                  <th className="py-3 px-2 w-10 text-center">#</th>
                   <th className="py-3 px-3">สถานะ</th>
                   <th className="py-3 px-3">รหัสโคมไฟ</th>
                   <th className="py-3 px-3 min-w-[200px]">ปัญหาที่พบ</th>
@@ -1361,17 +1512,32 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {filteredWorkOrders.map((item, index) => (
-                  <tr 
-                    key={item.id} 
-                    className="hover:bg-slate-900/60 transition-colors text-slate-300 group"
-                  >
-                    <td className="py-3 px-3 text-center font-mono text-slate-500 text-[11px]">
-                      {index + 1}
-                    </td>
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      {renderStatusIconBadge(item.status, 'table')}
-                    </td>
+                {filteredWorkOrders.map((item, index) => {
+                  const isSelected = selectedIds.has(item.id);
+                  return (
+                    <tr 
+                      key={item.id} 
+                      className={`transition-colors text-slate-300 group ${
+                        isSelected 
+                          ? 'bg-blue-600/10 hover:bg-blue-600/15' 
+                          : 'hover:bg-slate-900/60'
+                      }`}
+                    >
+                      <td className="py-3 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(item.id)}
+                          className="w-4 h-4 rounded border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600 align-middle"
+                          title="เลือกรายการนี้เพื่อพิมพ์ใบงาน A4"
+                        />
+                      </td>
+                      <td className="py-3 px-2 text-center font-mono text-slate-500 text-[11px]">
+                        {index + 1}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {renderStatusIconBadge(item.status, 'table')}
+                      </td>
                     <td className="py-3 px-3 font-mono font-bold text-white whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <span>{item.poleId || 'ไม่ระบุรหัส'}</span>
@@ -1450,8 +1616,9 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                );
+              })}
+            </tbody>
             </table>
           </div>
         )}
@@ -1796,7 +1963,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 <div className="flex items-center gap-2">
                   <Printer size={18} className="text-blue-400" />
                   <h3 className="text-sm font-bold text-white">
-                    ตัวอย่างเอกสารใบสั่งงาน ({filteredWorkOrders.length} รายการ)
+                    ตัวอย่างเอกสารใบสั่งงาน ({itemsToPrint.length} รายการ)
                   </h3>
                   <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                     📄 A4 แนวนอน (Landscape)
@@ -1810,7 +1977,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
                     <Printer size={14} />
-                    <span>สั่งพิมพ์ A4 แนวนอน</span>
+                    <span>สั่งพิมพ์ A4 แนวนอน ({itemsToPrint.length})</span>
                   </button>
                   <button
                     type="button"
@@ -1871,16 +2038,16 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                           </span>
                         </div>
                         <div className="text-[11px] text-slate-600 font-medium mt-0.5">
-                          จำนวนงานทั้งหมด: <span className="font-bold text-slate-900">{filteredWorkOrders.length}</span> รายการ
+                          จำนวนงานที่สั่งพิมพ์: <span className="font-bold text-slate-900">{itemsToPrint.length}</span> รายการ
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Table of Jobs (Wide format for A4 Landscape) */}
-                  {filteredWorkOrders.length === 0 ? (
+                  {itemsToPrint.length === 0 ? (
                     <div className="py-8 text-center text-slate-400 border border-dashed border-slate-300 rounded-lg text-xs">
-                      ยังไม่มีรายการแจ้งซ่อมในใบงานนี้
+                      ยังไม่มีรายการแจ้งซ่อมที่เลือกในใบงานนี้ (กรุณาเลือกรายการที่ต้องการพิมพ์)
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -1898,7 +2065,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-300">
-                          {filteredWorkOrders.map((job, idx) => (
+                          {itemsToPrint.map((job, idx) => (
                             <tr key={job.id} className="hover:bg-slate-50/50">
                               <td className="py-1.5 px-2 text-center font-bold font-mono border-r border-slate-300 text-slate-700">
                                 {idx + 1}

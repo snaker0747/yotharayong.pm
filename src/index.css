@@ -652,7 +652,7 @@ html.light .bg-black\/70 {
 }
 
 /* 12. Input boxes, Selects, Textareas */
-html.light input,
+html.light input:not([type="checkbox"]):not([type="radio"]),
 html.light select,
 html.light textarea {
   background-color: #FFFFFF !important;
@@ -660,12 +660,18 @@ html.light textarea {
   color: #0F172A !important;
 }
 
+html.light input[type="checkbox"],
+html.light input[type="radio"] {
+  accent-color: #2563EB !important;
+  cursor: pointer;
+}
+
 html.light input::placeholder,
 html.light textarea::placeholder {
   color: #94A3B8 !important;
 }
 
-html.light input:focus,
+html.light input:not([type="checkbox"]):not([type="radio"]):focus,
 html.light select:focus,
 html.light textarea:focus {
   border-color: #2563EB !important;
