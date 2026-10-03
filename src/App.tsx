@@ -523,7 +523,7 @@ export default function App() {
                     ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 shadow-sm'
                     : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 border border-slate-700'
                 }`}
-                title={isSidebarCollapsed ? 'แสดงแท็บด้านซ้าย (คลิกเพื่อกางออก)' : 'ซ่อนแท็บด้านซ้าย'}
+                title={isSidebarCollapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูด้านซ้าย (เหลือเฉพาะไอคอน)'}
               >
                 <Menu size={19} className="lg:hidden" />
                 {isSidebarCollapsed ? (

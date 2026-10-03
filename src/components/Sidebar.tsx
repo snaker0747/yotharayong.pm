@@ -3,7 +3,7 @@ import {
   LayoutDashboard, ClipboardList, Printer,
   Settings, RefreshCw, Sun, Moon, LogOut, X, 
   CheckCircle2, Clock, Hourglass, Shield, ExternalLink,
-  PanelLeftClose
+  PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -72,12 +72,24 @@ export default function Sidebar({
     },
   ];
 
-  const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#111827] dark:bg-[#0B132B] text-slate-200 border-r border-slate-800/80 font-sans select-none">
+  const renderSidebarContent = (collapsed: boolean) => (
+    <div className={`flex flex-col h-full bg-[#111827] dark:bg-[#0B132B] text-slate-200 border-r border-slate-800/80 font-sans select-none transition-all duration-300 ${
+      collapsed ? 'items-center' : ''
+    }`}>
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+      <div className={`border-b border-slate-800/80 flex items-center transition-all ${
+        collapsed 
+          ? 'p-3 flex-col gap-2.5 justify-center w-full' 
+          : 'p-5 justify-between w-full'
+      }`}>
+        <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : 'min-w-0'}`}>
+          <div 
+            onClick={collapsed ? onToggleCollapse : undefined}
+            className={`w-11 h-11 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden ${
+              collapsed ? 'cursor-pointer hover:ring-2 hover:ring-emerald-500/50 transition-all' : ''
+            }`}
+            title={collapsed ? 'เทศบาลนครระยอง (คลิกเพื่อขยายเมนู)' : 'สำนักช่าง เทศบาลนครระยอง'}
+          >
             <img 
               src="/logo.png" 
               alt="สำนักช่าง เทศบาลนครระยอง" 
@@ -90,30 +102,36 @@ export default function Sidebar({
               }}
             />
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <h2 className="text-sm font-bold text-white tracking-normal truncate">
-                ระบบงานซ่อมบำรุง
-              </h2>
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="text-sm font-bold text-white tracking-normal truncate">
+                  ระบบงานซ่อมบำรุง
+                </h2>
+              </div>
+              <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                เทศบาลนครระยอง
+              </p>
             </div>
-            <p className="text-[11px] text-slate-400 truncate mt-0.5">
-              เทศบาลนครระยอง
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Header action buttons */}
-        <div className="flex items-center gap-1">
-          {/* Desktop Collapse Button */}
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-1'}`}>
+          {/* Desktop Collapse / Expand Button */}
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
               className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer group"
-              title="ซ่อนแท็บด้านซ้าย"
-              aria-label="ซ่อนแท็บด้านซ้าย"
+              title={collapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูเหลือเฉพาะไอคอน'}
+              aria-label={collapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูเหลือเฉพาะไอคอน'}
             >
-              <PanelLeftClose size={18} className="group-hover:text-emerald-400 transition-colors" />
+              {collapsed ? (
+                <PanelLeftOpen size={17} className="group-hover:text-emerald-400 transition-colors" />
+              ) : (
+                <PanelLeftClose size={18} className="group-hover:text-emerald-400 transition-colors" />
+              )}
             </button>
           )}
 
@@ -129,22 +147,56 @@ export default function Sidebar({
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <div className={`flex-1 overflow-y-auto space-y-5 w-full ${collapsed ? 'px-2 py-4' : 'px-3 py-4'}`}>
         {/* Main Section */}
         <div>
-          <div className="px-3 mb-2 flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-              MAIN MENU
-            </span>
-            <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono font-medium">
-              V2.0
-            </span>
-          </div>
+          {!collapsed ? (
+            <div className="px-3 mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                MAIN MENU
+              </span>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono font-medium">
+                V2.0
+              </span>
+            </div>
+          ) : (
+            <div className="w-8 h-px bg-slate-800/80 mx-auto mb-2" />
+          )}
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
+              
+              if (collapsed) {
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onNavigate(item.id);
+                      onCloseMobile();
+                    }}
+                    title={`${item.label} (${item.sublabel})`}
+                    className={`relative w-full flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer group ${
+                      isActive
+                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25 font-semibold'
+                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    }`}
+                  >
+                    <div className="relative">
+                      <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
+                      {item.badge && (
+                        <span className={`absolute -top-2 -right-2.5 min-w-4 h-4 px-1 rounded-full text-[9px] font-mono font-bold flex items-center justify-center shadow-sm ${
+                          isActive ? 'bg-white text-emerald-800' : 'bg-rose-500 text-white'
+                        }`}>
+                          {item.badge.includes(' ') ? item.badge.split(' ')[0] : item.badge}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
@@ -188,125 +240,188 @@ export default function Sidebar({
 
         {/* Management Section */}
         <div>
-          <div className="px-3 mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-              SYSTEM & SYNC
-            </span>
-          </div>
-          <div className="space-y-1">
+          {!collapsed ? (
+            <div className="px-3 mb-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+                SYSTEM & SYNC
+              </span>
+            </div>
+          ) : (
+            <div className="w-8 h-px bg-slate-800/80 mx-auto my-2" />
+          )}
+
+          <div className="space-y-1.5">
             {/* Sync button */}
-            <button
-              onClick={() => {
-                onRefresh();
-                onCloseMobile();
-              }}
-              disabled={isRefreshing}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60">
-                  <RefreshCw size={17} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
-                </div>
-                <div>
-                  <div className="text-xs font-medium">ซิงค์ข้อมูลระบบ</div>
-                  <div className="text-[10px] text-slate-400">
-                    {lastRefreshed ? `อัปเดต ${lastRefreshed}` : 'กดเพื่อดึงข้อมูลสด'}
+            {collapsed ? (
+              <button
+                onClick={() => {
+                  onRefresh();
+                  onCloseMobile();
+                }}
+                disabled={isRefreshing}
+                title={`ซิงค์ข้อมูลระบบ ${lastRefreshed ? `(อัปเดต ${lastRefreshed})` : '(กดเพื่อดึงข้อมูลสด)'}`}
+                className="w-full flex items-center justify-center p-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group disabled:opacity-50"
+              >
+                <RefreshCw size={19} className={isRefreshing ? 'animate-spin text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onRefresh();
+                  onCloseMobile();
+                }}
+                disabled={isRefreshing}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60">
+                    <RefreshCw size={17} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium">ซิงค์ข้อมูลระบบ</div>
+                    <div className="text-[10px] text-slate-400">
+                      {lastRefreshed ? `อัปเดต ${lastRefreshed}` : 'กดเพื่อดึงข้อมูลสด'}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            )}
 
             {/* Settings button */}
-            <button
-              onClick={() => {
-                onOpenSettings();
-                onCloseMobile();
-              }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700/60">
-                  <Settings size={17} />
+            {collapsed ? (
+              <button
+                onClick={() => {
+                  onOpenSettings();
+                  onCloseMobile();
+                }}
+                title="ตั้งค่าการเชื่อมต่อ (ฐานข้อมูล & บริการ API)"
+                className="w-full flex items-center justify-center p-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+              >
+                <Settings size={19} className="text-slate-400 group-hover:text-blue-400 transition-colors" />
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  onOpenSettings();
+                  onCloseMobile();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700/60">
+                    <Settings size={17} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium">ตั้งค่าการเชื่อมต่อ</div>
+                    <div className="text-[10px] text-slate-400">ฐานข้อมูล & บริการ API</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-xs font-medium">ตั้งค่าการเชื่อมต่อ</div>
-                  <div className="text-[10px] text-slate-400">ฐานข้อมูล & บริการ API</div>
-                </div>
-              </div>
-            </button>
+              </button>
+            )}
           </div>
         </div>
 
         {/* Quick Summary Pill Widget */}
-        <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-          <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
-            <span>สถานะงานวันนี้</span>
-            <span className="text-[10px] text-emerald-400 font-mono">100% Sync</span>
+        {!collapsed && (
+          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
+              <span>สถานะงานวันนี้</span>
+              <span className="text-[10px] text-emerald-400 font-mono">100% Sync</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 text-center font-mono">
+              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                <div className="text-[10px] text-rose-400">รอ</div>
+                <div className="text-xs font-bold text-white">{pendingRecords}</div>
+              </div>
+              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                <div className="text-[10px] text-blue-400">กำลัง</div>
+                <div className="text-xs font-bold text-white">{inProgressRecords}</div>
+              </div>
+              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
+                <div className="text-[10px] text-emerald-400">เสร็จ</div>
+                <div className="text-xs font-bold text-white">{completedRecords}</div>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-1 text-center font-mono">
-            <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-              <div className="text-[10px] text-rose-400">รอ</div>
-              <div className="text-xs font-bold text-white">{pendingRecords}</div>
-            </div>
-            <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-              <div className="text-[10px] text-blue-400">กำลัง</div>
-              <div className="text-xs font-bold text-white">{inProgressRecords}</div>
-            </div>
-            <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-              <div className="text-[10px] text-emerald-400">เสร็จ</div>
-              <div className="text-xs font-bold text-white">{completedRecords}</div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Footer User Profile & Actions */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 space-y-2">
-        <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">
+      <div className={`border-t border-slate-800/80 bg-slate-950/40 w-full ${
+        collapsed ? 'p-2 flex flex-col items-center gap-2' : 'p-3 space-y-2'
+      }`}>
+        {collapsed ? (
+          <>
+            <div 
+              className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0 cursor-default"
+              title="ฝ่ายสาธารณูปโภค สำนักช่าง เทศบาลนครระยอง"
+            >
               รย
             </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-white truncate">ฝ่ายสาธารณูปโภค</div>
-              <div className="text-[10px] text-slate-400 truncate">สำนักช่าง ระยอง</div>
+            <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={onToggleTheme}
+                className="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                title={theme === 'light' ? 'เปลี่ยนเป็นธีมมืด' : 'เปลี่ยนเป็นธีมสว่าง'}
+              >
+                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} className="text-amber-400" />}
+              </button>
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                title="ออกจากระบบ"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">
+                รย
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-white truncate">ฝ่ายสาธารณูปโภค</div>
+                <div className="text-[10px] text-slate-400 truncate">สำนักช่าง ระยอง</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              {/* Theme Toggle */}
+              <button
+                onClick={onToggleTheme}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                title="สลับโหมด มืด/สว่าง"
+              >
+                {theme === 'light' ? <Moon size={15} /> : <Sun size={15} className="text-amber-400" />}
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={onLogout}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                title="ออกจากระบบ"
+              >
+                <LogOut size={15} />
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center gap-1">
-            {/* Theme Toggle */}
-            <button
-              onClick={onToggleTheme}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
-              title="สลับโหมด มืด/สว่าง"
-            >
-              {theme === 'light' ? <Moon size={15} /> : <Sun size={15} className="text-amber-400" />}
-            </button>
-
-            {/* Logout */}
-            <button
-              onClick={onLogout}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
-              title="ออกจากระบบ"
-            >
-              <LogOut size={15} />
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop Fixed Left Sidebar */}
+      {/* Desktop Fixed Left Sidebar (Full w-64 or Icon-only w-20) */}
       <aside
         className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-0 opacity-0 overflow-hidden pointer-events-none' : 'w-64 opacity-100'
+          isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="w-64 h-full">
-          {sidebarContent}
+        <div className={`${isCollapsed ? 'w-20' : 'w-64'} h-full transition-all duration-300`}>
+          {renderSidebarContent(isCollapsed)}
         </div>
       </aside>
 
@@ -330,7 +445,7 @@ export default function Sidebar({
               transition={{ type: 'spring', damping: 25, stiffness: 280 }}
               className="relative w-72 max-w-[85vw] h-full z-10 shadow-2xl"
             >
-              {sidebarContent}
+              {renderSidebarContent(false)}
             </motion.div>
           </div>
         )}
