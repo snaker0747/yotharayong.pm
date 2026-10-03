@@ -137,6 +137,7 @@ export default function App() {
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
+    setSelectedRecord(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -172,12 +173,12 @@ export default function App() {
       setRecords(data);
       setLastRefreshed(new Date().toLocaleTimeString('th-TH'));
       
-      // Auto-reconcile selectedRecord: if selected item was deleted from sheet, select another or null
+      // Auto-reconcile selectedRecord: only keep updated if already open, never auto-open on load
       setSelectedRecord(prev => {
-        if (!prev) return data.length > 0 ? data[0] : null;
+        if (!prev) return null;
         const prevId = (prev.raw?.['ID ประวัติ'] || prev.id || '').trim();
         const stillExists = data.find(r => (r.raw?.['ID ประวัติ'] || r.id || '').trim() === prevId);
-        return stillExists || (data.length > 0 ? data[0] : null);
+        return stillExists || null;
       });
 
       // Auto-reconcile editingRecord if open
@@ -195,7 +196,11 @@ export default function App() {
       console.error(err);
       // Fallback to offline mock data on failure
       setRecords(MOCK_RAYONG_RECORDS);
-      setSelectedRecord(prev => prev || (MOCK_RAYONG_RECORDS.length > 0 ? MOCK_RAYONG_RECORDS[0] : null));
+      setSelectedRecord(prev => {
+        if (!prev) return null;
+        const prevId = (prev.raw?.['ID ประวัติ'] || prev.id || '').trim();
+        return MOCK_RAYONG_RECORDS.find(r => (r.raw?.['ID ประวัติ'] || r.id || '').trim() === prevId) || null;
+      });
       setError(
         'กำลังใช้งานโหมดออฟไลน์/ข้อมูลตัวอย่างของระยอง (หากต้องการซิงค์สด กรุณาเปิดแชร์ไฟล์ชีตเป็น "ทุกคนที่มีลิงก์มีสิทธิ์อ่าน" หรือตั้งค่าบัญชี Google)'
       );
@@ -263,11 +268,6 @@ export default function App() {
 
   const handleRecordSelect = (record: MaintenanceRecord) => {
     setSelectedRecord(record);
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setTimeout(() => {
-        document.getElementById('record-detail-panel')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    }
   };
 
   const handleOpenEdit = (record: MaintenanceRecord) => {
