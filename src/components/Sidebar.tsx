@@ -3,7 +3,7 @@ import {
   LayoutDashboard, ClipboardList, Printer,
   Settings, RefreshCw, Sun, Moon, LogOut, X, 
   CheckCircle2, Clock, Hourglass, Shield, ExternalLink,
-  PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, ChevronRight, ChevronLeft
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -79,30 +79,57 @@ export default function Sidebar({
       {/* Brand Header */}
       <div className={`border-b border-slate-800/80 flex items-center transition-all ${
         collapsed 
-          ? 'p-3 flex-col gap-2.5 justify-center w-full' 
+          ? 'py-3.5 px-2 flex-col justify-center w-full' 
           : 'p-5 justify-between w-full'
       }`}>
-        <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : 'min-w-0'}`}>
-          <div 
-            onClick={collapsed ? onToggleCollapse : undefined}
-            className={`w-11 h-11 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden ${
-              collapsed ? 'cursor-pointer hover:ring-2 hover:ring-emerald-500/50 transition-all' : ''
-            }`}
-            title={collapsed ? 'เทศบาลนครระยอง (คลิกเพื่อขยายเมนู)' : 'สำนักช่าง เทศบาลนครระยอง'}
-          >
-            <img 
-              src="/logo.png" 
-              alt="สำนักช่าง เทศบาลนครระยอง" 
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.parentElement) {
-                  e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-xs rounded-lg">ระยอง</div>';
-                }
-              }}
-            />
+        {collapsed ? (
+          <div className="flex flex-col items-center w-full">
+            {/* Circular Expand Toggle Button on Top (matching user's reference image) */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700/80 flex items-center justify-center transition-all cursor-pointer shadow-sm mx-auto mb-3"
+                title="ขยายเมนูด้านซ้าย"
+                aria-label="ขยายเมนูด้านซ้าย"
+              >
+                <ChevronRight size={13} />
+              </button>
+            )}
+
+            {/* Logo Emblem */}
+            <div 
+              onClick={onToggleCollapse}
+              className="w-10 h-10 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-md mx-auto cursor-pointer hover:ring-2 hover:ring-emerald-500/40 transition-all overflow-hidden"
+              title="เทศบาลนครระยอง (คลิกเพื่อขยายเมนู)"
+            >
+              <img 
+                src="/logo.png" 
+                alt="สำนักช่าง" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-xs rounded-lg">ระยอง</div>';
+                  }
+                }}
+              />
+            </div>
           </div>
-          {!collapsed && (
+        ) : (
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+              <img 
+                src="/logo.png" 
+                alt="สำนักช่าง เทศบาลนครระยอง" 
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-emerald-600 text-white font-bold text-xs rounded-lg">ระยอง</div>';
+                  }
+                }}
+              />
+            </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -114,43 +141,44 @@ export default function Sidebar({
                 เทศบาลนครระยอง
               </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Header action buttons */}
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-1'}`}>
-          {/* Desktop Collapse / Expand Button */}
-          {onToggleCollapse && (
-            <button
-              onClick={onToggleCollapse}
-              className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer group"
-              title={collapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูเหลือเฉพาะไอคอน'}
-              aria-label={collapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูเหลือเฉพาะไอคอน'}
-            >
-              {collapsed ? (
-                <PanelLeftOpen size={17} className="group-hover:text-emerald-400 transition-colors" />
-              ) : (
+        {!collapsed && (
+          <div className="flex items-center gap-1">
+            {/* Desktop Collapse Button */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer group"
+                title="ย่อเมนูเหลือเฉพาะไอคอน"
+                aria-label="ย่อเมนูเหลือเฉพาะไอคอน"
+              >
                 <PanelLeftClose size={18} className="group-hover:text-emerald-400 transition-colors" />
-              )}
-            </button>
-          )}
+              </button>
+            )}
 
-          {/* Mobile close button */}
-          <button
-            onClick={onCloseMobile}
-            className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-            title="ปิดเมนู"
-          >
-            <X size={18} />
-          </button>
-        </div>
+            {/* Mobile close button */}
+            <button
+              onClick={onCloseMobile}
+              className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              title="ปิดเมนู"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Nav List */}
-      <div className={`flex-1 overflow-y-auto space-y-5 w-full ${collapsed ? 'px-2 py-4' : 'px-3 py-4'}`}>
+      <div className={`flex-1 overflow-y-auto w-full ${collapsed ? 'px-2 py-3 space-y-4' : 'px-3 py-4 space-y-5'}`}>
         {/* Main Section */}
         <div>
-          {!collapsed ? (
+          {collapsed ? (
+            <span className="text-[9px] font-semibold text-slate-500 tracking-tight text-center block uppercase mt-1 mb-2 font-mono">
+              Main Menu
+            </span>
+          ) : (
             <div className="px-3 mb-2 flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
                 MAIN MENU
@@ -159,11 +187,9 @@ export default function Sidebar({
                 V2.0
               </span>
             </div>
-          ) : (
-            <div className="w-8 h-px bg-slate-800/80 mx-auto mb-2" />
           )}
 
-          <div className="space-y-1.5">
+          <div className={`space-y-1.5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -177,22 +203,18 @@ export default function Sidebar({
                       onCloseMobile();
                     }}
                     title={`${item.label} (${item.sublabel})`}
-                    className={`relative w-full flex items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer group ${
+                    className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer group ${
                       isActive
-                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25 font-semibold'
-                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        ? 'bg-slate-800 text-emerald-400 border border-slate-700/90 shadow-md shadow-black/40 ring-1 ring-emerald-500/40'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
                     }`}
                   >
-                    <div className="relative">
-                      <Icon size={20} className={isActive ? 'text-white' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
-                      {item.badge && (
-                        <span className={`absolute -top-2 -right-2.5 min-w-4 h-4 px-1 rounded-full text-[9px] font-mono font-bold flex items-center justify-center shadow-sm ${
-                          isActive ? 'bg-white text-emerald-800' : 'bg-rose-500 text-white'
-                        }`}>
-                          {item.badge.includes(' ') ? item.badge.split(' ')[0] : item.badge}
-                        </span>
-                      )}
-                    </div>
+                    <Icon size={19} className={isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
+                    {item.badge && (
+                      <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-500 text-white text-[9px] font-mono font-bold rounded-full flex items-center justify-center ring-2 ring-[#0B132B] shadow-sm">
+                        {item.badge.includes(' ') ? item.badge.split(' ')[0] : item.badge}
+                      </span>
+                    )}
                   </button>
                 );
               }
@@ -240,17 +262,19 @@ export default function Sidebar({
 
         {/* Management Section */}
         <div>
-          {!collapsed ? (
+          {collapsed ? (
+            <span className="text-[9px] font-semibold text-slate-500 tracking-tight text-center block uppercase mt-2 mb-2 font-mono">
+              System
+            </span>
+          ) : (
             <div className="px-3 mb-2">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
                 SYSTEM & SYNC
               </span>
             </div>
-          ) : (
-            <div className="w-8 h-px bg-slate-800/80 mx-auto my-2" />
           )}
 
-          <div className="space-y-1.5">
+          <div className={`space-y-1.5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
             {/* Sync button */}
             {collapsed ? (
               <button
@@ -260,9 +284,9 @@ export default function Sidebar({
                 }}
                 disabled={isRefreshing}
                 title={`ซิงค์ข้อมูลระบบ ${lastRefreshed ? `(อัปเดต ${lastRefreshed})` : '(กดเพื่อดึงข้อมูลสด)'}`}
-                className="w-full flex items-center justify-center p-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group disabled:opacity-50"
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-slate-800/60 border border-transparent transition-all cursor-pointer group disabled:opacity-50"
               >
-                <RefreshCw size={19} className={isRefreshing ? 'animate-spin text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
+                <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'} />
               </button>
             ) : (
               <button
@@ -295,9 +319,9 @@ export default function Sidebar({
                   onCloseMobile();
                 }}
                 title="ตั้งค่าการเชื่อมต่อ (ฐานข้อมูล & บริการ API)"
-                className="w-full flex items-center justify-center p-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+                className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-400 hover:bg-slate-800/60 border border-transparent transition-all cursor-pointer group"
               >
-                <Settings size={19} className="text-slate-400 group-hover:text-blue-400 transition-colors" />
+                <Settings size={18} className="group-hover:text-blue-400 transition-colors" />
               </button>
             ) : (
               <button
@@ -348,31 +372,31 @@ export default function Sidebar({
 
       {/* Footer User Profile & Actions */}
       <div className={`border-t border-slate-800/80 bg-slate-950/40 w-full ${
-        collapsed ? 'p-2 flex flex-col items-center gap-2' : 'p-3 space-y-2'
+        collapsed ? 'p-2.5 flex flex-col items-center gap-2' : 'p-3 space-y-2'
       }`}>
         {collapsed ? (
           <>
-            <div 
-              className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0 cursor-default"
-              title="ฝ่ายสาธารณูปโภค สำนักช่าง เทศบาลนครระยอง"
-            >
-              รย
-            </div>
             <div className="flex flex-col items-center gap-1">
               <button
                 onClick={onToggleTheme}
-                className="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
                 title={theme === 'light' ? 'เปลี่ยนเป็นธีมมืด' : 'เปลี่ยนเป็นธีมสว่าง'}
               >
-                {theme === 'light' ? <Moon size={16} /> : <Sun size={16} className="text-amber-400" />}
+                {theme === 'light' ? <Moon size={15} /> : <Sun size={15} className="text-amber-400" />}
               </button>
               <button
                 onClick={onLogout}
-                className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
                 title="ออกจากระบบ"
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
               </button>
+            </div>
+            <div 
+              className="w-8 h-8 rounded-full bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 font-bold text-xs flex items-center justify-center shadow-md cursor-default mt-0.5"
+              title="ฝ่ายสาธารณูปโภค สำนักช่าง เทศบาลนครระยอง"
+            >
+              รย
             </div>
           </>
         ) : (
@@ -414,13 +438,13 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop Fixed Left Sidebar (Full w-64 or Icon-only w-20) */}
+      {/* Desktop Fixed Left Sidebar (Full w-64 or Icon-only w-[70px]) */}
       <aside
         className={`hidden lg:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-20' : 'w-64'
+          isCollapsed ? 'w-[70px]' : 'w-64'
         }`}
       >
-        <div className={`${isCollapsed ? 'w-20' : 'w-64'} h-full transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'w-[70px]' : 'w-64'} h-full transition-all duration-300`}>
           {renderSidebarContent(isCollapsed)}
         </div>
       </aside>
