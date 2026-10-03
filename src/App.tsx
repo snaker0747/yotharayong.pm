@@ -21,7 +21,7 @@ import { MOCK_RAYONG_RECORDS } from './mockData';
 import { 
   Lightbulb, ShieldAlert, LogOut, RefreshCw, Settings, 
   Terminal, Globe, Loader2, Play, ChevronRight, CheckCircle2,
-  Sun, Moon, Menu, ClipboardList, PanelLeftClose, PanelLeftOpen,
+  Sun, Moon, Menu, ClipboardList,
   LayoutDashboard, Printer
 } from 'lucide-react';
 
@@ -508,41 +508,22 @@ export default function App() {
         {/* Top Navbar Header */}
         <header className="border-b border-slate-700/80 bg-[#1E293B]/90 backdrop-blur-md sticky top-0 z-20 px-4 sm:px-6 py-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-            {/* Left: Sidebar Toggle Button (Desktop & Mobile) & Title */}
+            {/* Left: Sidebar Toggle Button (Mobile Only) & Title */}
             <div className="flex items-center gap-3 min-w-0">
+              {/* Mobile-only menu drawer trigger */}
               <button
-                onClick={() => {
-                  if (window.innerWidth < 1024) {
-                    setIsMobileSidebarOpen(prev => !prev);
-                  } else {
-                    handleToggleSidebar();
-                  }
-                }}
-                className={`p-2 rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                  isSidebarCollapsed
-                    ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-600/30 shadow-sm'
-                    : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 border border-slate-700'
-                }`}
-                title={isSidebarCollapsed ? 'ขยายเมนูด้านซ้าย' : 'ย่อเมนูด้านซ้าย (เหลือเฉพาะไอคอน)'}
+                onClick={() => setIsMobileSidebarOpen(prev => !prev)}
+                className="lg:hidden p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700/80 border border-slate-700 transition-all cursor-pointer shrink-0 flex items-center justify-center"
+                title="เปิดเมนู"
               >
-                <Menu size={19} className="lg:hidden" />
-                {isSidebarCollapsed ? (
-                  <>
-                    <PanelLeftOpen size={19} className="hidden lg:block text-emerald-400" />
-                    <span className="hidden lg:inline-block text-xs font-bold font-sans text-emerald-300 pr-1">
-                      แสดงเมนู
-                    </span>
-                  </>
-                ) : (
-                  <PanelLeftClose size={19} className="hidden lg:block" />
-                )}
+                <Menu size={19} />
               </button>
 
               <div className="min-w-0">
-                <h1 className="text-base sm:text-lg font-bold text-white font-sans tracking-tight truncate">
+                <h1 className="text-base sm:text-lg font-bold text-white font-sans tracking-tight whitespace-nowrap">
                   ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
                 </h1>
-                <p className="text-xs text-slate-400 truncate">
+                <p className="text-xs text-slate-400 whitespace-nowrap truncate">
                   ฝ่ายสาธารณูปโภค ส่วนการโยธา เทศบาลนครระยอง
                 </p>
               </div>
