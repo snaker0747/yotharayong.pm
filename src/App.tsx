@@ -539,16 +539,11 @@ export default function App() {
               </button>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-bold text-white font-sans tracking-tight truncate">
-                    ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
-                  </h1>
-                  <span className="hidden sm:inline-flex text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full shrink-0">
-                    เทศบาลนครระยอง
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 truncate hidden sm:block">
-                  ฝ่ายสาธารณูปโภค ส่วนการโยธา สำนักช่าง
+                <h1 className="text-base sm:text-lg font-bold text-white font-sans tracking-tight truncate">
+                  ระบบงานซ่อมบำรุงไฟฟ้าสาธารณะ
+                </h1>
+                <p className="text-xs text-slate-400 truncate">
+                  ฝ่ายสาธารณูปโภค ส่วนการโยธา เทศบาลนครระยอง
                 </p>
               </div>
             </div>
