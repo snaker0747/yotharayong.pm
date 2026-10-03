@@ -72,12 +72,19 @@ export default function Sidebar({
     },
   ];
 
+  const isLight = theme === 'light';
   const renderSidebarContent = (collapsed: boolean) => (
-    <div className={`flex flex-col h-full bg-[#111827] dark:bg-[#0B132B] text-slate-200 border-r border-slate-800/80 font-sans select-none transition-all duration-300 ${
+    <div className={`flex flex-col h-full font-sans select-none transition-all duration-300 ${
+      isLight 
+        ? 'bg-white text-slate-800 border-r border-slate-200' 
+        : 'bg-[#111827] text-slate-200 border-r border-slate-800/80'
+    } ${
       collapsed ? 'items-center' : ''
     }`}>
       {/* Brand Header */}
-      <div className={`border-b border-slate-800/80 flex items-center transition-all ${
+      <div className={`flex items-center transition-all ${
+        isLight ? 'border-b border-slate-200' : 'border-b border-slate-800/80'
+      } ${
         collapsed 
           ? 'py-3.5 px-2 flex-col justify-center w-full' 
           : 'p-5 justify-between w-full'
@@ -88,7 +95,11 @@ export default function Sidebar({
             {onToggleCollapse && (
               <button
                 onClick={onToggleCollapse}
-                className="w-6 h-6 rounded-full bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700/80 flex items-center justify-center transition-all cursor-pointer shadow-sm mx-auto mb-3"
+                className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-sm mx-auto mb-3 ${
+                  isLight 
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-300' 
+                    : 'bg-slate-800/90 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700/80'
+                }`}
                 title="ขยายเมนูด้านซ้าย"
                 aria-label="ขยายเมนูด้านซ้าย"
               >
@@ -99,7 +110,9 @@ export default function Sidebar({
             {/* Logo Emblem */}
             <div 
               onClick={onToggleCollapse}
-              className="w-10 h-10 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-md mx-auto cursor-pointer hover:ring-2 hover:ring-emerald-500/40 transition-all overflow-hidden"
+              className={`w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center mx-auto cursor-pointer hover:ring-2 hover:ring-emerald-500/40 transition-all overflow-hidden ${
+                isLight ? 'border border-slate-200 shadow-sm' : 'border border-slate-700/60 shadow-md'
+              }`}
               title="เทศบาลนครระยอง (คลิกเพื่อขยายเมนู)"
             >
               <img 
@@ -117,7 +130,9 @@ export default function Sidebar({
           </div>
         ) : (
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-xl bg-white border border-slate-700/60 p-1 flex items-center justify-center shadow-lg shrink-0 overflow-hidden">
+            <div className={`w-11 h-11 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 overflow-hidden ${
+              isLight ? 'border border-slate-200 shadow-sm' : 'border border-slate-700/60 shadow-lg'
+            }`}>
               <img 
                 src="/logo.png" 
                 alt="สำนักช่าง เทศบาลนครระยอง" 
@@ -133,11 +148,15 @@ export default function Sidebar({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <h2 className="text-sm font-bold text-white tracking-normal truncate">
+                <h2 className={`text-sm font-bold tracking-normal truncate ${
+                  isLight ? 'text-slate-900' : 'text-white'
+                }`}>
                   ระบบงานซ่อมบำรุง
                 </h2>
               </div>
-              <p className="text-[11px] text-slate-400 truncate mt-0.5">
+              <p className={`text-[11px] truncate mt-0.5 ${
+                isLight ? 'text-slate-500 font-medium' : 'text-slate-400'
+              }`}>
                 เทศบาลนครระยอง
               </p>
             </div>
@@ -150,18 +169,22 @@ export default function Sidebar({
             {onToggleCollapse && (
               <button
                 onClick={onToggleCollapse}
-                className="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer group"
+                className={`hidden lg:flex items-center justify-center p-1.5 rounded-lg transition-colors cursor-pointer group ${
+                  isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
                 title="ย่อเมนูเหลือเฉพาะไอคอน"
                 aria-label="ย่อเมนูเหลือเฉพาะไอคอน"
               >
-                <PanelLeftClose size={18} className="group-hover:text-emerald-400 transition-colors" />
+                <PanelLeftClose size={18} className="group-hover:text-emerald-500 transition-colors" />
               </button>
             )}
 
             {/* Mobile close button */}
             <button
               onClick={onCloseMobile}
-              className="lg:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              className={`lg:hidden p-1 rounded-lg transition-colors cursor-pointer ${
+                isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+              }`}
               title="ปิดเมนู"
             >
               <X size={18} />
@@ -175,15 +198,21 @@ export default function Sidebar({
         {/* Main Section */}
         <div>
           {collapsed ? (
-            <span className="text-[9px] font-semibold text-slate-500 tracking-tight text-center block uppercase mt-1 mb-2 font-mono">
+            <span className={`text-[9px] font-semibold tracking-tight text-center block uppercase mt-1 mb-2 font-mono ${
+              isLight ? 'text-slate-400' : 'text-slate-500'
+            }`}>
               Main Menu
             </span>
           ) : (
             <div className="px-3 mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+              <span className={`text-[10px] font-bold uppercase tracking-wider font-mono ${
+                isLight ? 'text-slate-500' : 'text-slate-400'
+              }`}>
                 MAIN MENU
               </span>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono font-medium">
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-medium ${
+                isLight ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-emerald-400 bg-emerald-500/10'
+              }`}>
                 V2.0
               </span>
             </div>
@@ -205,13 +234,17 @@ export default function Sidebar({
                     title={`${item.label} (${item.sublabel})`}
                     className={`relative w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer group ${
                       isActive
-                        ? 'bg-slate-800 text-emerald-400 border border-slate-700/90 shadow-md shadow-black/40 ring-1 ring-emerald-500/40'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
+                        ? isLight
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-sm ring-1 ring-emerald-400/40'
+                          : 'bg-slate-800 text-emerald-400 border border-slate-700/90 shadow-md shadow-black/40 ring-1 ring-emerald-500/40'
+                        : isLight
+                          ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
                     }`}
                   >
-                    <Icon size={19} className={isActive ? 'text-emerald-400' : 'text-slate-400 group-hover:text-emerald-400 transition-colors'} />
+                    <Icon size={19} className={isActive ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-slate-500 group-hover:text-emerald-600 transition-colors' : 'text-slate-400 group-hover:text-emerald-400 transition-colors')} />
                     {item.badge && (
-                      <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-500 text-white text-[9px] font-mono font-bold rounded-full flex items-center justify-center ring-2 ring-[#0B132B] shadow-sm">
+                      <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 bg-rose-500 text-white text-[9px] font-mono font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-[#0B132B] shadow-sm">
                         {item.badge.includes(' ') ? item.badge.split(' ')[0] : item.badge}
                       </span>
                     )}
@@ -228,21 +261,25 @@ export default function Sidebar({
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer group ${
                     isActive
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25 font-semibold'
-                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 font-semibold'
+                      : isLight
+                        ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                        : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`p-1.5 rounded-lg transition-colors ${
                       isActive 
                         ? 'bg-white/20 text-white' 
-                        : 'bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60'
+                        : isLight
+                          ? 'bg-slate-100 text-slate-600 group-hover:text-emerald-600 group-hover:bg-slate-200/70'
+                          : 'bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60'
                     }`}>
                       <Icon size={17} />
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs truncate">{item.label}</div>
-                      <div className={`text-[10px] truncate ${isActive ? 'text-emerald-100' : 'text-slate-400'}`}>
+                      <div className={`text-[10px] truncate ${isActive ? 'text-emerald-100' : isLight ? 'text-slate-400' : 'text-slate-400'}`}>
                         {item.sublabel}
                       </div>
                     </div>
@@ -263,12 +300,16 @@ export default function Sidebar({
         {/* Management Section */}
         <div>
           {collapsed ? (
-            <span className="text-[9px] font-semibold text-slate-500 tracking-tight text-center block uppercase mt-2 mb-2 font-mono">
+            <span className={`text-[9px] font-semibold tracking-tight text-center block uppercase mt-2 mb-2 font-mono ${
+              isLight ? 'text-slate-400' : 'text-slate-500'
+            }`}>
               System
             </span>
           ) : (
             <div className="px-3 mb-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+              <span className={`text-[10px] font-bold uppercase tracking-wider font-mono ${
+                isLight ? 'text-slate-500' : 'text-slate-400'
+              }`}>
                 SYSTEM & SYNC
               </span>
             </div>
@@ -284,9 +325,13 @@ export default function Sidebar({
                 }}
                 disabled={isRefreshing}
                 title={`ซิงค์ข้อมูลระบบ ${lastRefreshed ? `(อัปเดต ${lastRefreshed})` : '(กดเพื่อดึงข้อมูลสด)'}`}
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:bg-slate-800/60 border border-transparent transition-all cursor-pointer group disabled:opacity-50"
+                className={`w-11 h-11 rounded-xl flex items-center justify-center border border-transparent transition-all cursor-pointer group disabled:opacity-50 ${
+                  isLight 
+                    ? 'text-slate-500 hover:text-emerald-600 hover:bg-slate-100' 
+                    : 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800/60'
+                }`}
               >
-                <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-emerald-400' : 'group-hover:text-emerald-400 transition-colors'} />
+                <RefreshCw size={18} className={isRefreshing ? 'animate-spin text-emerald-500' : 'group-hover:text-emerald-500 transition-colors'} />
               </button>
             ) : (
               <button
@@ -295,15 +340,23 @@ export default function Sidebar({
                   onCloseMobile();
                 }}
                 disabled={isRefreshing}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer group ${
+                  isLight 
+                    ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' 
+                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60">
-                    <RefreshCw size={17} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
+                  <div className={`p-1.5 rounded-lg ${
+                    isLight 
+                      ? 'bg-slate-100 text-slate-600 group-hover:text-emerald-600 group-hover:bg-slate-200/70' 
+                      : 'bg-slate-800 text-slate-400 group-hover:text-emerald-400 group-hover:bg-slate-700/60'
+                  }`}>
+                    <RefreshCw size={17} className={isRefreshing ? 'animate-spin text-emerald-500' : ''} />
                   </div>
                   <div>
                     <div className="text-xs font-medium">ซิงค์ข้อมูลระบบ</div>
-                    <div className="text-[10px] text-slate-400">
+                    <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                       {lastRefreshed ? `อัปเดต ${lastRefreshed}` : 'กดเพื่อดึงข้อมูลสด'}
                     </div>
                   </div>
@@ -319,9 +372,13 @@ export default function Sidebar({
                   onCloseMobile();
                 }}
                 title="ตั้งค่าการเชื่อมต่อ (ฐานข้อมูล & บริการ API)"
-                className="w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-400 hover:bg-slate-800/60 border border-transparent transition-all cursor-pointer group"
+                className={`w-11 h-11 rounded-xl flex items-center justify-center border border-transparent transition-all cursor-pointer group ${
+                  isLight 
+                    ? 'text-slate-500 hover:text-blue-600 hover:bg-slate-100' 
+                    : 'text-slate-400 hover:text-blue-400 hover:bg-slate-800/60'
+                }`}
               >
-                <Settings size={18} className="group-hover:text-blue-400 transition-colors" />
+                <Settings size={18} className="group-hover:text-blue-500 transition-colors" />
               </button>
             ) : (
               <button
@@ -329,15 +386,23 @@ export default function Sidebar({
                   onOpenSettings();
                   onCloseMobile();
                 }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all cursor-pointer group"
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer group ${
+                  isLight 
+                    ? 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' 
+                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-1.5 rounded-lg bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700/60">
+                  <div className={`p-1.5 rounded-lg ${
+                    isLight 
+                      ? 'bg-slate-100 text-slate-600 group-hover:text-blue-600 group-hover:bg-slate-200/70' 
+                      : 'bg-slate-800 text-slate-400 group-hover:text-blue-400 group-hover:bg-slate-700/60'
+                  }`}>
                     <Settings size={17} />
                   </div>
                   <div>
                     <div className="text-xs font-medium">ตั้งค่าการเชื่อมต่อ</div>
-                    <div className="text-[10px] text-slate-400">ฐานข้อมูล & บริการ API</div>
+                    <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>ฐานข้อมูล & บริการ API</div>
                   </div>
                 </div>
               </button>
@@ -347,23 +412,37 @@ export default function Sidebar({
 
         {/* Quick Summary Pill Widget */}
         {!collapsed && (
-          <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-[11px] text-slate-300 font-medium">
+          <div className={`p-3 rounded-xl space-y-2 ${
+            isLight ? 'bg-slate-50 border border-slate-200 shadow-xs' : 'bg-slate-900/80 border border-slate-800'
+          }`}>
+            <div className={`flex items-center justify-between text-[11px] font-medium ${
+              isLight ? 'text-slate-700' : 'text-slate-300'
+            }`}>
               <span>สถานะงานวันนี้</span>
-              <span className="text-[10px] text-emerald-400 font-mono">100% Sync</span>
+              <span className={`text-[10px] font-mono font-bold ${
+                isLight ? 'text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-emerald-400'
+              }`}>
+                100% Sync
+              </span>
             </div>
             <div className="grid grid-cols-3 gap-1 text-center font-mono">
-              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                <div className="text-[10px] text-rose-400">รอ</div>
-                <div className="text-xs font-bold text-white">{pendingRecords}</div>
+              <div className={`p-1.5 rounded-lg border ${
+                isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-950/60 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>รอ</div>
+                <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{pendingRecords}</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                <div className="text-[10px] text-blue-400">กำลัง</div>
-                <div className="text-xs font-bold text-white">{inProgressRecords}</div>
+              <div className={`p-1.5 rounded-lg border ${
+                isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-950/60 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>กำลัง</div>
+                <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{inProgressRecords}</div>
               </div>
-              <div className="p-1.5 rounded-lg bg-slate-950/60 border border-slate-800">
-                <div className="text-[10px] text-emerald-400">เสร็จ</div>
-                <div className="text-xs font-bold text-white">{completedRecords}</div>
+              <div className={`p-1.5 rounded-lg border ${
+                isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-slate-950/60 border-slate-800'
+              }`}>
+                <div className={`text-[10px] font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>เสร็จ</div>
+                <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{completedRecords}</div>
               </div>
             </div>
           </div>
@@ -371,7 +450,9 @@ export default function Sidebar({
       </div>
 
       {/* Footer User Profile & Actions */}
-      <div className={`border-t border-slate-800/80 bg-slate-950/40 w-full ${
+      <div className={`w-full ${
+        isLight ? 'border-t border-slate-200 bg-slate-50' : 'border-t border-slate-800/80 bg-slate-950/40'
+      } ${
         collapsed ? 'p-2.5 flex flex-col items-center gap-2' : 'p-3 space-y-2'
       }`}>
         {collapsed ? (
@@ -379,35 +460,53 @@ export default function Sidebar({
             <div className="flex flex-col items-center gap-1">
               <button
                 onClick={onToggleTheme}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                  isLight 
+                    ? 'text-slate-600 hover:text-amber-600 hover:bg-slate-200' 
+                    : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800/80'
+                }`}
                 title={theme === 'light' ? 'เปลี่ยนเป็นธีมมืด' : 'เปลี่ยนเป็นธีมสว่าง'}
               >
                 {theme === 'light' ? <Moon size={15} /> : <Sun size={15} className="text-amber-400" />}
               </button>
               <button
                 onClick={onLogout}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-slate-800/80 transition-colors cursor-pointer"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${
+                  isLight 
+                    ? 'text-slate-600 hover:text-rose-600 hover:bg-slate-200' 
+                    : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800/80'
+                }`}
                 title="ออกจากระบบ"
               >
                 <LogOut size={15} />
               </button>
             </div>
             <div 
-              className="w-8 h-8 rounded-full bg-emerald-600/25 border border-emerald-500/40 text-emerald-400 font-bold text-xs flex items-center justify-center shadow-md cursor-default mt-0.5"
+              className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shadow-md cursor-default mt-0.5 ${
+                isLight 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : 'bg-emerald-600/25 border border-emerald-500/40 text-emerald-400'
+              }`}
               title="ฝ่ายสาธารณูปโภค สำนักช่าง เทศบาลนครระยอง"
             >
               รย
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/60">
+          <div className={`flex items-center justify-between p-2 rounded-xl ${
+            isLight ? 'bg-white border border-slate-200 shadow-xs' : 'bg-slate-900/60 border border-slate-800/60'
+          }`}>
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs shrink-0">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                isLight 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                  : 'bg-emerald-600/20 border border-emerald-500/30 text-emerald-400'
+              }`}>
                 รย
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-bold text-white truncate">ฝ่ายสาธารณูปโภค</div>
-                <div className="text-[10px] text-slate-400 truncate">สำนักช่าง ระยอง</div>
+                <div className={`text-xs font-bold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>ฝ่ายสาธารณูปโภค</div>
+                <div className={`text-[10px] truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>สำนักช่าง ระยอง</div>
               </div>
             </div>
 
@@ -415,7 +514,11 @@ export default function Sidebar({
               {/* Theme Toggle */}
               <button
                 onClick={onToggleTheme}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isLight 
+                    ? 'text-slate-600 hover:text-amber-600 hover:bg-slate-100' 
+                    : 'text-slate-400 hover:text-amber-400 hover:bg-slate-800'
+                }`}
                 title="สลับโหมด มืด/สว่าง"
               >
                 {theme === 'light' ? <Moon size={15} /> : <Sun size={15} className="text-amber-400" />}
@@ -424,7 +527,11 @@ export default function Sidebar({
               {/* Logout */}
               <button
                 onClick={onLogout}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  isLight 
+                    ? 'text-slate-600 hover:text-rose-600 hover:bg-slate-100' 
+                    : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                }`}
                 title="ออกจากระบบ"
               >
                 <LogOut size={15} />
