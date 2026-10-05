@@ -12,6 +12,7 @@ import {
   RAYONG_COMMUNITIES_FALLBACK 
 } from '../sheetsService';
 import SearchableCombobox from './SearchableCombobox';
+import MapCoordinatePicker from './MapCoordinatePicker';
 
 interface EditRecordModalProps {
   isOpen: boolean;
@@ -353,31 +354,27 @@ export default function EditRecordModal({
                 </div>
               </div>
 
-              {/* Coordinates */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-400 font-sans">ละติจูด (Latitude)</span>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.lat !== null && formData.lat !== undefined ? formData.lat : ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, lat: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder="เช่น 12.67389"
-                    className="w-full bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[11px] text-slate-400 font-sans">ลองจิจูด (Longitude)</span>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.lng !== null && formData.lng !== undefined ? formData.lng : ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, lng: e.target.value ? parseFloat(e.target.value) : null }))}
-                    placeholder="เช่น 101.27854"
-                    className="w-full bg-slate-950/60 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
+              {/* Coordinates with Interactive Map Picker */}
+              <div className="pt-1">
+                <MapCoordinatePicker
+                  value={
+                    formData.lat !== null && formData.lat !== undefined && formData.lng !== null && formData.lng !== undefined
+                      ? `${formData.lat}, ${formData.lng}`
+                      : ''
+                  }
+                  onChange={(gps) => {
+                    const parts = gps.trim().split(/[\s,]+/);
+                    if (parts.length >= 2) {
+                      const lat = parseFloat(parts[0]);
+                      const lng = parseFloat(parts[1]);
+                      setFormData(prev => ({ ...prev, lat: isNaN(lat) ? null : lat, lng: isNaN(lng) ? null : lng }));
+                    } else {
+                      setFormData(prev => ({ ...prev, lat: null, lng: null }));
+                    }
+                  }}
+                  label="พิกัดโคมไฟ / เสาไฟฟ้า (GPS)"
+                  placeholder="เช่น 12.67389, 101.27854"
+                />
               </div>
 
               {formData.lat && formData.lng && (

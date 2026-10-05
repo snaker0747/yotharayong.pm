@@ -15,6 +15,7 @@ import {
   RAYONG_COMMUNITIES_FALLBACK 
 } from '../sheetsService';
 import SearchableCombobox from './SearchableCombobox';
+import MapCoordinatePicker from './MapCoordinatePicker';
 
 export interface WorkOrderItem {
   id: string; // rowId or unique key
@@ -1825,29 +1826,14 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   </div>
                 </div>
 
-                {/* 6. GPS Coordinates */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-slate-300">
-                      พิกัดซ่อมบำรุง (GPS)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Navigation size={11} />
-                      <span>ดึงพิกัดปัจจุบัน</span>
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="เช่น 12.682379, 101.246283"
-                    value={gpsStr}
-                    onChange={(e) => setGpsStr(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
+                {/* 6. GPS Coordinates with Interactive Map Pinning */}
+                <MapCoordinatePicker
+                  value={gpsStr}
+                  onChange={setGpsStr}
+                  theme={theme}
+                  label="พิกัดซ่อมบำรุง (GPS)"
+                  placeholder="เช่น 12.682379, 101.246283"
+                />
 
                 {/* 7. Image Upload (รูปภาพการซ่อมบำรุง) */}
                 <div className="space-y-1.5">
@@ -2244,6 +2230,28 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     />
                   </div>
                 </div>
+
+                {/* GPS Coordinates in Edit Modal */}
+                <MapCoordinatePicker
+                  value={
+                    editingItem.lat !== null && editingItem.lat !== undefined && editingItem.lng !== null && editingItem.lng !== undefined
+                      ? `${editingItem.lat}, ${editingItem.lng}`
+                      : ''
+                  }
+                  onChange={(gps) => {
+                    const parts = gps.trim().split(/[\s,]+/);
+                    if (parts.length >= 2) {
+                      const lat = parseFloat(parts[0]);
+                      const lng = parseFloat(parts[1]);
+                      setEditingItem(prev => prev ? { ...prev, lat: isNaN(lat) ? null : lat, lng: isNaN(lng) ? null : lng } : null);
+                    } else {
+                      setEditingItem(prev => prev ? { ...prev, lat: null, lng: null } : null);
+                    }
+                  }}
+                  theme={theme}
+                  label="พิกัดซ่อมบำรุง (GPS)"
+                  placeholder="เช่น 12.682379, 101.246283"
+                />
 
                 {/* Photo Upload in Edit Modal */}
                 <div className="space-y-1.5">
