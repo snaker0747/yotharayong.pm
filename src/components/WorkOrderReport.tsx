@@ -1102,17 +1102,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
             {copiedLine ? <Check size={15} className="text-emerald-400" /> : <Copy size={15} />}
             <span>{copiedLine ? 'คัดลอกแล้ว' : `ส่ง LINE ช่าง (${itemsToPrint.length})`}</span>
           </button>
-
-          {workOrders.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClearAll}
-              className="p-2 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 border border-rose-500/20 transition-colors cursor-pointer"
-              title="ล้างรายการงานทั้งหมดในชุดนี้"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
         </div>
       </div>
 
