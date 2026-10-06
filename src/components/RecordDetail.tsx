@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, MapPin, Calendar, User, CheckCircle2, Clock, 
   Hourglass, AlertTriangle, ExternalLink, Navigation, 
@@ -19,6 +19,7 @@ interface DetailProps {
 
 export default function RecordDetail({ record, appName = '', tableName = '', onEdit, onDelete, onClose }: DetailProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   if (!record) return null;
 
   const getStatusBadgeLarge = (status: string, statusThai: string) => {
@@ -194,7 +195,11 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
 
         {/* 2. Photo Section (Balanced 16:9 or sleek compact placeholder) */}
         {previewImage ? (
-          <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group shadow-md">
+          <div 
+            onClick={() => setIsImageModalOpen(true)}
+            className="relative aspect-[16/9] w-full rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group shadow-md cursor-pointer hover:ring-2 hover:ring-blue-500/50 transition-all"
+            title="คลิกเพื่อดูรูปภาพขนาดใหญ่ (Popup)"
+          >
             <img
               src={previewImage}
               alt={`เสาไฟ ${record.poleId}`}
@@ -205,16 +210,17 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
               <ImageIcon size={12} className="text-emerald-400" />
               <span>ภาพถ่ายหน้างาน</span>
             </div>
-            <a
-              href={previewImage}
-              target="_blank"
-              referrerPolicy="no-referrer"
-              rel="noopener noreferrer"
-              className="absolute bottom-2.5 right-2.5 bg-slate-900/90 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1.5 text-xs font-semibold backdrop-blur-sm border border-slate-700 shadow-lg"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsImageModalOpen(true);
+              }}
+              className="absolute bottom-2.5 right-2.5 bg-slate-900/90 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1.5 text-xs font-semibold backdrop-blur-sm border border-slate-700 shadow-lg cursor-pointer"
             >
               <ExternalLink size={12} />
-              <span>ดูรูปขนาดเต็ม</span>
-            </a>
+              <span>ดูรูปภาพ (Popup)</span>
+            </button>
           </div>
         ) : (
           <div className="p-3.5 rounded-xl bg-slate-950/40 border border-dashed border-slate-800 flex items-center justify-between text-xs text-slate-400 gap-2">
@@ -379,6 +385,80 @@ export default function RecordDetail({ record, appName = '', tableName = '', onE
           </span>
         </div>
       </div>
+
+      {/* In-page Image Lightbox Modal Popup */}
+      <AnimatePresence>
+        {isImageModalOpen && previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 select-none"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="relative max-w-4xl w-full max-h-[92vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 text-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <ImageIcon size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base font-sans flex items-center gap-2">
+                      <span>ภาพถ่ายหน้างาน</span>
+                      {record.poleId && (
+                        <span className="font-mono text-blue-400 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-md text-xs">
+                          เสา {record.poleId}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 font-sans">
+                      แสดงรูปภาพป๊อปอัปหน้าต่างเดียว ไม่เปิดแท็บใหม่
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="ปิดหน้าต่าง (Esc)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Image Preview Canvas */}
+              <div className="p-3 sm:p-6 bg-slate-950/70 overflow-auto flex items-center justify-center flex-1 min-h-[260px] max-h-[calc(90vh-120px)]">
+                <img
+                  src={previewImage}
+                  alt={`เสาไฟ ${record.poleId || ''}`}
+                  className="max-h-[72vh] max-w-full w-auto object-contain rounded-xl shadow-2xl border border-slate-800"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
+                <span className="font-sans text-[11px] text-slate-400 truncate max-w-[70%]">
+                  {record.issue ? `ปัญหา/อาการ: ${record.issue}` : 'ภาพถ่ายการซ่อมบำรุงไฟฟ้าสาธารณะ'}
+                </span>
+                <button
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                >
+                  ปิดหน้าต่าง (Esc)
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

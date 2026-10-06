@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Compass, MapPin, ExternalLink, HelpCircle, X, Calendar, User, Image as ImageIcon, Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Compass, MapPin, ExternalLink, HelpCircle, X, Calendar, User, Image as ImageIcon, Eye, ChevronDown, ChevronUp, Maximize2, Minimize2 } from 'lucide-react';
 import { MaintenanceRecord } from '../sheetsService';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -63,10 +63,82 @@ const createCustomMarker = (status: string, isSelected: boolean) => {
 export default function MapVisualizer({ records, onSelectRecord, selectedRecord, theme, appName = '', tableName = '' }: MapProps) {
   const [viewMode, setViewMode] = useState<'osm' | 'satellite' | 'radar'>('osm');
   const [isPopupMinimized, setIsPopupMinimized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewPoleId, setPreviewPoleId] = useState<string | null>(null);
+
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  // Helper to open in-page image modal
+  const openImagePopup = (url: string, poleId?: string) => {
+    if (!url) return;
+    setPreviewImage(url);
+    if (poleId) {
+      setPreviewPoleId(poleId);
+    } else if (selectedRecord?.poleId) {
+      setPreviewPoleId(selectedRecord.poleId);
+    } else {
+      setPreviewPoleId(null);
+    }
+  };
+
+  // Expose image preview trigger to window for Leaflet HTML popups
+  useEffect(() => {
+    (window as any).__openMapImage = (url: string, poleId?: string) => {
+      openImagePopup(url, poleId);
+    };
+    return () => {
+      delete (window as any).__openMapImage;
+    };
+  }, [selectedRecord]);
+
+  // Handle ESC key to close image popup or exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (previewImage) {
+          setPreviewImage(null);
+          setPreviewPoleId(null);
+        } else if (isFullscreen) {
+          setIsFullscreen(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImage, isFullscreen]);
+
+  // Re-calculate map dimensions smoothly when entering/exiting fullscreen
+  useEffect(() => {
+    const triggerResize = () => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    };
+
+    const t1 = setTimeout(triggerResize, 60);
+    const t2 = setTimeout(triggerResize, 200);
+    const t3 = setTimeout(triggerResize, 450);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [isFullscreen]);
+
+  // When toggling fullscreen, if a record is selected, center on it
+  useEffect(() => {
+    if (isFullscreen && selectedRecord?.lat && selectedRecord?.lng && mapRef.current) {
+      const timer = setTimeout(() => {
+        mapRef.current?.panTo([Number(selectedRecord.lat), Number(selectedRecord.lng)]);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [isFullscreen]);
 
   // Reset popup minimized status when a record is selected
   useEffect(() => {
@@ -247,8 +319,9 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       // Compute image URL for popup thumbnail
       const previewImg = getImageUrl(record.imageUrl);
       const imgHTML = previewImg 
-        ? `<div style="margin-top: 6px; border-radius: 6px; overflow: hidden; border: 1px solid #475569; height: 75px; background-color: #0f172a;">
+        ? `<div onclick="window.__openMapImage && window.__openMapImage('${previewImg}', '${record.poleId || ''}')" style="margin-top: 6px; border-radius: 6px; overflow: hidden; border: 1px solid #475569; height: 75px; background-color: #0f172a; cursor: pointer; position: relative;" title="คลิกเพื่อขยายรูปภาพ">
              <img src="${previewImg}" style="width: 100%; height: 100%; object-fit: cover;" referrerpolicy="no-referrer" />
+             <div style="position: absolute; bottom: 3px; right: 3px; background: rgba(15,23,42,0.85); color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);">🔍 ขยายรูป</div>
            </div>`
         : '';
 
@@ -326,7 +399,16 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
   const paddedLngSpan = lngMaxPadded - lngMinPadded;
 
   return (
-    <div className="bg-[#1E293B] border border-slate-700 rounded-lg overflow-hidden flex flex-col h-[340px] relative shadow-lg" id="map-visualizer-container">
+    <div
+      className={`${
+        isFullscreen
+          ? 'fixed inset-0 z-[60] w-screen h-screen rounded-none border-0 shadow-2xl'
+          : 'relative h-[340px] rounded-lg border shadow-lg'
+      } ${
+        theme === 'light' ? 'bg-white border-slate-200' : 'bg-[#1E293B] border-slate-700'
+      } overflow-hidden flex flex-col transition-all duration-150`}
+      id="map-visualizer-container"
+    >
       {/* CSS injection for leaflet custom animations and dark mode tile adjustments */}
       <style>{`
         @keyframes ping-pulse {
@@ -346,43 +428,80 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
       `}</style>
 
       {/* Header controls */}
-      <div className="flex justify-between items-center px-4 py-3 bg-slate-900/40 border-b border-slate-700 z-10 select-none">
+      <div className={`flex justify-between items-center px-4 py-2.5 border-b z-10 select-none flex-wrap gap-2 ${
+        theme === 'light' ? 'bg-slate-50/95 border-slate-200' : 'bg-slate-900/80 border-slate-700'
+      }`}>
         <div className="flex items-center gap-2">
-          <Compass className="text-blue-500 animate-spin-slow" size={16} />
-          <span className="text-base font-semibold text-slate-100 font-sans">
+          <Compass className="text-blue-500 animate-spin-slow shrink-0" size={16} />
+          <span className={`text-sm sm:text-base font-semibold font-sans ${theme === 'light' ? 'text-slate-800' : 'text-slate-100'}`}>
             พิกัดแผนที่ GIS ({mappedRecords.length} จุด)
           </span>
+          {isFullscreen && (
+            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-sans font-medium">
+              โหมดเต็มจอ
+            </span>
+          )}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Map Layer Switchers */}
+          <div className={`flex rounded-lg p-0.5 border ${
+            theme === 'light' ? 'bg-slate-200/70 border-slate-300' : 'bg-slate-950/70 border-slate-800'
+          }`}>
+            <button
+              onClick={() => setViewMode('osm')}
+              className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
+                viewMode === 'osm'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              แผนที่ถนน (OSM)
+            </button>
+            <button
+              onClick={() => setViewMode('satellite')}
+              className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
+                viewMode === 'satellite'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              ภาพดาวเทียม
+            </button>
+            <button
+              onClick={() => setViewMode('radar')}
+              className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
+                viewMode === 'radar'
+                  ? 'bg-blue-600 text-white font-bold shadow-sm'
+                  : theme === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              เรดาร์ (GRID)
+            </button>
+          </div>
+
+          {/* Fullscreen Toggle Button */}
           <button
-            onClick={() => setViewMode('osm')}
-            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
-              viewMode === 'osm'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-sans font-medium rounded-lg transition-all cursor-pointer shadow-sm ${
+              isFullscreen
+                ? 'bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-amber-900/20'
+                : theme === 'light'
+                  ? 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-sm'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 shadow-sm'
             }`}
+            title={isFullscreen ? 'ย่อแผนที่กลับขนาดปกติ (Esc)' : 'ขยายแผนที่เต็มจอ (Fullscreen)'}
           >
-            แผนที่ถนน (OSM)
-          </button>
-          <button
-            onClick={() => setViewMode('satellite')}
-            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
-              viewMode === 'satellite'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            ภาพดาวเทียม
-          </button>
-          <button
-            onClick={() => setViewMode('radar')}
-            className={`px-2.5 py-1 text-[11px] font-sans rounded-md transition-all cursor-pointer ${
-              viewMode === 'radar'
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 font-bold'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            เรดาร์ (GRID)
+            {isFullscreen ? (
+              <>
+                <Minimize2 size={13} className="text-white" />
+                <span>ย่อหน้าจอ</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 size={13} className={theme === 'light' ? 'text-slate-700' : 'text-slate-300'} />
+                <span>เต็มจอ</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -547,24 +666,23 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
               <div className="flex gap-2.5 items-start">
                 {/* Image Preview Thumbnail */}
                 {getImageUrl(selectedRecord.imageUrl) ? (
-                  <div className={`relative w-[65px] h-[65px] rounded-lg overflow-hidden border shrink-0 group ${
-                    theme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-slate-700 bg-slate-950'
-                  }`}>
+                  <div
+                    onClick={() => openImagePopup(getImageUrl(selectedRecord.imageUrl), selectedRecord.poleId)}
+                    className={`relative w-[65px] h-[65px] rounded-lg overflow-hidden border shrink-0 group cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/70 shadow-sm ${
+                      theme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-slate-700 bg-slate-950'
+                    }`}
+                    title="คลิกเพื่อดูรูปภาพขนาดใหญ่ (Popup)"
+                  >
                     <img
                       src={getImageUrl(selectedRecord.imageUrl)}
                       alt={`Pole ${selectedRecord.poleId}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       referrerPolicy="no-referrer"
                     />
-                    <a
-                      href={getImageUrl(selectedRecord.imageUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      referrerPolicy="no-referrer"
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                    >
-                      <Eye size={11} className="text-white" />
-                    </a>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
+                      <Eye size={13} className="text-white drop-shadow" />
+                      <span className="text-[7px] text-white font-sans font-medium mt-0.5">ขยายรูป</span>
+                    </div>
                   </div>
                 ) : (
                   <div className={`w-[65px] h-[65px] rounded-lg border flex flex-col items-center justify-center shrink-0 ${
@@ -637,6 +755,89 @@ export default function MapVisualizer({ records, onSelectRecord, selectedRecord,
           </span>
         </div>
       )}
+
+      {/* In-page Image Lightbox Modal Popup (No new tab) */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 select-none"
+            onClick={() => {
+              setPreviewImage(null);
+              setPreviewPoleId(null);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="relative max-w-4xl w-full max-h-[92vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 text-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <ImageIcon size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base font-sans flex items-center gap-2">
+                      <span>ภาพถ่ายจุดติดตั้งเสาไฟ</span>
+                      {previewPoleId && (
+                        <span className="font-mono text-blue-400 px-2 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-md text-xs">
+                          เสา {previewPoleId}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-[11px] text-slate-400 font-sans">
+                      ระบบแสดงรูปภาพแบบป๊อปอัปหน้าต่างเดียว ไม่เปิดแท็บใหม่
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setPreviewImage(null);
+                    setPreviewPoleId(null);
+                  }}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="ปิดหน้าต่าง (Esc)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Body / Image Viewer */}
+              <div className="p-3 sm:p-6 bg-slate-950/70 overflow-auto flex items-center justify-center flex-1 min-h-[260px] max-h-[calc(90vh-120px)]">
+                <img
+                  src={previewImage}
+                  alt={`เสาไฟ ${previewPoleId || ''}`}
+                  className="max-h-[72vh] max-w-full w-auto object-contain rounded-xl shadow-2xl border border-slate-800"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-4 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
+                <span className="font-sans text-[11px] text-slate-400 truncate max-w-[70%]">
+                  {selectedRecord?.issue ? `ปัญหา/อาการ: ${selectedRecord.issue}` : 'ภาพถ่ายการซ่อมบำรุงไฟฟ้าสาธารณะ'}
+                </span>
+                <button
+                  onClick={() => {
+                    setPreviewImage(null);
+                    setPreviewPoleId(null);
+                  }}
+                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                >
+                  ปิดหน้าต่าง (Esc)
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
