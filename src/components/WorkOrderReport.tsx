@@ -1131,7 +1131,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                ตารางสรุปรายการงานซ่อมบำรุงไฟฟ้าสาธารณะ ตรวจสอบ อัปเดตสถานะงาน และพิมพ์ออกใบงาน A4 แนวนอน
+                ตารางสรุปรายการงานซ่อมบำรุงไฟฟ้าสาธารณะ (คลิกที่รายการเพื่ออัปเดตสถานะงานซ่อม) และพิมพ์ออกใบงาน A4 แนวนอน
               </p>
             </div>
           </div>
@@ -1147,15 +1147,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                 title="เลขที่ใบสั่งงาน สามารถแก้ไขได้"
               />
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowAddModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-emerald-900/30"
-            >
-              <Plus size={16} />
-              <span>เพิ่มรายการ</span>
-            </button>
           </div>
         </div>
 
@@ -1356,15 +1347,20 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
               return (
                 <div
                   key={item.id}
-                  className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 shadow-sm ${
+                  onClick={() => setEditingItem(item)}
+                  className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 shadow-sm cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-950/20 border-blue-500/40 shadow-blue-950/20'
-                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-950/80'
+                      ? 'bg-blue-950/20 border-blue-500/40 shadow-blue-950/20 hover:border-blue-400/60'
+                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-950/90'
                   }`}
+                  title={`คลิกเพื่ออัปเดตสถานะงานซ่อม: เสา ${item.poleId || ''}`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
                     {/* Checkbox เลือกรายการพิมพ์ */}
-                    <div className="pt-0.5 shrink-0">
+                    <div 
+                      className="pt-0.5 shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -1432,7 +1428,10 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   </div>
 
                   {/* Actions Bar on card */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 gap-2">
+                  <div 
+                    className="flex items-center justify-between pt-2 border-t border-slate-800/80 gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <div className="flex items-center gap-2">
                       {item.lat && item.lng && (
                         <a
@@ -1449,17 +1448,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      {/* Update Status / Edit Button */}
-                      <button
-                        type="button"
-                        onClick={() => setEditingItem(item)}
-                        className="px-2.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                        title="อัปเดตสถานะงาน / บันทึกผลการซ่อม"
-                      >
-                        <Wrench size={13} />
-                        <span>อัปเดตงาน</span>
-                      </button>
-
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(item.id)}
@@ -1507,13 +1495,18 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   return (
                     <tr 
                       key={item.id} 
-                      className={`transition-colors text-slate-300 group ${
+                      onClick={() => setEditingItem(item)}
+                      className={`transition-colors text-slate-300 group cursor-pointer ${
                         isSelected 
-                          ? 'bg-blue-600/10 hover:bg-blue-600/15' 
-                          : 'hover:bg-slate-900/60'
+                          ? 'bg-blue-600/10 hover:bg-blue-600/20' 
+                          : 'hover:bg-slate-900/80 hover:text-white'
                       }`}
+                      title={`คลิกเพื่ออัปเดตสถานะงานซ่อม: เสา ${item.poleId || ''}`}
                     >
-                      <td className="py-3 px-3 text-center">
+                      <td 
+                        className="py-3 px-3 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <input
                           type="checkbox"
                           checked={isSelected}
@@ -1530,7 +1523,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       </td>
                     <td className="py-3 px-3 font-mono font-bold text-white whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
-                        <span>{item.poleId || 'ไม่ระบุรหัส'}</span>
+                        <span className="group-hover:text-blue-400 transition-colors">{item.poleId || 'ไม่ระบุรหัส'}</span>
                         {item.imageUrl && (
                           <span title="มีรูปภาพแนบ" className="text-slate-500">
                             <ImageIcon size={11} />
@@ -1573,7 +1566,10 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                     <td className="py-3 px-3 text-center font-mono text-[11px] text-slate-400 whitespace-nowrap">
                       {item.fixedDate || item.orderDate || '-'}
                     </td>
-                    <td className="py-3 px-3 text-right whitespace-nowrap">
+                    <td 
+                      className="py-3 px-3 text-right whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex items-center justify-end gap-1.5">
                         {item.lat && item.lng && (
                           <a
@@ -1586,15 +1582,6 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                             <Navigation size={13} />
                           </a>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => setEditingItem(item)}
-                          className="px-2.5 py-1 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 border border-blue-500/25 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          title="อัปเดตสถานะงาน / บันทึกผลการซ่อม"
-                        >
-                          <Wrench size={12} />
-                          <span>อัปเดต</span>
-                        </button>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(item.id)}
