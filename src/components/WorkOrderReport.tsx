@@ -43,6 +43,8 @@ interface WorkOrderReportProps {
   onSyncNewRecord?: (record: MaintenanceRecord, action?: 'insert' | 'update') => Promise<{ success: boolean; message?: string }>;
   onDeleteRecord?: (historyId: string) => Promise<{ success: boolean; message?: string }>;
   theme: 'light' | 'dark';
+  appName?: string;
+  tableName?: string;
 }
 
 const COMMON_ISSUES = [
@@ -90,7 +92,14 @@ const isPendingRecord = (r: MaintenanceRecord) =>
   r.status === 'รอซ่อม' || 
   !r.status;
 
-export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteRecord, theme }: WorkOrderReportProps) {
+export default function WorkOrderReport({ 
+  records, 
+  onSyncNewRecord, 
+  onDeleteRecord, 
+  theme,
+  appName = '',
+  tableName = ''
+}: WorkOrderReportProps) {
   // Saved work orders in current draft batch (synchronized with database)
   const [workOrders, setWorkOrders] = useState<WorkOrderItem[]>(() => {
     try {
@@ -306,6 +315,53 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
 
   // Quick Edit / Update Status Modal
   const [editingItem, setEditingItem] = useState<WorkOrderItem | null>(null);
+
+  // Image Lightbox Preview Modal state
+  const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
+
+  // Safe Google Sheets & AppSheet image preview link converter
+  const getImageUrl = (url: string) => {
+    if (!url) return '';
+    // If it's already a base64 or blob URL (e.g. freshly uploaded photo)
+    if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+
+    // Handle Google Drive links
+    if (url.includes('drive.google.com')) {
+      const match = url.match(/id=([^&]+)/) || url.match(/\/file\/d\/([^/]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+      }
+    }
+
+    // If it's a relative path (AppSheet image e.g. "TableName_Images/photo.jpg" or "photo.jpg")
+    if (!url.startsWith('http')) {
+      const aName = appName || localStorage.getItem('pole_appsheet_name') || 'ข้อมูลไฟฟ้าแสงสว่าง-724677635';
+      let tName = tableName || localStorage.getItem('pole_sheet_name') || 'ข้อมูลไฟฟ้าแสงสว่าง';
+
+      // Auto-extract table name if fileName contains e.g. "TableName_Images/..."
+      if (url.includes('_Images/')) {
+        const extracted = url.split('_Images/')[0];
+        if (extracted && extracted.trim()) {
+          tName = extracted.trim();
+        }
+      }
+
+      return `https://www.appsheet.com/template/gettablefileurl?appName=${encodeURIComponent(aName)}&tableName=${encodeURIComponent(tName)}&fileName=${encodeURIComponent(url)}`;
+    }
+
+    return url;
+  };
+
+  // Close lightbox on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && previewModalImage) {
+        setPreviewModalImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewModalImage]);
 
   // View mode state: 'grid' (การ์ด) vs 'table' (ตารางรายการ)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
@@ -1392,7 +1448,14 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                           </span>
                         )}
                         {item.imageUrl && (
-                          <span title="มีรูปภาพแนบ" className="text-slate-500 hover:text-slate-300">
+                          <span 
+                            title="คลิกเพื่อดูรูปภาพ" 
+                            className="text-slate-500 hover:text-blue-400 cursor-pointer p-0.5 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewModalImage(getImageUrl(item.imageUrl));
+                            }}
+                          >
                             <ImageIcon size={12} />
                           </span>
                         )}
@@ -1525,7 +1588,14 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       <div className="flex items-center gap-1.5">
                         <span className="group-hover:text-blue-400 transition-colors">{item.poleId || 'ไม่ระบุรหัส'}</span>
                         {item.imageUrl && (
-                          <span title="มีรูปภาพแนบ" className="text-slate-500">
+                          <span 
+                            title="คลิกเพื่อดูรูปภาพ" 
+                            className="text-slate-500 hover:text-blue-400 cursor-pointer p-0.5 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewModalImage(getImageUrl(item.imageUrl));
+                            }}
+                          >
                             <ImageIcon size={11} />
                           </span>
                         )}
@@ -1818,13 +1888,31 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   </label>
                   <div className="flex items-center gap-3">
                     {imageUrl ? (
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 group shrink-0">
-                        <img src={imageUrl} alt="รูปซ่อมบำรุง" className="w-full h-full object-cover" />
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group shrink-0 shadow-md">
+                        <img 
+                          src={getImageUrl(imageUrl)} 
+                          alt="รูปซ่อมบำรุง" 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105 cursor-pointer" 
+                          referrerPolicy="no-referrer"
+                          onClick={() => setPreviewModalImage(getImageUrl(imageUrl))}
+                          title="คลิกเพื่อดูภาพขนาดใหญ่"
+                        />
                         <button
                           type="button"
-                          onClick={() => setImageUrl('')}
-                          className="absolute top-1 right-1 p-1 bg-rose-600/90 hover:bg-rose-500 text-white rounded-full transition-colors cursor-pointer"
-                          title="ลบรูปภาพ"
+                          onClick={() => setPreviewModalImage(getImageUrl(imageUrl))}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white cursor-pointer"
+                          title="คลิกเพื่อดูภาพขนาดใหญ่"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImageUrl('');
+                          }}
+                          className="absolute top-1 right-1 p-1 bg-rose-600/90 hover:bg-rose-500 text-white rounded-full z-10 transition-colors shadow-sm cursor-pointer"
+                          title="ลบรูปภาพนี้"
                         >
                           <X size={12} />
                         </button>
@@ -2236,12 +2324,31 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   </label>
                   <div className="flex items-center gap-3">
                     {editingItem.imageUrl ? (
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 group shrink-0">
-                        <img src={editingItem.imageUrl} alt="รูปงาน" className="w-full h-full object-cover" />
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 group shrink-0 shadow-md">
+                        <img 
+                          src={getImageUrl(editingItem.imageUrl)} 
+                          alt="รูปงาน" 
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105 cursor-pointer" 
+                          referrerPolicy="no-referrer"
+                          onClick={() => setPreviewModalImage(getImageUrl(editingItem.imageUrl))}
+                          title="คลิกเพื่อดูภาพขนาดใหญ่"
+                        />
                         <button
                           type="button"
-                          onClick={() => setEditingItem(prev => prev ? { ...prev, imageUrl: '' } : null)}
-                          className="absolute top-1 right-1 p-1 bg-rose-600/90 text-white rounded-full"
+                          onClick={() => setPreviewModalImage(getImageUrl(editingItem.imageUrl))}
+                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white cursor-pointer"
+                          title="คลิกเพื่อดูภาพขนาดใหญ่"
+                        >
+                          <Eye size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingItem(prev => prev ? { ...prev, imageUrl: '' } : null);
+                          }}
+                          className="absolute top-1 right-1 p-1 bg-rose-600/90 hover:bg-rose-500 text-white rounded-full z-10 transition-colors shadow-sm cursor-pointer"
+                          title="ลบรูปภาพนี้"
                         >
                           <X size={12} />
                         </button>
@@ -2260,7 +2367,7 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                       </label>
                     )}
                     <span className="text-[11px] text-slate-400">
-                      แนบภาพถ่ายหลังซ่อมแซมเสร็จสิ้นเพื่อยืนยันงาน
+                      แนบภาพถ่ายหลังซ่อมแซมเสร็จสิ้นเพื่อยืนยันงาน (คลิกรูปเพื่อดูภาพขนาดใหญ่)
                     </span>
                   </div>
                 </div>
@@ -2297,6 +2404,50 @@ export default function WorkOrderReport({ records, onSyncNewRecord, onDeleteReco
                   <CheckCircle size={15} />
                   <span>บันทึกและซิงค์ข้อมูลลงระบบ</span>
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Lightbox Image Preview Modal */}
+      <AnimatePresence>
+        {previewModalImage && (
+          <div
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md no-print select-none"
+            onClick={() => setPreviewModalImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="relative max-w-4xl w-full max-h-[92vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 bg-slate-950 border-b border-slate-800 text-slate-100">
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={16} className="text-blue-400" />
+                  <span className="font-bold text-sm font-sans">
+                    ภาพถ่ายการซ่อมบำรุงไฟฟ้าสาธารณะ
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModalImage(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="ปิด (Esc)"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="p-3 sm:p-6 bg-slate-950/70 overflow-auto flex items-center justify-center flex-1 min-h-[260px] max-h-[calc(90vh-100px)]">
+                <img
+                  src={previewModalImage}
+                  alt="ภาพขยาย"
+                  className="max-h-[72vh] max-w-full w-auto object-contain rounded-xl shadow-2xl border border-slate-800"
+                  referrerPolicy="no-referrer"
+                />
               </div>
             </motion.div>
           </div>

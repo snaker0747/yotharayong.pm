@@ -805,6 +805,8 @@ export default function App() {
                   <WorkOrderReport
                     records={records}
                     theme={theme}
+                    appName={appSheetAppName}
+                    tableName={sheetName}
                     onSyncNewRecord={handleSaveRecord}
                     onDeleteRecord={handleDeleteRecord}
                   />
